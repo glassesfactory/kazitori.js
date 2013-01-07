@@ -1,23 +1,22 @@
 kazitori.js
 ===============
 
-kazitori.js は pushState を良い感じにさばいてくれるライブラリです。
-依存しているライブラリはありません。
+kazitori.js は pushState を良い感じにさばいてくれるライブラリです。  
+依存しているライブラリはありません。  
 
-実装としては現状 [Backbone.js](http://backbonejs.org) の
-`Backbone.Router` と `Backbone.History` を多大に参考、もとい
-ほぼ抜き出している状態です。
+実装としては現状 [Backbone.js](http://backbonejs.org) の  
+`Backbone.Router` と `Backbone.History` を多大に参考、もといほぼ抜き出している状態です。
 
 そのうち最適化も含め実装が変わっていく…予定です。
 
-先述の通り、Backbone.js を多大に参考としているため
+先述の通り、Backbone.js を多大に参考としているため  
 `Backbone.Router` のルーティングを定義するかのようにルーティングを定義できます。
 
 使い方
 ----------
 
-kazitori.js を読み込んだ上で Kazitori クラスを継承。
-routes に対して URL マップを定義。
+kazitori.js を読み込んだ上で Kazitori クラスを継承。  
+routes に対して URL マップを定義。  
 各 URL に対しアクセスが有った際の処理を書いていきます。
 
 ```coffee
@@ -46,14 +45,14 @@ $(document).ready ()->
 		window.App.change(target)
 ```
 
-[こちらの記事](http://dev.hageee.net/4) でもうちょっと解説しています。
-というか使い勝手としては Backbone.Router とほぼ同じなのでそのあたりでググったほうが早いと思います。
+[こちらの記事](http://dev.hageee.net/4) でもうちょっと解説しています。  
+というか使い勝手としては Backbone.Router とほぼ同じなのでそのあたりでググったほうが早いと思います。  
 
 使い所
 ----------
 
-使い所としては Backbone.js の Model や Controller といった高機能な部分はいらないけど
-pushState で良い感じに捌きたい、といった時に使います。
+使い所としては Backbone.js の Model や Controller といった高機能な部分はいらないけど  
+pushState で良い感じに捌きたい、といった時に使います。  
 IE など pushState に対応していないブラウザは自動的に #(ハッシュ) で処理されます。
 
 jQuery.pjax との大きな違いは
@@ -79,7 +78,8 @@ LICENSE
 
 要望とか
 ------------
-こういう風にしたら使いやすいんじゃないとか
-本家 Backbone.js に言いづらい or 英語分かんねーよといった方がいるのなら
+こういう風にしたら使いやすいんじゃないとか  
+オメーこれじっそうたりてねーよ ks! とか 
+本家 Backbone.js に言いづらい or 英語分かんねーよといった方がいるのなら  
 [@__hage__](https://twitter.com/__hage__) あたりに連絡を下さい。
 
