@@ -4,6 +4,9 @@ kazitori.js
 kazitori.js は pushState を良い感じにさばいてくれるライブラリです。  
 依存しているライブラリはありません。  
 
+サンプル
+[http://pstest.hageee.net](http://pstest.hageee.net)
+
 実装としては現状 [Backbone.js](http://backbonejs.org) の  
 `Backbone.Router` と `Backbone.History` を多大に参考、もといほぼ抜き出している状態です。
 
@@ -46,7 +49,7 @@ $(document).ready ()->
 ```
 
 [こちらの記事](http://dev.hageee.net/4) でもうちょっと解説しています。  
-というか使い勝手としては Backbone.Router とほぼ同じなのでそのあたりでググったほうが早いと思います。  
+というか使い勝手としては `Backbone.Router` とほぼ同じなのでそのあたりでググったほうが早いと思います。  
 
 使い所
 ----------
@@ -79,7 +82,7 @@ LICENSE
 要望とか
 ------------
 こういう風にしたら使いやすいんじゃないとか  
-オメーこれじっそうたりてねーよ ks! とか 
+オメーこれじっそうたりてねーよ ks! とか  
 本家 Backbone.js に言いづらい or 英語分かんねーよといった方がいるのなら  
 [@__hage__](https://twitter.com/__hage__) あたりに連絡を下さい。
 
