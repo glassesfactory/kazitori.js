@@ -14,7 +14,7 @@ Router = (function(_super) {
   Router.prototype.routes = {
     '': 'index',
     '/': 'index',
-    ':id': 'show'
+    ':minchi': 'show'
   };
 
   Router.prototype.index = function() {

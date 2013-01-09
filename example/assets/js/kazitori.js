@@ -105,7 +105,7 @@ Kazitori = (function() {
       this.fragment = this.getHash().replace(routeStripper, '');
       this.history.replaceState({}, document.title, this.root + this.fragment + this.location.search);
     }
-    if (__indexOf.call(this.options, "silent") >= 0 && options.silent !== true) {
+    if (!this.options.silent) {
       return this.loadURL();
     }
   };

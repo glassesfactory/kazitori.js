@@ -91,7 +91,8 @@ class Kazitori
 			@.fragment = @.getHash().replace(routeStripper, '')
 			@.history.replaceState({}, document.title, @.root + @.fragment + @.location.search)
 			# return
-		if "silent" in @.options and options.silent isnt true
+
+		if !@.options.silent
 			return  @loadURL()
 
 
