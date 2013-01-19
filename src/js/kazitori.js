@@ -42,13 +42,21 @@ splatParam = /\*\w+/g;
 
 Kazitori = (function() {
 
+  Kazitori.prototype.VERSION = "0.1.2";
+
   Kazitori.prototype.history = null;
 
   Kazitori.prototype.location = null;
 
   Kazitori.prototype.handlers = [];
 
+  Kazitori.prototype.beforeHandlers = [];
+
+  Kazitori.prototype.afterhandlers = [];
+
   Kazitori.prototype.root = null;
+
+  Kazitori.prototype.allBeforeHandler = null;
 
   Kazitori.prototype.breaker = {};
 
@@ -66,6 +74,7 @@ Kazitori = (function() {
     }
     docMode = document.docmentMode;
     this.isOldIE = (win.navigator.userAgent.toLowerCase().indexOf('msie') !== -1) && (!docMode || docMode < 7);
+    this._bindBefores();
     this._bindRules();
     if (__indexOf.call(options, "isAutoStart") < 0 || options["isAutoStart"] !== false) {
       this.start();
@@ -149,14 +158,16 @@ Kazitori = (function() {
     this.loadURL(frag);
   };
 
-  Kazitori.prototype.route = function(rule, name, callback) {
+  Kazitori.prototype.registHandler = function(rule, name, isBefore, callback) {
+    var target;
     if (typeof rule !== RegExp) {
       rule = this._ruleToRegExp(rule);
     }
     if (!callback) {
-      callback = this[name];
+      callback = isBefore ? this._bindFunctions(name) : this[name];
     }
-    this.handlers.unshift({
+    target = isBefore ? this.beforeHandlers : this.handlers;
+    target.unshift({
       rule: rule,
       callback: this._binder(function(fragment) {
         var args;
@@ -168,12 +179,22 @@ Kazitori = (function() {
   };
 
   Kazitori.prototype.loadURL = function(fragmentOverride) {
-    var fragment, handler, matched, _i, _len, _ref;
+    var fragment, handler, matched, _i, _j, _len, _len1, _ref, _ref1;
     fragment = this.fragment = this.getFragment(fragmentOverride);
     matched = [];
-    _ref = this.handlers;
+    if (this.allBeforeHandler != null) {
+      this.allBeforeHandler.callback(fragment);
+    }
+    _ref = this.beforeHandlers;
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       handler = _ref[_i];
+      if (handler.rule.test(fragment)) {
+        handler.callback(fragment);
+      }
+    }
+    _ref1 = this.handlers;
+    for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+      handler = _ref1[_j];
       if (handler.rule.test(fragment)) {
         handler.callback(fragment);
         matched.push(true);
@@ -198,14 +219,36 @@ Kazitori = (function() {
   };
 
   Kazitori.prototype._bindRules = function() {
-    var route, routes, _i, _len;
+    var routes, rule, _i, _len;
     if (!(this.routes != null)) {
       return;
     }
     routes = this._keys(this.routes);
     for (_i = 0, _len = routes.length; _i < _len; _i++) {
-      route = routes[_i];
-      this.route(route, this.routes[route]);
+      rule = routes[_i];
+      this.registHandler(rule, this.routes[rule], false);
+    }
+  };
+
+  Kazitori.prototype._bindBefores = function() {
+    var befores, callback, key, _i, _len;
+    if (!(this.befores != null)) {
+      return;
+    }
+    befores = this._keys(this.befores);
+    for (_i = 0, _len = befores.length; _i < _len; _i++) {
+      key = befores[_i];
+      this.registHandler(key, this.befores[key], true);
+    }
+    if (this.allBefores) {
+      callback = this._bindFunctions(this.allBefores);
+      this.allBeforeHandler = {
+        callback: this._binder(function(fragment) {
+          var args;
+          args = [fragment];
+          return callback && callback.apply(this, args);
+        }, this)
+      };
     }
   };
 
@@ -320,6 +363,49 @@ Kazitori = (function() {
         }
       }
     }
+  };
+
+  Kazitori.prototype._bindFunctions = function(funcs) {
+    var bindedFuncs, callback, f, func, funcName, i, len, names, newF, _i, _len;
+    if (typeof funcs === 'string') {
+      funcs = funcs.split(',');
+    }
+    bindedFuncs = [];
+    for (_i = 0, _len = funcs.length; _i < _len; _i++) {
+      funcName = funcs[_i];
+      func = this[funcName];
+      if (!(func != null)) {
+        names = funcName.split('.');
+        if (names.length > 1) {
+          f = window[names[0]];
+          i = 1;
+          len = names.length;
+          while (i < len) {
+            newF = f[names[i]];
+            if (newF != null) {
+              f = newF;
+              i++;
+            } else {
+              break;
+            }
+          }
+          func = f;
+        } else {
+          func = window[funcName];
+        }
+      }
+      if (func != null) {
+        bindedFuncs.push(func);
+      }
+    }
+    callback = function(args) {
+      var _j, _len1;
+      for (_j = 0, _len1 = bindedFuncs.length; _j < _len1; _j++) {
+        func = bindedFuncs[_j];
+        func.apply(this, [args]);
+      }
+    };
+    return callback;
   };
 
   return Kazitori;

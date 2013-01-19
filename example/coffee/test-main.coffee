@@ -1,17 +1,28 @@
 class Router extends Kazitori
+	allBefores:['test','test2']
+	befores:
+		':minchi':['beforeMinchi']
+
 	routes :
 		'':'index'
 		'/':'index'
-		':id':'show'
+		':minchi':'show'
 		
 
 	index:()->
-		# console.log "index"
 		$('.currentPage').empty().append "this page is index"
 
 	show:(id)->
-		# console.log id
 		$('.currentPage').empty().append "this page is test" + id
+
+	###
+		some before functions
+	###
+	test:(hiroshi)->
+		console.log "before 1", hiroshi
+
+	beforeMinchi:()->
+		console.log "before minchi"
 
 
 $(document).ready ()->
@@ -20,3 +31,6 @@ $(document).ready ()->
 		event.preventDefault()
 		target = event.currentTarget.pathname
 		window.App.change(target)
+
+test2 =()->
+	console.log "before 2"

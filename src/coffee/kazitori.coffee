@@ -31,12 +31,14 @@ splatParam = /\*\w+/g
 #
 ###
 class Kazitori
+	VERSION:"0.1.2"
 	history:null
 	location:null
 	handlers:[]
 	beforeHandlers:[]
 	afterhandlers:[]
 	root:null
+	allBeforeHandler:null
 
 	breaker:{}
 
@@ -127,52 +129,41 @@ class Kazitori
 				if !options.replace
 					@.iframe.document.open().close()
 				@_updateHash(@.iframe.location, frag, options.replace)
-			# console.log "ooooooooo"
 		else
 			return @.location.assign(url)
 
 		@loadURL(frag)
 		return 
 
-
-	# ルーティングを登録
-	route:(rule, name, callback)->
+	registHandler:(rule, name, isBefore, callback )->
 		if typeof rule isnt RegExp
 			rule = @_ruleToRegExp(rule)
 		if not callback
-			callback = @[name]
+			callback = if isBefore then @_bindFunctions(name) else @[name]
 
-		@.handlers.unshift {
+		target = if isBefore then @.beforeHandlers else @.handlers
+		
+		target.unshift {
 			rule:rule, 
 			callback:@_binder (fragment)->
-				args = @._extractParams(rule, fragment)
+				args = @._extractParams(rule, fragment)				
 				callback && callback.apply(@, args)
 			,@
 		}
 		return @
-
-	registBefore:(rule, names, callbacks)->
-		if typeof rule isnt RegExp
-			rule = @_ruleToRegExp(rule)
-		if not callbacks
-			callback = @_bindFunctions(names)
-
-		@.beforeHandlers.unshift {
-			key:rule
-			callbacks:@_binder ()->
-				#aaaa
-				args = @._extractParams(rule, fragment)
-				callback && callback.apply(@,args)
-		}
 
 	#URL を読み込む
 	loadURL:(fragmentOverride)->
 		fragment = @.fragment = @getFragment(fragmentOverride)
 		matched = []
 
-		for handler in @.beforehandlers
-			handler.callback()
-		
+		if @.allBeforeHandler?
+			@.allBeforeHandler.callback(fragment)
+
+		for handler in @.beforeHandlers
+			if handler.rule.test(fragment)
+				handler.callback(fragment)
+
 		for handler in @.handlers
 			if handler.rule.test(fragment)
 				handler.callback(fragment)
@@ -197,8 +188,8 @@ class Kazitori
 		if not @.routes?
 			return
 		routes = @_keys(@.routes)
-		for rule in routes
-			@route(rule, @.routes[rule])
+		for rule in routes			
+			@registHandler(rule, @.routes[rule],false)
 		return
 
 	# befores から指定された事前に処理したいメソッドをバインド
@@ -207,7 +198,18 @@ class Kazitori
 			return 
 		befores = @_keys(@.befores)
 		for key in befores
-			@registBefore(key, @.befores[key])
+			@registHandler(key, @.befores[key], true)
+
+		if @.allBefores
+			callback = @_bindFunctions(@.allBefores)
+			@.allBeforeHandler = {
+					callback:@_binder (fragment)->
+						args = [fragment]						
+						callback && callback.apply(@, args)
+
+					,@
+				}
+		return
 
 
 	_updateHash:(location, fragment, replace)->
@@ -314,21 +316,36 @@ class Kazitori
 					if iter.call(ctx, obj[k], k, obj) is @breaker
 						return
 
-	_bindFunctions:(funcs)->
-		#hum
-		if typeof funcs is String
-			funcs = [funcs]
+	_bindFunctions:(funcs)->		
+		if typeof funcs is 'string'
+			funcs = funcs.split(',')
 		bindedFuncs = []
 		for funcName in funcs
 			func = @[funcName]
 			if not func?
-				func = window[func]
+				names = funcName.split('.')
+				if names.length > 1
+					f = window[names[0]]
+					i = 1
+					len = names.length
+					while i < len
+						newF = f[names[i]]
+						if newF?
+							f = newF
+							i++
+						else
+							break
+					func = f
+				else
+					func = window[funcName]
+
 			if func?
 				bindedFuncs.push(func)
-
-		return ()=>
+		callback =(args)->
 			for func in bindedFuncs
-				func.apply(func)
+				func.apply(@, [args])
+			return
+		return callback
 
 
 

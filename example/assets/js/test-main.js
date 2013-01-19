@@ -11,8 +11,9 @@ Router = (function(_super) {
     return Router.__super__.constructor.apply(this, arguments);
   }
 
+  Router.prototype.allBefores = ['test', 'test2'];
+
   Router.prototype.befores = {
-    '__any': ['test', 'test2'],
     ':minchi': ['beforeMinchi']
   };
 
@@ -30,8 +31,13 @@ Router = (function(_super) {
     return $('.currentPage').empty().append("this page is test" + id);
   };
 
-  Router.prototype.test = function() {
-    return console.log("before 1");
+  /*
+  		some before functions
+  */
+
+
+  Router.prototype.test = function(hiroshi) {
+    return console.log("before 1", hiroshi);
   };
 
   Router.prototype.beforeMinchi = function() {
