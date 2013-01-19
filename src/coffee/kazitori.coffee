@@ -34,6 +34,8 @@ class Kazitori
 	history:null
 	location:null
 	handlers:[]
+	beforeHandlers:[]
+	afterhandlers:[]
 	root:null
 
 	breaker:{}
@@ -54,6 +56,7 @@ class Kazitori
 		docMode = document.docmentMode
 		@isOldIE = (win.navigator.userAgent.toLowerCase().indexOf('msie') != -1) and (!docMode||docMode < 7)
 
+		@_bindBefores()
 		@_bindRules()
 
 		if "isAutoStart" not in options or options["isAutoStart"] != false
@@ -148,11 +151,28 @@ class Kazitori
 		}
 		return @
 
+	registBefore:(rule, names, callbacks)->
+		if typeof rule isnt RegExp
+			rule = @_ruleToRegExp(rule)
+		if not callbacks
+			callback = @_bindFunctions(names)
+
+		@.beforeHandlers.unshift {
+			key:rule
+			callbacks:@_binder ()->
+				#aaaa
+				args = @._extractParams(rule, fragment)
+				callback && callback.apply(@,args)
+		}
 
 	#URL を読み込む
 	loadURL:(fragmentOverride)->
 		fragment = @.fragment = @getFragment(fragmentOverride)
 		matched = []
+
+		for handler in @.beforehandlers
+			handler.callback()
+		
 		for handler in @.handlers
 			if handler.rule.test(fragment)
 				handler.callback(fragment)
@@ -177,9 +197,17 @@ class Kazitori
 		if not @.routes?
 			return
 		routes = @_keys(@.routes)
-		for route in routes
-			@route(route, @.routes[route])
+		for rule in routes
+			@route(rule, @.routes[rule])
 		return
+
+	# befores から指定された事前に処理したいメソッドをバインド
+	_bindBefores:()->
+		if not @.befores?
+			return 
+		befores = @_keys(@.befores)
+		for key in befores
+			@registBefore(key, @.befores[key])
 
 
 	_updateHash:(location, fragment, replace)->
@@ -285,6 +313,24 @@ class Kazitori
 				if k in obj
 					if iter.call(ctx, obj[k], k, obj) is @breaker
 						return
+
+	_bindFunctions:(funcs)->
+		#hum
+		if typeof funcs is String
+			funcs = [funcs]
+		bindedFuncs = []
+		for funcName in funcs
+			func = @[funcName]
+			if not func?
+				func = window[func]
+			if func?
+				bindedFuncs.push(func)
+
+		return ()=>
+			for func in bindedFuncs
+				func.apply(func)
+
+
 
 
 Kazitori.started = false

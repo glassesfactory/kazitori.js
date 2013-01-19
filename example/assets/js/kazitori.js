@@ -48,6 +48,10 @@ Kazitori = (function() {
 
   Kazitori.prototype.handlers = [];
 
+  Kazitori.prototype.beforeHandlers = [];
+
+  Kazitori.prototype.afterhandlers = [];
+
   Kazitori.prototype.root = null;
 
   Kazitori.prototype.breaker = {};
@@ -66,6 +70,7 @@ Kazitori = (function() {
     }
     docMode = document.docmentMode;
     this.isOldIE = (win.navigator.userAgent.toLowerCase().indexOf('msie') !== -1) && (!docMode || docMode < 7);
+    this._bindBefores();
     this._bindRules();
     if (__indexOf.call(options, "isAutoStart") < 0 || options["isAutoStart"] !== false) {
       this.start();
@@ -167,13 +172,36 @@ Kazitori = (function() {
     return this;
   };
 
+  Kazitori.prototype.registBefore = function(rule, names, callbacks) {
+    var callback;
+    if (typeof rule !== RegExp) {
+      rule = this._ruleToRegExp(rule);
+    }
+    if (!callbacks) {
+      callback = this._bindFunctions(names);
+    }
+    return this.beforeHandlers.unshift({
+      key: rule,
+      callbacks: this._binder(function() {
+        var args;
+        args = this._extractParams(rule, fragment);
+        return callback && callback.apply(this, args);
+      })
+    });
+  };
+
   Kazitori.prototype.loadURL = function(fragmentOverride) {
-    var fragment, handler, matched, _i, _len, _ref;
+    var fragment, handler, matched, _i, _j, _len, _len1, _ref, _ref1;
     fragment = this.fragment = this.getFragment(fragmentOverride);
     matched = [];
-    _ref = this.handlers;
+    _ref = this.beforehandlers;
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       handler = _ref[_i];
+      handler.callback();
+    }
+    _ref1 = this.handlers;
+    for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+      handler = _ref1[_j];
       if (handler.rule.test(fragment)) {
         handler.callback(fragment);
         matched.push(true);
@@ -198,15 +226,29 @@ Kazitori = (function() {
   };
 
   Kazitori.prototype._bindRules = function() {
-    var route, routes, _i, _len;
+    var routes, rule, _i, _len;
     if (!(this.routes != null)) {
       return;
     }
     routes = this._keys(this.routes);
     for (_i = 0, _len = routes.length; _i < _len; _i++) {
-      route = routes[_i];
-      this.route(route, this.routes[route]);
+      rule = routes[_i];
+      this.route(rule, this.routes[rule]);
     }
+  };
+
+  Kazitori.prototype._bindBefores = function() {
+    var befores, key, _i, _len, _results;
+    if (!(this.befores != null)) {
+      return;
+    }
+    befores = this._keys(this.befores);
+    _results = [];
+    for (_i = 0, _len = befores.length; _i < _len; _i++) {
+      key = befores[_i];
+      _results.push(this.registBefore(key, this.befores[key]));
+    }
+    return _results;
   };
 
   Kazitori.prototype._updateHash = function(location, fragment, replace) {
@@ -320,6 +362,34 @@ Kazitori = (function() {
         }
       }
     }
+  };
+
+  Kazitori.prototype._bindFunctions = function(funcs) {
+    var bindedFuncs, func, funcName, _i, _len,
+      _this = this;
+    if (typeof funcs === String) {
+      funcs = [funcs];
+    }
+    bindedFuncs = [];
+    for (_i = 0, _len = funcs.length; _i < _len; _i++) {
+      funcName = funcs[_i];
+      func = this[funcName];
+      if (!(func != null)) {
+        func = window[func];
+      }
+      if (func != null) {
+        bindedFuncs.push(func);
+      }
+    }
+    return function() {
+      var _j, _len1, _results;
+      _results = [];
+      for (_j = 0, _len1 = bindedFuncs.length; _j < _len1; _j++) {
+        func = bindedFuncs[_j];
+        _results.push(func.apply(func));
+      }
+      return _results;
+    };
   };
 
   return Kazitori;
