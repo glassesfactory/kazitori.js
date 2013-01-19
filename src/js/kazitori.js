@@ -56,7 +56,7 @@ Kazitori = (function() {
 
   Kazitori.prototype.root = null;
 
-  Kazitori.prototype.allBeforeHandler = null;
+  Kazitori.prototype.beforeAnytimeHandler = null;
 
   Kazitori.prototype.breaker = {};
 
@@ -182,8 +182,8 @@ Kazitori = (function() {
     var fragment, handler, matched, _i, _j, _len, _len1, _ref, _ref1;
     fragment = this.fragment = this.getFragment(fragmentOverride);
     matched = [];
-    if (this.allBeforeHandler != null) {
-      this.allBeforeHandler.callback(fragment);
+    if (this.beforeAnytimeHandler != null) {
+      this.beforeAnytimeHandler.callback(fragment);
     }
     _ref = this.beforeHandlers;
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -240,9 +240,9 @@ Kazitori = (function() {
       key = befores[_i];
       this.registHandler(key, this.befores[key], true);
     }
-    if (this.allBefores) {
-      callback = this._bindFunctions(this.allBefores);
-      this.allBeforeHandler = {
+    if (this.beforeAnytime) {
+      callback = this._bindFunctions(this.beforeAnytime);
+      this.beforeAnytimeHandler = {
         callback: this._binder(function(fragment) {
           var args;
           args = [fragment];

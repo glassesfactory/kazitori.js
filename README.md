@@ -24,6 +24,9 @@ routes に対して URL マップを定義。
 
 ```coffee
 class Router extends Kazitori
+	beforeAnytime:["test-before"]
+	befores:
+		':id':['test-show']
 	routes :
 		'':'index'
 		'/':'index'
@@ -36,6 +39,14 @@ class Router extends Kazitori
 	show:(id)->
 		# console.log id
 		$('.currentPage').empty().append "this page is test" + id
+
+	###
+		some before handlers
+	###
+	test-before:()->
+		console.log "before!"
+	test-show:()->
+		console.log "before show"
 
 
 
@@ -86,3 +97,11 @@ LICENSE
 本家 Backbone.js に言いづらい or 英語分かんねーよといった方がいるのなら  
 [@__hage__](https://twitter.com/__hage__) あたりに連絡を下さい。
 
+
+Change Log
+--------------
+
+**2013 01 19 ver 0.1.2**
+
+* バージョン名をつけました。今回から 0.1.2 です。
+* routes で登録した handler が処理される前に、事前処理を行う before 機能を実装しました。

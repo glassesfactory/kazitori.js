@@ -38,7 +38,7 @@ class Kazitori
 	beforeHandlers:[]
 	afterhandlers:[]
 	root:null
-	allBeforeHandler:null
+	beforeAnytimeHandler:null
 
 	breaker:{}
 
@@ -157,8 +157,8 @@ class Kazitori
 		fragment = @.fragment = @getFragment(fragmentOverride)
 		matched = []
 
-		if @.allBeforeHandler?
-			@.allBeforeHandler.callback(fragment)
+		if @.beforeAnytimeHandler?
+			@.beforeAnytimeHandler.callback(fragment)
 
 		for handler in @.beforeHandlers
 			if handler.rule.test(fragment)
@@ -200,9 +200,9 @@ class Kazitori
 		for key in befores
 			@registHandler(key, @.befores[key], true)
 
-		if @.allBefores
-			callback = @_bindFunctions(@.allBefores)
-			@.allBeforeHandler = {
+		if @.beforeAnytime
+			callback = @_bindFunctions(@.beforeAnytime)
+			@.beforeAnytimeHandler = {
 					callback:@_binder (fragment)->
 						args = [fragment]						
 						callback && callback.apply(@, args)

@@ -1,5 +1,5 @@
 class Router extends Kazitori
-	allBefores:['test','test2']
+	beforeAnytime:['test','test2']
 	befores:
 		':minchi':['beforeMinchi']
 

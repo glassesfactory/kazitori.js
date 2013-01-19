@@ -11,7 +11,7 @@ Router = (function(_super) {
     return Router.__super__.constructor.apply(this, arguments);
   }
 
-  Router.prototype.allBefores = ['test', 'test2'];
+  Router.prototype.beforeAnytime = ['test', 'test2'];
 
   Router.prototype.befores = {
     ':minchi': ['beforeMinchi']
