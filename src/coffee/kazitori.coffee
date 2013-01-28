@@ -159,7 +159,6 @@ class Kazitori
 				callback && callback.apply(@, args)
 			,@
 		}
-		console.log target
 		return @
 
 	#URL を読み込む
@@ -200,7 +199,6 @@ class Kazitori
 		@._beforeDeffer.index = -1
 		for handler in @.handlers
 			if handler.rule.test(@.fragment)
-				console.log "incomplete", handler.rule
 				handler.callback(@.fragment)
 				matched.push true
 		return matched
@@ -462,7 +460,6 @@ class Deffered extends EventDispatcher
 					@.dispatchEvent({type:KazitoriEvent.TASK_QUEUE_COMPLETE})
 					
 		catch error
-			console.log error
 			@reject(error)
 
 	reject:(error)->
