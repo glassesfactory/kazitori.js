@@ -31,7 +31,7 @@ splatParam = /\*\w+/g
 #
 ###
 class Kazitori
-	VERSION:"0.1.2"
+	VERSION:"0.1.3"
 	history:null
 	location:null
 	handlers:[]
@@ -39,8 +39,16 @@ class Kazitori
 	afterhandlers:[]
 	root:null
 	beforeAnytimeHandler:null
+	#失敗した時
+	beforeFaildHandler:()->
+		return
+	isBeforeForce:false
 
 	breaker:{}
+
+	_dispatcher:null
+	#hum
+	_beforeDeffer:null
 
 
 	constructor:(options)->
@@ -57,7 +65,7 @@ class Kazitori
 			@.history = win.history
 		docMode = document.docmentMode
 		@isOldIE = (win.navigator.userAgent.toLowerCase().indexOf('msie') != -1) and (!docMode||docMode < 7)
-
+		@_dispatcher = new EventDispatcher()
 		@_bindBefores()
 		@_bindRules()
 
@@ -123,6 +131,7 @@ class Kazitori
 
 		if @._hasPushState
 			@.history[ if options.replace then 'replaceState' else 'pushState' ]({}, document.title, url)
+			@._dispatcher.dispatchEvent(KazitoriEvent.CHANGE)
 		else if @._wantChangeHash
 			@_updateHash(@.location, frag, options.replace)
 			if @.iframe and (frag isnt @getFragment(@getHash(@.iframe)))
@@ -157,18 +166,52 @@ class Kazitori
 		fragment = @.fragment = @getFragment(fragmentOverride)
 		matched = []
 
+		@._beforeDeffer = new Deffered()
+		@._beforeDeffer.queue = []
+		@._beforeDeffer.index = -1
 		if @.beforeAnytimeHandler?
-			@.beforeAnytimeHandler.callback(fragment)
+			@._beforeDeffer.deffered((d)=>
+				@.beforeAnytimeHandler.callback(fragment)
+				d.execute(d)
+				return
+			)
 
+		y = 0
 		for handler in @.beforeHandlers
-			if handler.rule.test(fragment)
-				handler.callback(fragment)
+			if handler.rule.test(fragment) is true
+				@._beforeDeffer.deffered((d)->
+					handler.callback(fragment)
+					d.execute(d)
+					return
+				)
+		@._beforeDeffer.addEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, @beforeComplete)
+		@._beforeDeffer.addEventListener(KazitoriEvent.TASK_QUEUE_FAILD, @beforeFaild)
+		@._beforeDeffer.execute(@._beforeDeffer)
 
+		
+	#before で登録した処理が無難に終わった
+	beforeComplete:(event)=>
+		@._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, @beforeComplete)
+		@._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_FAILD, @beforeFaild)
+		matched = []
+		@._beforeDeffer.queue = []
+		@._beforeDeffer.index = -1
 		for handler in @.handlers
-			if handler.rule.test(fragment)
-				handler.callback(fragment)
+			if handler.rule.test(@.fragment)
+				handler.callback(@.fragment)
 				matched.push true
 		return matched
+
+	
+
+	beforeFaild:(event)=>
+		@.beforeFaildHandler.apply(@, arguments)
+		# @._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_FAILD, @beforeFaild)
+		# @._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, @beforeComplete)
+		if @isBeforeForce
+			@beforeComplete()
+		@._beforeDeffer = null
+
 
 
 	#URL の変更を監視
@@ -206,7 +249,6 @@ class Kazitori
 					callback:@_binder (fragment)->
 						args = [fragment]						
 						callback && callback.apply(@, args)
-
 					,@
 				}
 		return
@@ -261,6 +303,21 @@ class Kazitori
 		newRule = rule.replace(escapeRegExp, '\\$&').replace(optionalParam, '(?:$1)?').replace(namedParam, '([^\/]+)').replace(splatParam, '(.*?)')
 		return new RegExp('^' + newRule + '$')
 
+
+	#===============================================
+	#
+	# Event
+	#
+	#==============================================
+
+	addEventListener:(type, listener)->
+		@_dispatcher.addEventListener(type, listener)
+
+	removeEventListener:(type, listener)->
+		@_dispatcher.removeEventListener(type, listener)
+
+	dispatchEvent:(event)->
+		@_dispatcher.dispatchEvent(event)
 
 
 	#==============================================
@@ -348,6 +405,73 @@ class Kazitori
 		return callback
 
 
+class EventDispatcher
+	listeners:{}
+	addEventListener:(type, listener)->
+		if @listeners[ type ] is undefined
+			@listeners[ type ] =[]
+
+		if @listeners[type].indexOf listener is -1
+			@listeners[type].push listener
+		return
+
+	removeEventListener:(type, listener)->
+		index = @listeners[type].indexOf listener
+
+		if index isnt -1
+			@listeners[type].splice(index, 1)
+		return
+
+	dispatchEvent:(event)->
+		ary = @listeners[ event.type ]
+		if ary isnt undefined
+			event.target = @
+
+			for handler in ary
+				handler.call(@, event)
+		return
+
+class Deffered extends EventDispatcher
+	queue : []
+	index : -1
+
+	constructor:()->
+		@queue = []
+		@index = -1
+	
+	deffered:(func)->
+		@queue.push func
+		return @
+
+	execute:()->
+		@index++
+		try
+			if @queue[@index]
+				@queue[@index].apply(this, arguments)
+				if @queue.length is @index
+					@queue = []
+					@index = -1
+					@.dispatchEvent({type:KazitoriEvent.TASK_QUEUE_COMPLETE})
+					
+		catch error
+			@reject(error)
+
+	reject:(error)->
+		@dispatchEvent({type:KazitoriEvent.TASK_QUEUE_FAILD, index:@index, message:error.message })
+
+do(window)->
+	KazitoriEvent = {}
+
+	#タスクキューが空になった
+	KazitoriEvent.TASK_QUEUE_COMPLETE = 'task_queue_complete'
+
+	#タスクキューが中断された
+	KazitoriEvent.TASK_QUEUE_FAILD = 'task_queue_faild'
+
+	#URL が変わった時
+	KazitoriEvent.CHANGE = 'change'
+
+	window.KazitoriEvent = KazitoriEvent
 
 
 Kazitori.started = false

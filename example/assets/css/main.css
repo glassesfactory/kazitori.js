@@ -41,6 +41,42 @@ header {
     font-weight: bold;
     margin-right: 20px; }
 
+#logoutContainer {
+  text-align: center; }
+
+#dialog {
+  color: white;
+  background: rgba(0, 0, 0, 0.8);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 260px;
+  height: 160px;
+  padding: 20px;
+  border-radius: 7px; }
+  #dialog h2 {
+    margin-bottom: 20px; }
+  #dialog div {
+    margin-bottom: 20px; }
+    #dialog div label {
+      display: block;
+      width: 80px;
+      float: left; }
+    #dialog div input[type="text"] {
+      float: left; }
+  #dialog div.submit {
+    text-align: center; }
+    #dialog div.submit input[type="submit"] {
+      padding: 5px;
+      width: 200px;
+      font-size: 30px;
+      height: 40px;
+      display: inline-block; }
+  #dialog div:after {
+    content: "";
+    clear: both;
+    display: table; }
+
 footer {
   position: fixed;
   bottom: 0;

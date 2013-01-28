@@ -11,8 +11,11 @@
 //     http://backbonejs.org
 */
 
-var Kazitori, delegater, escapeRegExp, namedParam, optionalParam, routeStripper, splatParam, trailingSlash,
-  __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+var Deffered, EventDispatcher, Kazitori, delegater, escapeRegExp, namedParam, optionalParam, routeStripper, splatParam, trailingSlash,
+  __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
+  __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
+  __hasProp = {}.hasOwnProperty,
+  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
 delegater = function(target, func) {
   return function() {
@@ -42,7 +45,7 @@ splatParam = /\*\w+/g;
 
 Kazitori = (function() {
 
-  Kazitori.prototype.VERSION = "0.1.2";
+  Kazitori.prototype.VERSION = "0.1.3";
 
   Kazitori.prototype.history = null;
 
@@ -58,9 +61,21 @@ Kazitori = (function() {
 
   Kazitori.prototype.beforeAnytimeHandler = null;
 
+  Kazitori.prototype.beforeFaildHandler = function() {};
+
+  Kazitori.prototype.isBeforeForce = false;
+
   Kazitori.prototype.breaker = {};
 
+  Kazitori.prototype._dispatcher = null;
+
+  Kazitori.prototype._beforeDeffer = null;
+
   function Kazitori(options) {
+    this.beforeFaild = __bind(this.beforeFaild, this);
+
+    this.beforeComplete = __bind(this.beforeComplete, this);
+
     var docMode, win;
     this.options = options || (options = {});
     if (options.routes) {
@@ -74,6 +89,7 @@ Kazitori = (function() {
     }
     docMode = document.docmentMode;
     this.isOldIE = (win.navigator.userAgent.toLowerCase().indexOf('msie') !== -1) && (!docMode || docMode < 7);
+    this._dispatcher = new EventDispatcher();
     this._bindBefores();
     this._bindRules();
     if (__indexOf.call(options, "isAutoStart") < 0 || options["isAutoStart"] !== false) {
@@ -144,6 +160,7 @@ Kazitori = (function() {
     url = this.root + frag;
     if (this._hasPushState) {
       this.history[options.replace ? 'replaceState' : 'pushState']({}, document.title, url);
+      this._dispatcher.dispatchEvent(KazitoriEvent.CHANGE);
     } else if (this._wantChangeHash) {
       this._updateHash(this.location, frag, options.replace);
       if (this.iframe && (frag !== this.getFragment(this.getHash(this.iframe)))) {
@@ -179,28 +196,59 @@ Kazitori = (function() {
   };
 
   Kazitori.prototype.loadURL = function(fragmentOverride) {
-    var fragment, handler, matched, _i, _j, _len, _len1, _ref, _ref1;
+    var fragment, handler, matched, y, _i, _len, _ref,
+      _this = this;
     fragment = this.fragment = this.getFragment(fragmentOverride);
     matched = [];
+    this._beforeDeffer = new Deffered();
+    this._beforeDeffer.queue = [];
+    this._beforeDeffer.index = -1;
     if (this.beforeAnytimeHandler != null) {
-      this.beforeAnytimeHandler.callback(fragment);
+      this._beforeDeffer.deffered(function(d) {
+        _this.beforeAnytimeHandler.callback(fragment);
+        d.execute(d);
+      });
     }
+    y = 0;
     _ref = this.beforeHandlers;
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       handler = _ref[_i];
-      if (handler.rule.test(fragment)) {
-        handler.callback(fragment);
+      if (handler.rule.test(fragment) === true) {
+        this._beforeDeffer.deffered(function(d) {
+          handler.callback(fragment);
+          d.execute(d);
+        });
       }
     }
-    _ref1 = this.handlers;
-    for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-      handler = _ref1[_j];
-      if (handler.rule.test(fragment)) {
-        handler.callback(fragment);
+    this._beforeDeffer.addEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, this.beforeComplete);
+    this._beforeDeffer.addEventListener(KazitoriEvent.TASK_QUEUE_FAILD, this.beforeFaild);
+    return this._beforeDeffer.execute(this._beforeDeffer);
+  };
+
+  Kazitori.prototype.beforeComplete = function(event) {
+    var handler, matched, _i, _len, _ref;
+    this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, this.beforeComplete);
+    this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_FAILD, this.beforeFaild);
+    matched = [];
+    this._beforeDeffer.queue = [];
+    this._beforeDeffer.index = -1;
+    _ref = this.handlers;
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      handler = _ref[_i];
+      if (handler.rule.test(this.fragment)) {
+        handler.callback(this.fragment);
         matched.push(true);
       }
     }
     return matched;
+  };
+
+  Kazitori.prototype.beforeFaild = function(event) {
+    this.beforeFaildHandler.apply(this, arguments);
+    if (this.isBeforeForce) {
+      this.beforeComplete();
+    }
+    return this._beforeDeffer = null;
   };
 
   Kazitori.prototype.observeURLHandler = function(event) {
@@ -296,6 +344,18 @@ Kazitori = (function() {
     var newRule;
     newRule = rule.replace(escapeRegExp, '\\$&').replace(optionalParam, '(?:$1)?').replace(namedParam, '([^\/]+)').replace(splatParam, '(.*?)');
     return new RegExp('^' + newRule + '$');
+  };
+
+  Kazitori.prototype.addEventListener = function(type, listener) {
+    return this._dispatcher.addEventListener(type, listener);
+  };
+
+  Kazitori.prototype.removeEventListener = function(type, listener) {
+    return this._dispatcher.removeEventListener(type, listener);
+  };
+
+  Kazitori.prototype.dispatchEvent = function(event) {
+    return this._dispatcher.dispatchEvent(event);
   };
 
   Kazitori.prototype._slice = Array.prototype.slice;
@@ -411,5 +471,101 @@ Kazitori = (function() {
   return Kazitori;
 
 })();
+
+EventDispatcher = (function() {
+
+  function EventDispatcher() {}
+
+  EventDispatcher.prototype.listeners = {};
+
+  EventDispatcher.prototype.addEventListener = function(type, listener) {
+    if (this.listeners[type] === void 0) {
+      this.listeners[type] = [];
+    }
+    if (this.listeners[type].indexOf(listener === -1)) {
+      this.listeners[type].push(listener);
+    }
+  };
+
+  EventDispatcher.prototype.removeEventListener = function(type, listener) {
+    var index;
+    index = this.listeners[type].indexOf(listener);
+    if (index !== -1) {
+      this.listeners[type].splice(index, 1);
+    }
+  };
+
+  EventDispatcher.prototype.dispatchEvent = function(event) {
+    var ary, handler, _i, _len;
+    ary = this.listeners[event.type];
+    if (ary !== void 0) {
+      event.target = this;
+      for (_i = 0, _len = ary.length; _i < _len; _i++) {
+        handler = ary[_i];
+        handler.call(this, event);
+      }
+    }
+  };
+
+  return EventDispatcher;
+
+})();
+
+Deffered = (function(_super) {
+
+  __extends(Deffered, _super);
+
+  Deffered.prototype.queue = [];
+
+  Deffered.prototype.index = -1;
+
+  function Deffered() {
+    this.queue = [];
+    this.index = -1;
+  }
+
+  Deffered.prototype.deffered = function(func) {
+    this.queue.push(func);
+    return this;
+  };
+
+  Deffered.prototype.execute = function() {
+    this.index++;
+    try {
+      if (this.queue[this.index]) {
+        this.queue[this.index].apply(this, arguments);
+        if (this.queue.length === this.index) {
+          this.queue = [];
+          this.index = -1;
+          return this.dispatchEvent({
+            type: KazitoriEvent.TASK_QUEUE_COMPLETE
+          });
+        }
+      }
+    } catch (error) {
+      return this.reject(error);
+    }
+  };
+
+  Deffered.prototype.reject = function(error) {
+    return this.dispatchEvent({
+      type: KazitoriEvent.TASK_QUEUE_FAILD,
+      index: this.index,
+      message: error.message
+    });
+  };
+
+  return Deffered;
+
+})(EventDispatcher);
+
+(function(window) {
+  var KazitoriEvent;
+  KazitoriEvent = {};
+  KazitoriEvent.TASK_QUEUE_COMPLETE = 'task_queue_complete';
+  KazitoriEvent.TASK_QUEUE_FAILD = 'task_queue_faild';
+  KazitoriEvent.CHANGE = 'change';
+  return window.KazitoriEvent = KazitoriEvent;
+})(window);
 
 Kazitori.started = false;
