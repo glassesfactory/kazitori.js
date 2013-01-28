@@ -14,16 +14,17 @@ Router = (function(_super) {
   Router.prototype.beforeAnytime = [];
 
   Router.prototype.befores = {
-    'admin': ['ninshou'],
     'admin/:id': ['ninshou', 'beforeMinchi']
   };
 
   Router.prototype.routes = {
     '': 'index',
+    ':id': 'show',
     'admin/:id': 'show',
     'admin': 'admin',
     'login': 'login',
-    'logout': 'logout'
+    'logout': 'logout',
+    'hyoge': 'hyoge'
   };
 
   Router.prototype.index = function() {
@@ -36,6 +37,11 @@ Router = (function(_super) {
   Router.prototype.show = function(id) {
     console.log("showwww");
     return $('.currentPage').empty().append("this page is test" + id);
+  };
+
+  Router.prototype.hyoge = function() {
+    console.log("oppai");
+    return $('.currentPage').empty().append("(´･ω｀･)ｴｯ?");
   };
 
   Router.prototype.admin = function() {

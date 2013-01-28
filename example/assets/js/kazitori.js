@@ -191,8 +191,10 @@ Kazitori = (function() {
   };
 
   Kazitori.prototype.registHandler = function(rule, name, isBefore, callback) {
-    var target;
+    var orgRule, target;
+    orgRule = null;
     if (typeof rule !== RegExp) {
+      orgRule = rule;
       rule = this._ruleToRegExp(rule);
     }
     if (!callback) {
@@ -201,6 +203,7 @@ Kazitori = (function() {
     target = isBefore ? this.beforeHandlers : this.handlers;
     target.unshift({
       rule: rule,
+      orgRule: orgRule,
       callback: this._binder(function(fragment) {
         var args;
         args = this._extractParams(rule, fragment);
@@ -250,6 +253,12 @@ Kazitori = (function() {
     _ref = this.handlers;
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       handler = _ref[_i];
+      console.log(handler.orgRule, this.fragment);
+      if (handler.orgRule === this.fragment) {
+        handler.callback(this.fragment);
+        matched.push(true);
+        return matched;
+      }
       if (handler.rule.test(this.fragment)) {
         handler.callback(this.fragment);
         matched.push(true);

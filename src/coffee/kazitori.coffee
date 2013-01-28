@@ -154,8 +154,11 @@ class Kazitori
 
 
 	registHandler:(rule, name, isBefore, callback )->
+		orgRule = null
 		if typeof rule isnt RegExp
+			orgRule = rule
 			rule = @_ruleToRegExp(rule)
+
 		if not callback
 			callback = if isBefore then @_bindFunctions(name) else @[name]
 
@@ -163,6 +166,7 @@ class Kazitori
 		
 		target.unshift {
 			rule:rule, 
+			orgRule:orgRule
 			callback:@_binder (fragment)->
 				args = @._extractParams(rule, fragment)				
 				callback && callback.apply(@, args)
@@ -207,6 +211,11 @@ class Kazitori
 		@._beforeDeffer.queue = []
 		@._beforeDeffer.index = -1
 		for handler in @.handlers
+			console.log handler.orgRule, @.fragment
+			if handler.orgRule is @.fragment
+				handler.callback(@.fragment)
+				matched.push true
+				return matched
 			if handler.rule.test(@.fragment)
 				handler.callback(@.fragment)
 				matched.push true
