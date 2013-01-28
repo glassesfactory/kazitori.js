@@ -2,7 +2,7 @@ class Router extends Kazitori
 	beforeAnytime:['test']
 	befores:
 		'admin' :['ninshou']
-		'admin/:minchi':['beforeMinchi']
+		'article/:minchi':['beforeMinchi']
 
 
 	routes :
@@ -11,12 +11,13 @@ class Router extends Kazitori
 		'admin':'admin'
 		'login':'login'
 		'logout':'logout'
-		'admin/:minchi':'show'
+		'article/:minchi':'show'
 
 		
 
 	index:()->
 		console.log "index"
+		$('#dialog').hide()
 		$('.currentPage').empty().append "this page is index"
 
 	show:(id)->
@@ -65,6 +66,12 @@ $(document).ready ()->
 
 
 	window.App = new Router({root:'/'})
+
+	#チェンジイベント
+	window.App.addEventListener(KazitoriEvent.CHANGE, (event)->
+		console.log event
+		)
+
 	$('.test').on "click", (event)->
 		event.preventDefault()
 		target = event.currentTarget.pathname

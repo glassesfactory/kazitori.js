@@ -143,10 +143,11 @@ Kazitori = (function() {
   };
 
   Kazitori.prototype.change = function(fragment, options) {
-    var frag, url;
+    var frag, next, prev, url;
     if (!Kazitori.started) {
       return false;
     }
+    prev = this.fragment;
     if (!options) {
       options = {
         'trigger': options
@@ -157,10 +158,10 @@ Kazitori = (function() {
       return;
     }
     this.fragment = frag;
+    next = this.fragment;
     url = this.root + frag;
     if (this._hasPushState) {
       this.history[options.replace ? 'replaceState' : 'pushState']({}, document.title, url);
-      this._dispatcher.dispatchEvent(KazitoriEvent.CHANGE);
     } else if (this._wantChangeHash) {
       this._updateHash(this.location, frag, options.replace);
       if (this.iframe && (frag !== this.getFragment(this.getHash(this.iframe)))) {
@@ -172,6 +173,11 @@ Kazitori = (function() {
     } else {
       return this.location.assign(url);
     }
+    this._dispatcher.dispatchEvent({
+      type: KazitoriEvent.CHANGE,
+      prev: prev,
+      next: next
+    });
     this.loadURL(frag);
   };
 

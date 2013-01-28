@@ -120,18 +120,18 @@ class Kazitori
 	change:(fragment, options)->
 		if not Kazitori.started
 			return false
-
+		prev = @.fragment
 		if not options
 			options = {'trigger':options}
 		frag = @getFragment(fragment || '')
 		if @.fragment is frag
 			return
 		@.fragment = frag
+		next = @.fragment
 		url = @.root + frag
 
 		if @._hasPushState
 			@.history[ if options.replace then 'replaceState' else 'pushState' ]({}, document.title, url)
-			@._dispatcher.dispatchEvent(KazitoriEvent.CHANGE)
 		else if @._wantChangeHash
 			@_updateHash(@.location, frag, options.replace)
 			if @.iframe and (frag isnt @getFragment(@getHash(@.iframe)))
@@ -141,6 +141,7 @@ class Kazitori
 		else
 			return @.location.assign(url)
 
+		@._dispatcher.dispatchEvent({type:KazitoriEvent.CHANGE, prev:prev, next:next})
 		@loadURL(frag)
 		return 
 

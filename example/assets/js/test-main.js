@@ -15,7 +15,7 @@ Router = (function(_super) {
 
   Router.prototype.befores = {
     'admin': ['ninshou'],
-    'admin/:minchi': ['beforeMinchi']
+    'article/:minchi': ['beforeMinchi']
   };
 
   Router.prototype.routes = {
@@ -23,11 +23,12 @@ Router = (function(_super) {
     'admin': 'admin',
     'login': 'login',
     'logout': 'logout',
-    'admin/:minchi': 'show'
+    'article/:minchi': 'show'
   };
 
   Router.prototype.index = function() {
     console.log("index");
+    $('#dialog').hide();
     return $('.currentPage').empty().append("this page is index");
   };
 
@@ -90,6 +91,9 @@ $(document).ready(function() {
   $('#dialog').hide();
   window.App = new Router({
     root: '/'
+  });
+  window.App.addEventListener(KazitoriEvent.CHANGE, function(event) {
+    return console.log(event);
   });
   $('.test').on("click", function(event) {
     var target;
