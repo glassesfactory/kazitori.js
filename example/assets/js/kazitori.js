@@ -181,6 +181,15 @@ Kazitori = (function() {
     this.loadURL(frag);
   };
 
+  Kazitori.prototype.reject = function() {
+    this.dispatchEvent({
+      type: KazitoriEvent.REJECT
+    });
+    this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, this.beforeComplete);
+    this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_FAILD, this.beforeFaild);
+    this._beforeDeffer = null;
+  };
+
   Kazitori.prototype.registHandler = function(rule, name, isBefore, callback) {
     var target;
     if (typeof rule !== RegExp) {
@@ -577,6 +586,7 @@ Deffered = (function(_super) {
   KazitoriEvent.TASK_QUEUE_COMPLETE = 'task_queue_complete';
   KazitoriEvent.TASK_QUEUE_FAILD = 'task_queue_faild';
   KazitoriEvent.CHANGE = 'change';
+  KazitoriEvent.REJECT = 'reject';
   return window.KazitoriEvent = KazitoriEvent;
 })(window);
 

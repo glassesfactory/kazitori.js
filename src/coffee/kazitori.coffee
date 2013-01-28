@@ -144,6 +144,15 @@ class Kazitori
 		@loadURL(frag)
 		return 
 
+	reject:()->
+		@dispatchEvent({type:KazitoriEvent.REJECT})
+		@._beforeDeffer.removeEventListener KazitoriEvent.TASK_QUEUE_COMPLETE, @beforeComplete
+		@._beforeDeffer.removeEventListener KazitoriEvent.TASK_QUEUE_FAILD, @beforeFaild
+		@._beforeDeffer = null
+		return
+		
+
+
 	registHandler:(rule, name, isBefore, callback )->
 		if typeof rule isnt RegExp
 			rule = @_ruleToRegExp(rule)
@@ -476,6 +485,8 @@ do(window)->
 
 	#URL が変わった時
 	KazitoriEvent.CHANGE = 'change'
+
+	KazitoriEvent.REJECT = 'reject'
 
 	window.KazitoriEvent = KazitoriEvent
 

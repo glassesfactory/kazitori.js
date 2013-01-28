@@ -15,7 +15,7 @@ Router = (function(_super) {
 
   Router.prototype.befores = {
     'admin': ['ninshou'],
-    'admin/:id': ['beforeMinchi']
+    'admin/:id': ['ninshou', 'beforeMinchi']
   };
 
   Router.prototype.routes = {
@@ -39,8 +39,9 @@ Router = (function(_super) {
   };
 
   Router.prototype.admin = function() {
+    console.log("admin");
     $('.currentPage').empty().append("this is admin page");
-    $('#adminContainer').append('<a href="/admin/1" class="test">1</a><a href="/admin/2" class="test">2</a><a href="/admin/3" class="test">3</a>');
+    $('#adminContainer').empty().append('<a href="/admin/1" class="test">1</a><a href="/admin/2" class="test">2</a><a href="/admin/3" class="test">3</a>');
     return $('.test').on('click', clickHandler);
   };
 
@@ -74,7 +75,7 @@ Router = (function(_super) {
     if (isLogined === true) {
 
     } else {
-      return window.App.change('login');
+      return this.reject();
     }
   };
 
@@ -97,7 +98,12 @@ $(document).ready(function() {
   window.App = new Router({
     root: '/'
   });
-  window.App.addEventListener(KazitoriEvent.CHANGE, function(event) {});
+  window.App.addEventListener(KazitoriEvent.CHANGE, function(event) {
+    return console.log(event);
+  });
+  window.App.addEventListener(KazitoriEvent.REJECT, function(event) {
+    return console.log(event);
+  });
   $('.test').on("click", clickHandler);
   return $('form').on('submit', function(event) {
     var pw, userID;
