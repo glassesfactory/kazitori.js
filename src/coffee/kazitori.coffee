@@ -129,7 +129,6 @@ class Kazitori
 		@.fragment = frag
 		next = @.fragment
 		url = @.root + frag
-
 		if @._hasPushState
 			@.history[ if options.replace then 'replaceState' else 'pushState' ]({}, document.title, url)
 		else if @._wantChangeHash
@@ -160,6 +159,7 @@ class Kazitori
 				callback && callback.apply(@, args)
 			,@
 		}
+		console.log target
 		return @
 
 	#URL を読み込む
@@ -185,6 +185,7 @@ class Kazitori
 					d.execute(d)
 					return
 				)
+
 		@._beforeDeffer.addEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, @beforeComplete)
 		@._beforeDeffer.addEventListener(KazitoriEvent.TASK_QUEUE_FAILD, @beforeFaild)
 		@._beforeDeffer.execute(@._beforeDeffer)
@@ -199,6 +200,7 @@ class Kazitori
 		@._beforeDeffer.index = -1
 		for handler in @.handlers
 			if handler.rule.test(@.fragment)
+				console.log "incomplete", handler.rule
 				handler.callback(@.fragment)
 				matched.push true
 		return matched
@@ -207,6 +209,7 @@ class Kazitori
 
 	beforeFaild:(event)=>
 		@.beforeFaildHandler.apply(@, arguments)
+		# throw new Error()
 		# @._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_FAILD, @beforeFaild)
 		# @._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, @beforeComplete)
 		if @isBeforeForce
@@ -232,7 +235,7 @@ class Kazitori
 		if not @.routes?
 			return
 		routes = @_keys(@.routes)
-		for rule in routes			
+		for rule in routes
 			@registHandler(rule, @.routes[rule],false)
 		return
 
@@ -296,7 +299,11 @@ class Kazitori
 
 	#URL パラメーターを取得
 	_extractParams:(rule, fragment)->
-		return rule.exec(fragment).slice(1)
+		param = rule.exec(fragment)
+		if param?
+			return param.slice(1)
+		else
+			return null
 
 
 	#url 正規化後 RegExp クラスに変換
@@ -455,6 +462,7 @@ class Deffered extends EventDispatcher
 					@.dispatchEvent({type:KazitoriEvent.TASK_QUEUE_COMPLETE})
 					
 		catch error
+			console.log error
 			@reject(error)
 
 	reject:(error)->

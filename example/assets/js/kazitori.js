@@ -198,6 +198,7 @@ Kazitori = (function() {
         return callback && callback.apply(this, args);
       }, this)
     });
+    console.log(target);
     return this;
   };
 
@@ -242,6 +243,7 @@ Kazitori = (function() {
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       handler = _ref[_i];
       if (handler.rule.test(this.fragment)) {
+        console.log("incomplete", handler.rule);
         handler.callback(this.fragment);
         matched.push(true);
       }
@@ -343,7 +345,13 @@ Kazitori = (function() {
   };
 
   Kazitori.prototype._extractParams = function(rule, fragment) {
-    return rule.exec(fragment).slice(1);
+    var param;
+    param = rule.exec(fragment);
+    if (param != null) {
+      return param.slice(1);
+    } else {
+      return null;
+    }
   };
 
   Kazitori.prototype._ruleToRegExp = function(rule) {
@@ -549,6 +557,7 @@ Deffered = (function(_super) {
         }
       }
     } catch (error) {
+      console.log(error);
       return this.reject(error);
     }
   };

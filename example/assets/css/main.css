@@ -32,14 +32,17 @@ header {
   padding: 10px 0;
   color: white; }
 
-.container {
+.container, #adminContainer {
   width: 940px;
   margin: 0 auto;
   text-align: center; }
-  .container a.test {
+  .container a.test, #adminContainer a.test {
     font-size: 60px;
     font-weight: bold;
     margin-right: 20px; }
+
+#adminContainer {
+  padding: 10px; }
 
 #logoutContainer {
   text-align: center; }

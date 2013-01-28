@@ -1,30 +1,30 @@
 class Router extends Kazitori
-	beforeAnytime:['test']
+	beforeAnytime:[]
 	befores:
 		'admin' :['ninshou']
-		'article/:minchi':['beforeMinchi']
-
-
+		'admin/:id':['beforeMinchi']
 	routes :
 		# '/':'index'
 		'':'index'
+		'admin/:id':'show'
 		'admin':'admin'
 		'login':'login'
 		'logout':'logout'
-		'article/:minchi':'show'
-
-		
 
 	index:()->
 		console.log "index"
 		$('#dialog').hide()
+		$('#adminContainer').empty()
 		$('.currentPage').empty().append "this page is index"
 
 	show:(id)->
+		console.log "showwww"
 		$('.currentPage').empty().append "this page is test" + id
 
 	admin:()->
 		$('.currentPage').empty().append "this is admin page"
+		$('#adminContainer').append('<a href="/admin/1" class="test">1</a><a href="/admin/2" class="test">2</a><a href="/admin/3" class="test">3</a>')
+		$('.test').on 'click', clickHandler
 
 	login:()->
 		$('#dialog').show()
@@ -33,6 +33,7 @@ class Router extends Kazitori
 		setCookie(COOKIE_KEY, '')
 		window.App.change('')
 		console.log "logout"
+		$('#adminContainer').empty()
 		return
 
 	###
@@ -69,14 +70,11 @@ $(document).ready ()->
 
 	#チェンジイベント
 	window.App.addEventListener(KazitoriEvent.CHANGE, (event)->
-		console.log event
+		# console.log event
 		)
 
-	$('.test').on "click", (event)->
-		event.preventDefault()
-		target = event.currentTarget.pathname
-		window.App.change(target)
-
+	$('.test').on "click", clickHandler
+	
 	$('form').on 'submit', (event)->
 		event.preventDefault()
 		userID = $('input[name=user]').val()
@@ -87,6 +85,12 @@ $(document).ready ()->
 			window.App.change('admin')
 		else
 			alert('バルス')
+
+clickHandler =(event)->
+	event.preventDefault()
+	target = event.currentTarget.pathname
+	console.log "inclick", target
+	window.App.change(target)
 
 getCookie =(key)->
 	cookies = document.cookie.split(";")
