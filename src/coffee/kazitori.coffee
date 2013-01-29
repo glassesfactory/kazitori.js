@@ -211,9 +211,9 @@ class Kazitori
 		# 	,@
 		# }
 		target.unshift new Rule(rule, (fragment)->
-			args = @_extractParams(fragment)
-			callback && callback.apply(@.router, args)
-			)
+				args = @_extractParams(fragment)
+				callback && callback.apply(@.router, args)
+			,@)
 		return @
 
 	#URL を読み込む
