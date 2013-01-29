@@ -4,14 +4,14 @@
 	kazitori.js may be freely distributed under the MIT license.
 	http://dev.hageee.net
 
-	fork from::
+	inspired from::
 //     (c) 2010-2012 Jeremy Ashkenas, DocumentCloud Inc.
 //     Backbone may be freely distributed under the MIT license.
 //     For all details and documentation:
 //     http://backbonejs.org
 */
 
-var Deffered, EventDispatcher, Kazitori, delegater, escapeRegExp, namedParam, optionalParam, routeStripper, splatParam, trailingSlash,
+var Deffered, EventDispatcher, Kazitori, KazitoriEvent, Rule, delegater, escapeRegExp, genericParam, namedParam, optionalParam, routeStripper, splatParam, trailingSlash,
   __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
   __hasProp = {}.hasOwnProperty,
@@ -29,7 +29,9 @@ routeStripper = /^[#\/]|\s+$/g;
 
 escapeRegExp = /[\-{}\[\]+?.,\\\^$|#\s]/g;
 
-namedParam = /:\w+/g;
+namedParam = /<(\w+|[A-Za-z_]+:\w+)>$/g;
+
+genericParam = /<([A-Za-z_]+):\w+>$/;
 
 optionalParam = /\((.*?)\)/g;
 
@@ -59,7 +61,11 @@ Kazitori = (function() {
 
   Kazitori.prototype.root = null;
 
+  Kazitori.prototype.notFound = null;
+
   Kazitori.prototype.beforeAnytimeHandler = null;
+
+  Kazitori.prototype.direct = null;
 
   Kazitori.prototype.beforeFaildHandler = function() {};
 
@@ -70,6 +76,8 @@ Kazitori = (function() {
   Kazitori.prototype._dispatcher = null;
 
   Kazitori.prototype._beforeDeffer = null;
+
+  Kazitori.prototype._prevFragment = null;
 
   function Kazitori(options) {
     this.beforeFaild = __bind(this.beforeFaild, this);
@@ -82,6 +90,7 @@ Kazitori = (function() {
       this.routes = options.routes;
     }
     this.root = options.root ? options.root : '/';
+    this.notFound = options.notFound ? options.notFound : this.root;
     win = window;
     if (typeof win !== 'undefined') {
       this.location = win.location;
@@ -130,6 +139,7 @@ Kazitori = (function() {
       this.fragment = this.getHash().replace(routeStripper, '');
       this.history.replaceState({}, document.title, this.root + this.fragment + this.location.search);
     }
+    this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.START, this.fragment));
     if (!this.options.silent) {
       return this.loadURL();
     }
@@ -139,7 +149,32 @@ Kazitori = (function() {
     var win;
     win = window;
     win.removeEventListener('popstate', arguments.callee);
-    return win.removeEventListener('hashchange', arguments.callee);
+    win.removeEventListener('hashchange', arguments.callee);
+    Kazitori.started = false;
+    return this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.STOP, this.fragment));
+  };
+
+  Kazitori.prototype.torikazi = function(options) {
+    return this.direction(options, "next");
+  };
+
+  Kazitori.prototype.omokazi = function(options) {
+    return this.direction(options, "prev");
+  };
+
+  Kazitori.prototype.direction = function(option, direction) {
+    if (!Kazitori.started) {
+      return false;
+    }
+    this._prevFragment = this.getFragment();
+    this.direct = direction;
+    if (direction === "prev") {
+      return this.history.back();
+    } else if (direction === "next") {
+      return this.history.forward();
+    } else {
+
+    }
   };
 
   Kazitori.prototype.change = function(fragment, options) {
@@ -159,7 +194,7 @@ Kazitori = (function() {
     }
     this.fragment = frag;
     next = this.fragment;
-    url = this.root + frag;
+    url = this.root + frag.replace(routeStripper, '');
     if (this._hasPushState) {
       this.history[options.replace ? 'replaceState' : 'pushState']({}, document.title, url);
     } else if (this._wantChangeHash) {
@@ -173,31 +208,30 @@ Kazitori = (function() {
     } else {
       return this.location.assign(url);
     }
-    this._dispatcher.dispatchEvent({
-      type: KazitoriEvent.CHANGE,
-      prev: prev,
-      next: next
-    });
+    this.dispatchEvent(new KazitoriEvent(KazitoriEvent.CHANGE, next, prev));
     this.loadURL(frag);
+  };
+
+  Kazitori.prototype.reject = function() {
+    this.dispatchEvent({
+      type: KazitoriEvent.REJECT
+    });
+    this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, this.beforeComplete);
+    this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_FAILD, this.beforeFaild);
+    this._beforeDeffer = null;
   };
 
   Kazitori.prototype.registHandler = function(rule, name, isBefore, callback) {
     var target;
-    if (typeof rule !== RegExp) {
-      rule = this._ruleToRegExp(rule);
-    }
     if (!callback) {
       callback = isBefore ? this._bindFunctions(name) : this[name];
     }
     target = isBefore ? this.beforeHandlers : this.handlers;
-    target.unshift({
-      rule: rule,
-      callback: this._binder(function(fragment) {
-        var args;
-        args = this._extractParams(rule, fragment);
-        return callback && callback.apply(this, args);
-      }, this)
-    });
+    target.unshift(new Rule(rule, function(fragment) {
+      var args;
+      args = this._extractParams(fragment);
+      return callback && callback.apply(this.router, args);
+    }));
     return this;
   };
 
@@ -219,7 +253,9 @@ Kazitori = (function() {
     _ref = this.beforeHandlers;
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       handler = _ref[_i];
-      if (handler.rule.test(fragment) === true) {
+      if (handler.isVariable) {
+
+      } else if (handler.rule.test(fragment) === true) {
         this._beforeDeffer.deffered(function(d) {
           handler.callback(fragment);
           d.execute(d);
@@ -232,7 +268,7 @@ Kazitori = (function() {
   };
 
   Kazitori.prototype.beforeComplete = function(event) {
-    var handler, matched, _i, _len, _ref;
+    var args, handler, matched, _i, _len, _ref;
     this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, this.beforeComplete);
     this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_FAILD, this.beforeFaild);
     matched = [];
@@ -241,16 +277,39 @@ Kazitori = (function() {
     _ref = this.handlers;
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       handler = _ref[_i];
-      if (handler.rule.test(this.fragment)) {
+      if (handler.rule === this.fragment) {
         handler.callback(this.fragment);
         matched.push(true);
+        return matched;
       }
+      if (handler.test(this.fragment)) {
+        if (handler.isVariable && handler.type !== null) {
+          args = handler._extractParams(this.fragment)[0];
+          if (handler.type === "int") {
+            args = Number(args) ? Number(args) : false;
+          } else if (handler.type === "string") {
+            args = String(args) ? String(args) : false;
+          }
+          if (args !== false) {
+            handler.callback(this.fragment);
+            matched.push(true);
+          }
+        } else {
+          handler.callback(this.fragment);
+          matched.push(true);
+        }
+      }
+    }
+    if (matched.length < 1 && this.notFound !== null) {
+      this.loadURL(this.notFound);
     }
     return matched;
   };
 
   Kazitori.prototype.beforeFaild = function(event) {
     this.beforeFaildHandler.apply(this, arguments);
+    this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_FAILD, this.beforeFaild);
+    this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, this.beforeComplete);
     if (this.isBeforeForce) {
       this.beforeComplete();
     }
@@ -269,7 +328,13 @@ Kazitori = (function() {
     if (this.iframe) {
       this.change(current);
     }
-    return this.loadURL() || this.loadURL(this.getHash());
+    if (this.direct === "prev") {
+      this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.PREV, current, this._prevFragment));
+    } else if (this.direct === "next") {
+      this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.NEXT, current, this._prevFragment));
+    }
+    this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.CHANGE, current, this._prevFragment));
+    return this.loadURL(current);
   };
 
   Kazitori.prototype._bindRules = function() {
@@ -329,7 +394,7 @@ Kazitori = (function() {
         fragment = this.getHash();
       }
     }
-    return fragment.replace(routeStripper, '');
+    return fragment;
   };
 
   Kazitori.prototype.getHash = function() {
@@ -342,7 +407,7 @@ Kazitori = (function() {
     }
   };
 
-  Kazitori.prototype._extractParams = function(rule, fragment) {
+  Kazitori.prototype._extractParams = function(rule, orgRule, fragment) {
     var param;
     param = rule.exec(fragment);
     if (param != null) {
@@ -353,8 +418,11 @@ Kazitori = (function() {
   };
 
   Kazitori.prototype._ruleToRegExp = function(rule) {
-    var newRule;
-    newRule = rule.replace(escapeRegExp, '\\$&').replace(optionalParam, '(?:$1)?').replace(namedParam, '([^\/]+)').replace(splatParam, '(.*?)');
+    var newRUle, newRule;
+    newRule = rule.replace(escapeRegExp, '\\$&');
+    newRUle = newRule.replace(optionalParam, '(?:$1)?');
+    newRule = newRule.replace(namedParam, '([^\/]+)');
+    newRule = newRule.replace(splatParam, '(.*?)');
     return new RegExp('^' + newRule + '$');
   };
 
@@ -484,6 +552,74 @@ Kazitori = (function() {
 
 })();
 
+/*
+/////////////////////////////
+	URL を定義する Rule クラス
+	ちょっと大げさな気もするけど外部的には変わらんし
+	今後を見据えてクラス化しておく
+/////////////////////////////
+*/
+
+
+Rule = (function() {
+
+  Rule.prototype.rule = null;
+
+  Rule.prototype._regexp = null;
+
+  Rule.prototype.callback = null;
+
+  Rule.prototype.router = null;
+
+  Rule.prototype.isVariable = false;
+
+  Rule.prototype.type = null;
+
+  function Rule(string, callback, router) {
+    var m, matched, re, t, _i, _len;
+    this.rule = string;
+    this.callback = callback;
+    this._regexp = this._ruleToRegExp(string);
+    this.router = router;
+    re = new RegExp(namedParam);
+    matched = string.match(re);
+    if (matched !== null) {
+      this.isVariable = true;
+      for (_i = 0, _len = matched.length; _i < _len; _i++) {
+        m = matched[_i];
+        t = m.match(genericParam)[1];
+        if (t !== null) {
+          this.type = t;
+          break;
+        }
+      }
+    }
+  }
+
+  Rule.prototype.test = function(fragment) {
+    return this._regexp.test(fragment);
+  };
+
+  Rule.prototype._extractParams = function(fragment) {
+    var param;
+    param = this._regexp.exec(fragment);
+    if (param != null) {
+      return param.slice(1);
+    } else {
+      return null;
+    }
+  };
+
+  Rule.prototype._ruleToRegExp = function(rule) {
+    var newRule;
+    newRule = rule.replace(escapeRegExp, '\\$&').replace(optionalParam, '(?:$1)?').replace(namedParam, '([^\/]+)').replace(splatParam, '(.*?)');
+    return new RegExp('^' + newRule + '$');
+  };
+
+  return Rule;
+
+})();
+
 EventDispatcher = (function() {
 
   function EventDispatcher() {}
@@ -571,13 +707,51 @@ Deffered = (function(_super) {
 
 })(EventDispatcher);
 
-(function(window) {
-  var KazitoriEvent;
-  KazitoriEvent = {};
-  KazitoriEvent.TASK_QUEUE_COMPLETE = 'task_queue_complete';
-  KazitoriEvent.TASK_QUEUE_FAILD = 'task_queue_faild';
-  KazitoriEvent.CHANGE = 'change';
-  return window.KazitoriEvent = KazitoriEvent;
-})(window);
+KazitoriEvent = (function() {
+
+  KazitoriEvent.prototype.next = null;
+
+  KazitoriEvent.prototype.prev = null;
+
+  KazitoriEvent.prototype.type = null;
+
+  function KazitoriEvent(type, next, prev) {
+    this.type = type;
+    this.next = next;
+    this.prev = prev;
+  }
+
+  KazitoriEvent.prototype.clone = function() {
+    return new KazitoriEvent(this.type, this.next, this.prev);
+  };
+
+  KazitoriEvent.prototype.toString = function() {
+    return "KazitoriEvent :: " + "type:" + this.type + " next:" + String(this.next) + " prev:" + String(this.prev);
+  };
+
+  return KazitoriEvent;
+
+})();
+
+KazitoriEvent.TASK_QUEUE_COMPLETE = 'task_queue_complete';
+
+KazitoriEvent.TASK_QUEUE_FAILD = 'task_queue_faild';
+
+KazitoriEvent.CHANGE = 'change';
+
+KazitoriEvent.INTERNAL_CHANGE = 'internal_change';
+
+KazitoriEvent.USER_CHANGE = 'user_change';
+
+KazitoriEvent.PREV = 'prev';
+
+KazitoriEvent.NEXT = 'next';
+
+KazitoriEvent.REJECT = 'reject';
+
+/*
+ver 0.1.3
+*/
+
 
 Kazitori.started = false;

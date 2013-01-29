@@ -14,17 +14,16 @@ Router = (function(_super) {
   Router.prototype.beforeAnytime = [];
 
   Router.prototype.befores = {
-    'admin/:id': ['ninshou', 'beforeMinchi']
+    '/admin/<int:id>': ['ninshou', 'beforeMinchi']
   };
 
   Router.prototype.routes = {
-    '': 'index',
-    ':id': 'show',
-    'admin/:id': 'show',
-    'admin': 'admin',
-    'login': 'login',
-    'logout': 'logout',
-    'hyoge': 'hyoge'
+    '/': 'index',
+    '/<int:id>': 'show',
+    '/admin/<int:id>': 'show',
+    '/admin': 'admin',
+    '/login': 'login',
+    '/logout': 'logout'
   };
 
   Router.prototype.index = function() {
@@ -35,7 +34,7 @@ Router = (function(_super) {
   };
 
   Router.prototype.show = function(id) {
-    console.log("showwww");
+    console.log("showwww", id);
     return $('.currentPage').empty().append("this page is test" + id);
   };
 
@@ -103,7 +102,6 @@ $(document).ready(function() {
   window.App = new Router({
     root: '/'
   });
-  console.log(KazitoriEvent.CHANGE);
   window.App.addEventListener(KazitoriEvent.CHANGE, function(event) {
     return console.log(event, "change");
   });

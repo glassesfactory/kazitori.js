@@ -11,7 +11,7 @@
 //     http://backbonejs.org
 */
 
-var Deffered, EventDispatcher, Kazitori, KazitoriEvent, delegater, escapeRegExp, namedParam, optionalParam, routeStripper, splatParam, trailingSlash,
+var Deffered, EventDispatcher, Kazitori, KazitoriEvent, Rule, delegater, escapeRegExp, genericParam, namedParam, optionalParam, routeStripper, splatParam, trailingSlash,
   __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
   __hasProp = {}.hasOwnProperty,
@@ -29,7 +29,9 @@ routeStripper = /^[#\/]|\s+$/g;
 
 escapeRegExp = /[\-{}\[\]+?.,\\\^$|#\s]/g;
 
-namedParam = /:\w+/g;
+namedParam = /<(\w+|[A-Za-z_]+:\w+)>$/g;
+
+genericParam = /<([A-Za-z_]+):\w+>$/;
 
 optionalParam = /\((.*?)\)/g;
 
@@ -59,6 +61,8 @@ Kazitori = (function() {
 
   Kazitori.prototype.root = null;
 
+  Kazitori.prototype.notFound = null;
+
   Kazitori.prototype.beforeAnytimeHandler = null;
 
   Kazitori.prototype.direct = null;
@@ -86,6 +90,7 @@ Kazitori = (function() {
       this.routes = options.routes;
     }
     this.root = options.root ? options.root : '/';
+    this.notFound = options.notFound ? options.notFound : this.root;
     win = window;
     if (typeof win !== 'undefined') {
       this.location = win.location;
@@ -189,7 +194,7 @@ Kazitori = (function() {
     }
     this.fragment = frag;
     next = this.fragment;
-    url = this.root + frag;
+    url = this.root + frag.replace(routeStripper, '');
     if (this._hasPushState) {
       this.history[options.replace ? 'replaceState' : 'pushState']({}, document.title, url);
     } else if (this._wantChangeHash) {
@@ -208,7 +213,6 @@ Kazitori = (function() {
   };
 
   Kazitori.prototype.reject = function() {
-    console.log(this.fragment, "reject...");
     this.dispatchEvent({
       type: KazitoriEvent.REJECT
     });
@@ -218,25 +222,16 @@ Kazitori = (function() {
   };
 
   Kazitori.prototype.registHandler = function(rule, name, isBefore, callback) {
-    var orgRule, target;
-    orgRule = null;
-    if (typeof rule !== RegExp) {
-      orgRule = rule;
-      rule = this._ruleToRegExp(rule);
-    }
+    var target;
     if (!callback) {
       callback = isBefore ? this._bindFunctions(name) : this[name];
     }
     target = isBefore ? this.beforeHandlers : this.handlers;
-    target.unshift({
-      rule: rule,
-      orgRule: orgRule,
-      callback: this._binder(function(fragment) {
-        var args;
-        args = this._extractParams(rule, fragment);
-        return callback && callback.apply(this, args);
-      }, this)
-    });
+    target.unshift(new Rule(rule, function(fragment) {
+      var args;
+      args = this._extractParams(fragment);
+      return callback && callback.apply(this.router, args);
+    }));
     return this;
   };
 
@@ -258,7 +253,9 @@ Kazitori = (function() {
     _ref = this.beforeHandlers;
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       handler = _ref[_i];
-      if (handler.rule.test(fragment) === true) {
+      if (handler.isVariable) {
+
+      } else if (handler.rule.test(fragment) === true) {
         this._beforeDeffer.deffered(function(d) {
           handler.callback(fragment);
           d.execute(d);
@@ -271,7 +268,7 @@ Kazitori = (function() {
   };
 
   Kazitori.prototype.beforeComplete = function(event) {
-    var handler, matched, _i, _len, _ref;
+    var args, handler, matched, _i, _len, _ref;
     this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, this.beforeComplete);
     this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_FAILD, this.beforeFaild);
     matched = [];
@@ -280,15 +277,31 @@ Kazitori = (function() {
     _ref = this.handlers;
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       handler = _ref[_i];
-      if (handler.orgRule === this.fragment) {
+      if (handler.rule === this.fragment) {
         handler.callback(this.fragment);
         matched.push(true);
         return matched;
       }
-      if (handler.rule.test(this.fragment)) {
-        handler.callback(this.fragment);
-        matched.push(true);
+      if (handler.test(this.fragment)) {
+        if (handler.isVariable && handler.type !== null) {
+          args = handler._extractParams(this.fragment)[0];
+          if (handler.type === "int") {
+            args = Number(args) ? Number(args) : false;
+          } else if (handler.type === "string") {
+            args = String(args) ? String(args) : false;
+          }
+          if (args !== false) {
+            handler.callback(this.fragment);
+            matched.push(true);
+          }
+        } else {
+          handler.callback(this.fragment);
+          matched.push(true);
+        }
       }
+    }
+    if (matched.length < 1 && this.notFound !== null) {
+      this.loadURL(this.notFound);
     }
     return matched;
   };
@@ -381,7 +394,7 @@ Kazitori = (function() {
         fragment = this.getHash();
       }
     }
-    return fragment.replace(routeStripper, '');
+    return fragment;
   };
 
   Kazitori.prototype.getHash = function() {
@@ -394,7 +407,7 @@ Kazitori = (function() {
     }
   };
 
-  Kazitori.prototype._extractParams = function(rule, fragment) {
+  Kazitori.prototype._extractParams = function(rule, orgRule, fragment) {
     var param;
     param = rule.exec(fragment);
     if (param != null) {
@@ -405,8 +418,11 @@ Kazitori = (function() {
   };
 
   Kazitori.prototype._ruleToRegExp = function(rule) {
-    var newRule;
-    newRule = rule.replace(escapeRegExp, '\\$&').replace(optionalParam, '(?:$1)?').replace(namedParam, '([^\/]+)').replace(splatParam, '(.*?)');
+    var newRUle, newRule;
+    newRule = rule.replace(escapeRegExp, '\\$&');
+    newRUle = newRule.replace(optionalParam, '(?:$1)?');
+    newRule = newRule.replace(namedParam, '([^\/]+)');
+    newRule = newRule.replace(splatParam, '(.*?)');
     return new RegExp('^' + newRule + '$');
   };
 
@@ -533,6 +549,74 @@ Kazitori = (function() {
   };
 
   return Kazitori;
+
+})();
+
+/*
+/////////////////////////////
+	URL を定義する Rule クラス
+	ちょっと大げさな気もするけど外部的には変わらんし
+	今後を見据えてクラス化しておく
+/////////////////////////////
+*/
+
+
+Rule = (function() {
+
+  Rule.prototype.rule = null;
+
+  Rule.prototype._regexp = null;
+
+  Rule.prototype.callback = null;
+
+  Rule.prototype.router = null;
+
+  Rule.prototype.isVariable = false;
+
+  Rule.prototype.type = null;
+
+  function Rule(string, callback, router) {
+    var m, matched, re, t, _i, _len;
+    this.rule = string;
+    this.callback = callback;
+    this._regexp = this._ruleToRegExp(string);
+    this.router = router;
+    re = new RegExp(namedParam);
+    matched = string.match(re);
+    if (matched !== null) {
+      this.isVariable = true;
+      for (_i = 0, _len = matched.length; _i < _len; _i++) {
+        m = matched[_i];
+        t = m.match(genericParam)[1];
+        if (t !== null) {
+          this.type = t;
+          break;
+        }
+      }
+    }
+  }
+
+  Rule.prototype.test = function(fragment) {
+    return this._regexp.test(fragment);
+  };
+
+  Rule.prototype._extractParams = function(fragment) {
+    var param;
+    param = this._regexp.exec(fragment);
+    if (param != null) {
+      return param.slice(1);
+    } else {
+      return null;
+    }
+  };
+
+  Rule.prototype._ruleToRegExp = function(rule) {
+    var newRule;
+    newRule = rule.replace(escapeRegExp, '\\$&').replace(optionalParam, '(?:$1)?').replace(namedParam, '([^\/]+)').replace(splatParam, '(.*?)');
+    return new RegExp('^' + newRule + '$');
+  };
+
+  return Rule;
 
 })();
 

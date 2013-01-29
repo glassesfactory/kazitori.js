@@ -19,7 +19,10 @@ delegater = (target, func)->
 trailingSlash = /\/$/
 routeStripper = /^[#\/]|\s+$/g
 escapeRegExp = /[\-{}\[\]+?.,\\\^$|#\s]/g
-namedParam = /:\w+/g
+# namedParam = /:\w+/g
+namedParam = /<(\w+|[A-Za-z_]+:\w+)>$/g
+genericParam = /<([A-Za-z_]+):\w+>$/
+
 optionalParam = /\((.*?)\)/g
 splatParam = /\*\w+/g
 
@@ -38,6 +41,7 @@ class Kazitori
 	beforeHandlers:[]
 	afterhandlers:[]
 	root:null
+	notFound:null
 	beforeAnytimeHandler:null
 	direct:null
 	#失敗した時
@@ -61,6 +65,9 @@ class Kazitori
 			@.routes = options.routes
 		
 		@.root = if options.root then options.root else '/'
+
+		#見つからなかった時強制的に root を表示する
+		@.notFound = if options.notFound then options.notFound else @.root
 
 		win = window
 		if typeof win != 'undefined'
@@ -156,7 +163,8 @@ class Kazitori
 			return
 		@.fragment = frag
 		next = @.fragment
-		url = @.root + frag
+		#a-
+		url = @.root + frag.replace(routeStripper, '')
 		if @._hasPushState
 			@.history[ if options.replace then 'replaceState' else 'pushState' ]({}, document.title, url)
 		else if @._wantChangeHash
@@ -172,8 +180,9 @@ class Kazitori
 		@loadURL(frag)
 		return 
 
+	#中断
 	reject:()->
-		console.log @.fragment, "reject..."
+		# console.log @.fragment, "reject..."
 		@dispatchEvent({type:KazitoriEvent.REJECT})
 		@._beforeDeffer.removeEventListener KazitoriEvent.TASK_QUEUE_COMPLETE, @beforeComplete
 		@._beforeDeffer.removeEventListener KazitoriEvent.TASK_QUEUE_FAILD, @beforeFaild
@@ -183,24 +192,28 @@ class Kazitori
 
 
 	registHandler:(rule, name, isBefore, callback )->
-		orgRule = null
-		if typeof rule isnt RegExp
-			orgRule = rule
-			rule = @_ruleToRegExp(rule)
-
+		# orgRule = null
+		# if typeof rule isnt RegExp
+			# orgRule = rule
+			# rule = @_ruleToRegExp(rule)
 		if not callback
 			callback = if isBefore then @_bindFunctions(name) else @[name]
-
 		target = if isBefore then @.beforeHandlers else @.handlers
 		
-		target.unshift {
-			rule:rule, 
-			orgRule:orgRule
-			callback:@_binder (fragment)->
-				args = @._extractParams(rule, fragment)				
-				callback && callback.apply(@, args)
-			,@
-		}
+	
+		# target.unshift {
+		# 	rule : rule
+		# 	orgRule : orgRule
+		# 	isVariable : isVariable
+		# 	callback:@_binder (fragment)->
+		# 		args = @._extractParams(rule, orgRule, fragment)				
+		# 		callback && callback.apply(@, args)
+		# 	,@
+		# }
+		target.unshift new Rule(rule, (fragment)->
+			args = @_extractParams(fragment)
+			callback && callback.apply(@.router, args)
+			)
 		return @
 
 	#URL を読み込む
@@ -220,7 +233,9 @@ class Kazitori
 
 		y = 0
 		for handler in @.beforeHandlers
-			if handler.rule.test(fragment) is true
+			if handler.isVariable
+				
+			else if handler.rule.test(fragment) is true
 				@._beforeDeffer.deffered((d)->
 					handler.callback(fragment)
 					d.execute(d)
@@ -240,13 +255,27 @@ class Kazitori
 		@._beforeDeffer.queue = []
 		@._beforeDeffer.index = -1
 		for handler in @.handlers
-			if handler.orgRule is @.fragment
+			if handler.rule is @.fragment
 				handler.callback(@.fragment)
 				matched.push true
 				return matched
-			if handler.rule.test(@.fragment)
-				handler.callback(@.fragment)
-				matched.push true
+			if handler.test(@.fragment)
+				#なんか判定のタイミングが違う気がしている
+				if handler.isVariable and handler.type isnt null
+					args = handler._extractParams(@.fragment)[0]
+					if handler.type is "int"
+						args = if Number(args) then Number(args) else false
+					else if handler.type is "string"
+						args = if String(args) then String(args) else false
+
+					if args isnt false
+						handler.callback(@.fragment)
+						matched.push true
+				else
+					handler.callback(@.fragment)
+					matched.push true
+		if matched.length < 1 and @.notFound isnt null
+			@loadURL(@.notFound)
 		return matched
 
 	
@@ -333,7 +362,8 @@ class Kazitori
 					fragment = fragment.substr(root.length)
 			else
 				fragment = @getHash()
-		return fragment.replace(routeStripper, '')
+		# return fragment.replace(routeStripper, '')
+		return fragment
 
 
 	# URL の # 以降を取得
@@ -346,9 +376,10 @@ class Kazitori
 
 
 	#URL パラメーターを取得
-	_extractParams:(rule, fragment)->
+	_extractParams:(rule, orgRule, fragment)->
 		param = rule.exec(fragment)
 		if param?
+
 			return param.slice(1)
 		else
 			return null
@@ -356,7 +387,13 @@ class Kazitori
 
 	#url 正規化後 RegExp クラスに変換
 	_ruleToRegExp:(rule)->
-		newRule = rule.replace(escapeRegExp, '\\$&').replace(optionalParam, '(?:$1)?').replace(namedParam, '([^\/]+)').replace(splatParam, '(.*?)')
+		# console.log rule, "org"
+		newRule = rule.replace(escapeRegExp, '\\$&')
+		newRUle = newRule.replace(optionalParam, '(?:$1)?')
+		newRule = newRule.replace(namedParam, '([^\/]+)')
+		newRule = newRule.replace(splatParam, '(.*?)')
+		# console.log rule.match(namedParam), "match"
+		# console.log newRule
 		return new RegExp('^' + newRule + '$')
 
 
@@ -459,6 +496,58 @@ class Kazitori
 				func.apply(@, [args])
 			return
 		return callback
+
+###
+/////////////////////////////
+	URL を定義する Rule クラス
+	ちょっと大げさな気もするけど外部的には変わらんし
+	今後を見据えてクラス化しておく
+/////////////////////////////
+###
+
+class Rule
+	rule:null
+	_regexp:null
+	callback:null
+	router:null
+	isVariable:false
+	type:null
+	constructor:(string, callback, router)->
+		@rule = string
+		@callback = callback
+		@_regexp = @_ruleToRegExp(string)
+		#これ…どうなんだろ…
+		@router = router
+
+		re = new RegExp(namedParam)
+		matched = string.match(re)
+		
+		if matched isnt null
+			@isVariable = true
+			for m in matched
+				t = m.match(genericParam)[1]
+				if t isnt null
+					@type = t
+					break
+
+	test:(fragment)->
+		return @_regexp.test(fragment)
+
+	_extractParams:(fragment)->
+		param = @_regexp.exec(fragment)
+		if param?
+			return param.slice(1)
+		else
+			return null
+
+	_ruleToRegExp:(rule)->
+		newRule = rule.replace(escapeRegExp, '\\$&')
+		.replace(optionalParam, '(?:$1)?')
+		.replace(namedParam, '([^\/]+)')
+		.replace(splatParam, '(.*?)')
+		return new RegExp('^' + newRule + '$')
+
+
 
 
 class EventDispatcher
