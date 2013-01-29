@@ -3,7 +3,7 @@
 	kazitori.js may be freely distributed under the MIT license.
 	http://dev.hageee.net
 
-	fork from::
+	inspired from::
 //     (c) 2010-2012 Jeremy Ashkenas, DocumentCloud Inc.
 //     Backbone may be freely distributed under the MIT license.
 //     For all details and documentation:
@@ -39,6 +39,7 @@ class Kazitori
 	afterhandlers:[]
 	root:null
 	beforeAnytimeHandler:null
+	direct:null
 	#失敗した時
 	beforeFaildHandler:()->
 		return
@@ -49,6 +50,8 @@ class Kazitori
 	_dispatcher:null
 	#hum
 	_beforeDeffer:null
+
+	_prevFragment:null
 
 
 	constructor:(options)->
@@ -105,6 +108,8 @@ class Kazitori
 			@.history.replaceState({}, document.title, @.root + @.fragment + @.location.search)
 			# return
 
+		#スタートイベントをディスパッチ
+		@._dispatcher.dispatchEvent( new KazitoriEvent( KazitoriEvent.START, @.fragment ))
 		if !@.options.silent
 			return  @loadURL()
 
@@ -114,6 +119,29 @@ class Kazitori
 		win = window
 		win.removeEventListener 'popstate', arguments.callee
 		win.removeEventListener 'hashchange', arguments.callee
+		Kazitori.started = false
+		#ストップイベントをディスパッチ
+		@._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.STOP, @.fragment))
+
+	#ヒストリーネクスト
+	torikazi:(options)->
+		return @direction(options, "next")
+
+	#ヒストリーバック
+	omokazi:(options)->
+		return @direction(options, "prev")
+
+	direction:(option, direction)->
+		if not Kazitori.started
+			return false
+		@._prevFragment = @getFragment()
+		@.direct = direction
+		if direction is "prev"
+			@.history.back()
+		else if direction is "next"
+			@.history.forward()
+		else
+			return
 
 
 	#url を変更する
@@ -139,12 +167,13 @@ class Kazitori
 				@_updateHash(@.iframe.location, frag, options.replace)
 		else
 			return @.location.assign(url)
-
-		@._dispatcher.dispatchEvent({type:KazitoriEvent.CHANGE, prev:prev, next:next})
+		#イベントディスパッチ
+		@dispatchEvent(new KazitoriEvent(KazitoriEvent.CHANGE, next, prev))
 		@loadURL(frag)
 		return 
 
 	reject:()->
+		console.log @.fragment, "reject..."
 		@dispatchEvent({type:KazitoriEvent.REJECT})
 		@._beforeDeffer.removeEventListener KazitoriEvent.TASK_QUEUE_COMPLETE, @beforeComplete
 		@._beforeDeffer.removeEventListener KazitoriEvent.TASK_QUEUE_FAILD, @beforeFaild
@@ -211,7 +240,6 @@ class Kazitori
 		@._beforeDeffer.queue = []
 		@._beforeDeffer.index = -1
 		for handler in @.handlers
-			console.log handler.orgRule, @.fragment
 			if handler.orgRule is @.fragment
 				handler.callback(@.fragment)
 				matched.push true
@@ -225,9 +253,8 @@ class Kazitori
 
 	beforeFaild:(event)=>
 		@.beforeFaildHandler.apply(@, arguments)
-		# throw new Error()
-		# @._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_FAILD, @beforeFaild)
-		# @._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, @beforeComplete)
+		@._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_FAILD, @beforeFaild)
+		@._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, @beforeComplete)
 		if @isBeforeForce
 			@beforeComplete()
 		@._beforeDeffer = null
@@ -243,7 +270,12 @@ class Kazitori
 			return false
 		if @.iframe
 			@change(current)
-		@loadURL() || @loadURL(@getHash())
+		if @.direct is "prev"
+			@._dispatcher.dispatchEvent( new KazitoriEvent( KazitoriEvent.PREV, current, @._prevFragment ))
+		else if @.direct is "next"
+			@._dispatcher.dispatchEvent( new KazitoriEvent( KazitoriEvent.NEXT, current, @._prevFragment ))
+		@._dispatcher.dispatchEvent( new KazitoriEvent( KazitoriEvent.CHANGE, current, @._prevFragment ))
+		return @loadURL(current)
 
 
 	# routes から指定されたルーティングをバインド
@@ -483,21 +515,78 @@ class Deffered extends EventDispatcher
 	reject:(error)->
 		@dispatchEvent({type:KazitoriEvent.TASK_QUEUE_FAILD, index:@index, message:error.message })
 
-do(window)->
-	KazitoriEvent = {}
+class KazitoriEvent
+	next:null
+	prev:null
+	type:null
 
-	#タスクキューが空になった
-	KazitoriEvent.TASK_QUEUE_COMPLETE = 'task_queue_complete'
+	constructor:(type, next, prev)->
+		@type = type
+		@next = next
+		@prev = prev
 
-	#タスクキューが中断された
-	KazitoriEvent.TASK_QUEUE_FAILD = 'task_queue_faild'
+	clone:()->
+		return new KazitoriEvent(@type, @next, @prev)
 
-	#URL が変わった時
-	KazitoriEvent.CHANGE = 'change'
+	toString:()->
+		return "KazitoriEvent :: " + "type:" + @type + " next:" + String(@next) + " prev:" + String(@prev)
 
-	KazitoriEvent.REJECT = 'reject'
 
-	window.KazitoriEvent = KazitoriEvent
+#タスクキューが空になった
+KazitoriEvent.TASK_QUEUE_COMPLETE = 'task_queue_complete'
+
+#タスクキューが中断された
+KazitoriEvent.TASK_QUEUE_FAILD = 'task_queue_faild'
+
+#URL が変わった時
+KazitoriEvent.CHANGE = 'change'
+
+#ユーザーアクション以外で URL の変更があった
+KazitoriEvent.INTERNAL_CHANGE ='internal_change'
+
+#ユーザー操作によって URL が変わった時
+KazitoriEvent.USER_CHANGE = 'user_change'
+
+#ヒストリーバックした時
+KazitoriEvent.PREV = 'prev'
+
+#ヒストリーネクストした時
+KazitoriEvent.NEXT = 'next'
+
+#中断
+KazitoriEvent.REJECT = 'reject'
+
+
+###
+ver 0.1.3
+###
+# do(window)->
+# 	KazitoriEvent = {}
+
+# 	#タスクキューが空になった
+# 	KazitoriEvent.TASK_QUEUE_COMPLETE = 'task_queue_complete'
+
+# 	#タスクキューが中断された
+# 	KazitoriEvent.TASK_QUEUE_FAILD = 'task_queue_faild'
+
+# 	#URL が変わった時
+# 	KazitoriEvent.CHANGE = 'change'
+
+# 	#ユーザーアクション以外で URL の変更があった
+# 	KazitoriEvent.INTERNAL_CHANGE ='internal_change'
+
+# 	#ユーザー操作によって URL が変わった時
+# 	KazitoriEvent.USER_CHANGE = 'user_change'
+
+# 	#ヒストリーバックした時
+# 	KazitoriEvent.PREV = 'prev'
+
+# 	#ヒストリーネクストした時
+# 	KazitoriEvent.NEXT = 'next'
+
+# 	KazitoriEvent.REJECT = 'reject'
+
+# 	window.KazitoriEvent = KazitoriEvent
 
 
 Kazitori.started = false
