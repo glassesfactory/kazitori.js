@@ -214,7 +214,13 @@ class Kazitori
 		
 	registHandler:(rule, name, isBefore, callback )->
 		if not callback
-			callback = if isBefore then @_bindFunctions(name) else @[name]
+			if isBefore
+				callback = @_bindFunctions(name)
+			else if typeof name is "function"
+				callback = name
+			else
+				callback = @[name]
+
 		target = if isBefore then @.beforeHandlers else @.handlers
 		
 		target.unshift new Rule(rule, (fragment)->
