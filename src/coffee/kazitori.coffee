@@ -127,7 +127,6 @@ class Kazitori
 			@.fragment = @.getHash().replace(routeStripper, '')
 			@.history.replaceState({}, document.title, @.root + @.fragment + @.location.search)
 			# return
-
 		#スタートイベントをディスパッチ
 		@._dispatcher.dispatchEvent( new KazitoriEvent( KazitoriEvent.START, @.fragment ))
 		if !@.options.silent
@@ -182,7 +181,9 @@ class Kazitori
 		 本家 Backbone もそうだけど
 		 URL にマッチするものがあるかどうかのテストってここでするべきじゃない?
 		###
+
 		url = @.root + frag.replace(routeStripper, '')
+
 		if @_matchCheck(@.fragment) is false
 			if @.notFound isnt null
 				@change(@.notFound)
@@ -253,7 +254,6 @@ class Kazitori
 						d.execute(d)
 						return
 					)
-					
 				else if handler.test(fragment) is true
 					if handler.isVariable and handler.types.length > 0
 						#型チェック用
@@ -261,7 +261,6 @@ class Kazitori
 						argsMatch = []
 						len = args.length
 						i = 0
-
 						while i < len
 							a = args[i]
 							t = handler.types[i]
@@ -280,8 +279,9 @@ class Kazitori
 							d.execute(d)
 							return
 						)
+				else
+					return @executeHandlers()
 					
-
 			@._beforeDeffer.addEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, @beforeComplete)
 			@._beforeDeffer.addEventListener(KazitoriEvent.TASK_QUEUE_FAILD, @beforeFaild)
 			@._beforeDeffer.execute(@._beforeDeffer)
@@ -296,6 +296,7 @@ class Kazitori
 		
 		@._beforeDeffer.queue = []
 		@._beforeDeffer.index = -1
+
 		@executeHandlers()
 	
 	executeHandlers:()=>
