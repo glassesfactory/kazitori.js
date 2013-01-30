@@ -183,6 +183,11 @@ class Kazitori
 		 URL にマッチするものがあるかどうかのテストってここでするべきじゃない?
 		###
 		url = @.root + frag.replace(routeStripper, '')
+		if @_matchCheck(@.fragment) is false
+			if @.notFound isnt null
+				@change(@.notFound)
+			@._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.NOT_FOUND))
+			return
 		if @._hasPushState
 			@.history[ if options.replace then 'replaceState' else 'pushState' ]({}, document.title, url)
 		else if @._wantChangeHash
@@ -387,6 +392,37 @@ class Kazitori
 		else
 			location.hash = "#" + fragment
 		return
+
+	#マッチする URL があるかどうか
+	# memo : 20130130
+	# ここでここまでのチェックを実際に行うなら
+	# loadURL, executeHandler 内で同じチェックは行う必要がないはずなので
+	# それぞれのメソッドが簡潔になるようにリファクタする必要がある
+	_matchCheck:(fragment)->
+		matched = []
+		for handler in @.handlers
+			if handler.rule is fragment
+				matched.push true
+				
+			if handler.test(fragment)
+				if handler.isVariable and handler.types.length > 0
+					#型チェック用
+					args = handler._extractParams(fragment)						
+					argsMatch = []
+					len = args.length
+					i = 0
+
+					while i < len
+						a = args[i]
+						t = handler.types[i]
+						if t is null or @_typeCheck(a,t) is true
+							argsMatch.push true
+						i++
+					if not false in argsMatch
+						matched.push true
+				else
+					matched.push true
+		return if true in matched then true else false
 
 
 
