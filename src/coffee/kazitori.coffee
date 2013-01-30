@@ -119,9 +119,9 @@ class Kazitori
 			@change(fragment)
 
 		if @._hasPushState is true
-			win.addEventListener 'popstate', delegater(@, @observeURLHandler)
+			win.addEventListener 'popstate', @observeURLHandler
 		else if @._wantChangeHash is true and ('onhashchange' in win) and not @.isOldIE
-			win.addEventListener 'hashchange', delegater(@, @observeURLHandler)
+			win.addEventListener 'hashchange', @observeURLHandler
 
 		if @._hasPushState and atRoot and @.location.hash
 			@.fragment = @.getHash().replace(routeStripper, '')
@@ -137,8 +137,8 @@ class Kazitori
 	#止める
 	stop:()->
 		win = window
-		win.removeEventListener 'popstate', arguments.callee
-		win.removeEventListener 'hashchange', arguments.callee
+		win.removeEventListener 'popstate', @observeURLHandler
+		win.removeEventListener 'hashchange', @observeURLHandler
 		Kazitori.started = false
 		#ストップイベントをディスパッチ
 		@._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.STOP, @.fragment))
@@ -347,7 +347,7 @@ class Kazitori
 
 
 	#URL の変更を監視
-	observeURLHandler:(event)->
+	observeURLHandler:(event)=>
 		current = @getFragment()
 		if current is @.fragment and @.iframe
 			current = @getFragment(@getHash(@.iframe))
@@ -731,6 +731,12 @@ KazitoriEvent.REJECT = 'reject'
 
 #見つからなかった
 KazitoriEvent.NOT_FOUND = 'not_found'
+
+#スタート　
+KazitoriEvent.START = 'start'
+
+#ストップ
+KazitoriEvent.STOP = 'stop'
 
 
 ###
