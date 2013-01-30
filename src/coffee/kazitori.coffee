@@ -236,14 +236,40 @@ class Kazitori
 
 			y = 0
 			for handler in @.beforeHandlers
-				if handler.isVariable
-					
-				else if handler.rule.test(fragment) is true
+				if handler.rule is fragment
 					@._beforeDeffer.deffered((d)->
 						handler.callback(fragment)
 						d.execute(d)
 						return
 					)
+					
+				else if handler.test(fragment) is true
+					if handler.isVariable and handler.types.length > 0
+						#型チェック用
+						args = handler._extractParams(@.fragment)						
+						argsMatch = []
+						len = args.length
+						i = 0
+
+						while i < len
+							a = args[i]
+							t = handler.types[i]
+							if t is null or @_typeCheck(a,t) is true
+								argsMatch.push true
+							i++
+						if not false in argsMatch
+							@._beforeDeffer.deffered((d)->
+								handler.callback(fragment)
+								d.execute(d)
+								return
+							)
+					else
+						@._beforeDeffer.deffered((d)->
+							handler.callback(fragment)
+							d.execute(d)
+							return
+						)
+					
 
 			@._beforeDeffer.addEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, @beforeComplete)
 			@._beforeDeffer.addEventListener(KazitoriEvent.TASK_QUEUE_FAILD, @beforeFaild)
@@ -270,33 +296,21 @@ class Kazitori
 				return matched
 				#なんか判定のタイミングが違う気がしている
 				#issue 書いた
-
 			if handler.test(@.fragment)
-				#型指定付き
+				if handler.isVariable and handler.types.length > 0
+					#型チェック用
+					args = handler._extractParams(@.fragment)						
+					argsMatch = []
+					len = args.length
+					i = 0
 
-				if handler.isVariable
-					if handler.types.length > 0
-						#型チェック用
-						args = handler._extractParams(@.fragment)						
-						argsMatch = []
-						len = args.length
-						i = 0
-
-						while i < len
-							a = args[i]
-							t = handler.types[i]
-
-							if t is null
-								argsMatch.push true
-							else if @_typeCheck(a,t)
-								argsMatch.push true
-							
-							i++
-				#ちょっとこのへんうんこなのでリファクタ
-						if not false in argsMatch
-							handler.callback(@.fragment)
-							matched.push true
-					else
+					while i < len
+						a = args[i]
+						t = handler.types[i]
+						if t is null or @_typeCheck(a,t) is true
+							argsMatch.push true
+						i++
+					if not false in argsMatch
 						handler.callback(@.fragment)
 						matched.push true
 				else
@@ -673,6 +687,7 @@ KazitoriEvent.NEXT = 'next'
 #中断
 KazitoriEvent.REJECT = 'reject'
 
+#見つからなかった
 KazitoriEvent.NOT_FOUND = 'not_found'
 
 
