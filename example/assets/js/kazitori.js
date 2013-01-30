@@ -11,7 +11,7 @@
 //     http://backbonejs.org
 */
 
-var Deffered, EventDispatcher, Kazitori, KazitoriEvent, Rule, delegater, escapeRegExp, genericParam, namedParam, optionalParam, routeStripper, splatParam, trailingSlash,
+var Deffered, EventDispatcher, Kazitori, KazitoriEvent, Rule, VARIABLE_TYPES, delegater, escapeRegExp, genericParam, namedParam, optionalParam, routeStripper, splatParam, trailingSlash,
   __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
   __hasProp = {}.hasOwnProperty,
@@ -29,13 +29,23 @@ routeStripper = /^[#\/]|\s+$/g;
 
 escapeRegExp = /[\-{}\[\]+?.,\\\^$|#\s]/g;
 
-namedParam = /<(\w+|[A-Za-z_]+:\w+)>$/g;
+namedParam = /<(\w+|[A-Za-z_]+:\w+)>/g;
 
-genericParam = /<([A-Za-z_]+):\w+>$/;
+genericParam = /([A-Za-z_]+):(\w+)/;
 
 optionalParam = /\((.*?)\)/g;
 
 splatParam = /\*\w+/g;
+
+VARIABLE_TYPES = [
+  {
+    name: "int",
+    cast: Number
+  }, {
+    name: "string",
+    cast: String
+  }
+];
 
 /*
 # ほとんど Backbone.Router と Backbone.History から拝借。
@@ -80,7 +90,11 @@ Kazitori = (function() {
   Kazitori.prototype._prevFragment = null;
 
   function Kazitori(options) {
+    this.observeURLHandler = __bind(this.observeURLHandler, this);
+
     this.beforeFaild = __bind(this.beforeFaild, this);
+
+    this.executeHandlers = __bind(this.executeHandlers, this);
 
     this.beforeComplete = __bind(this.beforeComplete, this);
 
@@ -131,9 +145,9 @@ Kazitori = (function() {
       this.change(fragment);
     }
     if (this._hasPushState === true) {
-      win.addEventListener('popstate', delegater(this, this.observeURLHandler));
+      win.addEventListener('popstate', this.observeURLHandler);
     } else if (this._wantChangeHash === true && (__indexOf.call(win, 'onhashchange') >= 0) && !this.isOldIE) {
-      win.addEventListener('hashchange', delegater(this, this.observeURLHandler));
+      win.addEventListener('hashchange', this.observeURLHandler);
     }
     if (this._hasPushState && atRoot && this.location.hash) {
       this.fragment = this.getHash().replace(routeStripper, '');
@@ -148,8 +162,8 @@ Kazitori = (function() {
   Kazitori.prototype.stop = function() {
     var win;
     win = window;
-    win.removeEventListener('popstate', arguments.callee);
-    win.removeEventListener('hashchange', arguments.callee);
+    win.removeEventListener('popstate', this.observeURLHandler);
+    win.removeEventListener('hashchange', this.observeURLHandler);
     Kazitori.started = false;
     return this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.STOP, this.fragment));
   };
@@ -194,7 +208,20 @@ Kazitori = (function() {
     }
     this.fragment = frag;
     next = this.fragment;
+    /*
+    		 memo : 20130129
+    		 本家 Backbone もそうだけど
+    		 URL にマッチするものがあるかどうかのテストってここでするべきじゃない?
+    */
+
     url = this.root + frag.replace(routeStripper, '');
+    if (this._matchCheck(this.fragment) === false) {
+      if (this.notFound !== null) {
+        this.change(this.notFound);
+      }
+      this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.NOT_FOUND));
+      return;
+    }
     if (this._hasPushState) {
       this.history[options.replace ? 'replaceState' : 'pushState']({}, document.title, url);
     } else if (this._wantChangeHash) {
@@ -224,56 +251,96 @@ Kazitori = (function() {
   Kazitori.prototype.registHandler = function(rule, name, isBefore, callback) {
     var target;
     if (!callback) {
-      callback = isBefore ? this._bindFunctions(name) : this[name];
+      if (isBefore) {
+        callback = this._bindFunctions(name);
+      } else if (typeof name === "function") {
+        callback = name;
+      } else {
+        callback = this[name];
+      }
     }
     target = isBefore ? this.beforeHandlers : this.handlers;
     target.unshift(new Rule(rule, function(fragment) {
       var args;
       args = this._extractParams(fragment);
       return callback && callback.apply(this.router, args);
-    }));
+    }, this));
     return this;
   };
 
   Kazitori.prototype.loadURL = function(fragmentOverride) {
-    var fragment, handler, matched, y, _i, _len, _ref,
+    var a, args, argsMatch, fragment, handler, i, len, matched, t, y, _i, _len, _ref, _ref1,
       _this = this;
     fragment = this.fragment = this.getFragment(fragmentOverride);
     matched = [];
-    this._beforeDeffer = new Deffered();
-    this._beforeDeffer.queue = [];
-    this._beforeDeffer.index = -1;
-    if (this.beforeAnytimeHandler != null) {
-      this._beforeDeffer.deffered(function(d) {
-        _this.beforeAnytimeHandler.callback(fragment);
-        d.execute(d);
-      });
-    }
-    y = 0;
-    _ref = this.beforeHandlers;
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      handler = _ref[_i];
-      if (handler.isVariable) {
-
-      } else if (handler.rule.test(fragment) === true) {
+    if (this.beforeAnytimeHandler || this.beforeHandlers.length > 0) {
+      this._beforeDeffer = new Deffered();
+      this._beforeDeffer.queue = [];
+      this._beforeDeffer.index = -1;
+      if (this.beforeAnytimeHandler != null) {
         this._beforeDeffer.deffered(function(d) {
-          handler.callback(fragment);
+          _this.beforeAnytimeHandler.callback(fragment);
           d.execute(d);
         });
       }
+      y = 0;
+      _ref = this.beforeHandlers;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        handler = _ref[_i];
+        if (handler.rule === fragment) {
+          this._beforeDeffer.deffered(function(d) {
+            handler.callback(fragment);
+            d.execute(d);
+          });
+        } else if (handler.test(fragment) === true) {
+          if (handler.isVariable && handler.types.length > 0) {
+            args = handler._extractParams(this.fragment);
+            argsMatch = [];
+            len = args.length;
+            i = 0;
+            while (i < len) {
+              a = args[i];
+              t = handler.types[i];
+              if (t === null || this._typeCheck(a, t) === true) {
+                argsMatch.push(true);
+              }
+              i++;
+            }
+            if (_ref1 = !false, __indexOf.call(argsMatch, _ref1) >= 0) {
+              this._beforeDeffer.deffered(function(d) {
+                handler.callback(fragment);
+                d.execute(d);
+              });
+            }
+          } else {
+            this._beforeDeffer.deffered(function(d) {
+              handler.callback(fragment);
+              d.execute(d);
+            });
+          }
+        } else {
+          return this.executeHandlers();
+        }
+      }
+      this._beforeDeffer.addEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, this.beforeComplete);
+      this._beforeDeffer.addEventListener(KazitoriEvent.TASK_QUEUE_FAILD, this.beforeFaild);
+      return this._beforeDeffer.execute(this._beforeDeffer);
+    } else {
+      return this.executeHandlers();
     }
-    this._beforeDeffer.addEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, this.beforeComplete);
-    this._beforeDeffer.addEventListener(KazitoriEvent.TASK_QUEUE_FAILD, this.beforeFaild);
-    return this._beforeDeffer.execute(this._beforeDeffer);
   };
 
   Kazitori.prototype.beforeComplete = function(event) {
-    var args, handler, matched, _i, _len, _ref;
     this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, this.beforeComplete);
     this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_FAILD, this.beforeFaild);
-    matched = [];
     this._beforeDeffer.queue = [];
     this._beforeDeffer.index = -1;
+    return this.executeHandlers();
+  };
+
+  Kazitori.prototype.executeHandlers = function() {
+    var a, args, argsMatch, handler, i, len, matched, t, _i, _len, _ref, _ref1;
+    matched = [];
     _ref = this.handlers;
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       handler = _ref[_i];
@@ -283,14 +350,20 @@ Kazitori = (function() {
         return matched;
       }
       if (handler.test(this.fragment)) {
-        if (handler.isVariable && handler.type !== null) {
-          args = handler._extractParams(this.fragment)[0];
-          if (handler.type === "int") {
-            args = Number(args) ? Number(args) : false;
-          } else if (handler.type === "string") {
-            args = String(args) ? String(args) : false;
+        if (handler.isVariable && handler.types.length > 0) {
+          args = handler._extractParams(this.fragment);
+          argsMatch = [];
+          len = args.length;
+          i = 0;
+          while (i < len) {
+            a = args[i];
+            t = handler.types[i];
+            if (t === null || this._typeCheck(a, t) === true) {
+              argsMatch.push(true);
+            }
+            i++;
           }
-          if (args !== false) {
+          if (_ref1 = !false, __indexOf.call(argsMatch, _ref1) >= 0) {
             handler.callback(this.fragment);
             matched.push(true);
           }
@@ -300,8 +373,11 @@ Kazitori = (function() {
         }
       }
     }
-    if (matched.length < 1 && this.notFound !== null) {
-      this.loadURL(this.notFound);
+    if (matched.length < 1) {
+      if (this.notFound !== null) {
+        this.loadURL(this.notFound);
+      }
+      this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.NOT_FOUND));
     }
     return matched;
   };
@@ -381,6 +457,44 @@ Kazitori = (function() {
     }
   };
 
+  Kazitori.prototype._matchCheck = function(fragment) {
+    var a, args, argsMatch, handler, i, len, matched, t, _i, _len, _ref, _ref1;
+    matched = [];
+    _ref = this.handlers;
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      handler = _ref[_i];
+      if (handler.rule === fragment) {
+        matched.push(true);
+      }
+      if (handler.test(fragment)) {
+        if (handler.isVariable && handler.types.length > 0) {
+          args = handler._extractParams(fragment);
+          argsMatch = [];
+          len = args.length;
+          i = 0;
+          while (i < len) {
+            a = args[i];
+            t = handler.types[i];
+            if (t === null || this._typeCheck(a, t) === true) {
+              argsMatch.push(true);
+            }
+            i++;
+          }
+          if (_ref1 = !false, __indexOf.call(argsMatch, _ref1) >= 0) {
+            matched.push(true);
+          }
+        } else {
+          matched.push(true);
+        }
+      }
+    }
+    if (__indexOf.call(matched, true) >= 0) {
+      return true;
+    } else {
+      return false;
+    }
+  };
+
   Kazitori.prototype.getFragment = function(fragment) {
     var root;
     if (!(fragment != null)) {
@@ -415,15 +529,6 @@ Kazitori = (function() {
     } else {
       return null;
     }
-  };
-
-  Kazitori.prototype._ruleToRegExp = function(rule) {
-    var newRUle, newRule;
-    newRule = rule.replace(escapeRegExp, '\\$&');
-    newRUle = newRule.replace(optionalParam, '(?:$1)?');
-    newRule = newRule.replace(namedParam, '([^\/]+)');
-    newRule = newRule.replace(splatParam, '(.*?)');
-    return new RegExp('^' + newRule + '$');
   };
 
   Kazitori.prototype.addEventListener = function(type, listener) {
@@ -548,6 +653,20 @@ Kazitori = (function() {
     return callback;
   };
 
+  Kazitori.prototype._typeCheck = function(a, t) {
+    var matched, type, _i, _len;
+    matched = false;
+    for (_i = 0, _len = VARIABLE_TYPES.length; _i < _len; _i++) {
+      type = VARIABLE_TYPES[_i];
+      if (t.toLowerCase() === type.name) {
+        if (type.cast(a)) {
+          matched = true;
+        }
+      }
+    }
+    return matched;
+  };
+
   return Kazitori;
 
 })();
@@ -573,7 +692,7 @@ Rule = (function() {
 
   Rule.prototype.isVariable = false;
 
-  Rule.prototype.type = null;
+  Rule.prototype.types = [];
 
   function Rule(string, callback, router) {
     var m, matched, re, t, _i, _len;
@@ -581,17 +700,15 @@ Rule = (function() {
     this.callback = callback;
     this._regexp = this._ruleToRegExp(string);
     this.router = router;
+    this.types = [];
     re = new RegExp(namedParam);
     matched = string.match(re);
     if (matched !== null) {
       this.isVariable = true;
       for (_i = 0, _len = matched.length; _i < _len; _i++) {
         m = matched[_i];
-        t = m.match(genericParam)[1];
-        if (t !== null) {
-          this.type = t;
-          break;
-        }
+        t = m.match(genericParam) || null;
+        this.types.push(t !== null ? t[1] : null);
       }
     }
   }
@@ -612,7 +729,10 @@ Rule = (function() {
 
   Rule.prototype._ruleToRegExp = function(rule) {
     var newRule;
-    newRule = rule.replace(escapeRegExp, '\\$&').replace(optionalParam, '(?:$1)?').replace(namedParam, '([^\/]+)').replace(splatParam, '(.*?)');
+    newRule = rule.replace(escapeRegExp, '\\$&');
+    newRule = newRule.replace(optionalParam, '(?:$1)?');
+    newRule = newRule.replace(namedParam, '([^\/]+)');
+    newRule = newRule.replace(splatParam, '(.*?)');
     return new RegExp('^' + newRule + '$');
   };
 
@@ -749,9 +869,10 @@ KazitoriEvent.NEXT = 'next';
 
 KazitoriEvent.REJECT = 'reject';
 
-/*
-ver 0.1.3
-*/
+KazitoriEvent.NOT_FOUND = 'not_found';
 
+KazitoriEvent.START = 'start';
+
+KazitoriEvent.STOP = 'stop';
 
 Kazitori.started = false;

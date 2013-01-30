@@ -739,37 +739,4 @@ KazitoriEvent.START = 'start'
 #ストップ
 KazitoriEvent.STOP = 'stop'
 
-
-###
-ver 0.1.3
-###
-# do(window)->
-# 	KazitoriEvent = {}
-
-# 	#タスクキューが空になった
-# 	KazitoriEvent.TASK_QUEUE_COMPLETE = 'task_queue_complete'
-
-# 	#タスクキューが中断された
-# 	KazitoriEvent.TASK_QUEUE_FAILD = 'task_queue_faild'
-
-# 	#URL が変わった時
-# 	KazitoriEvent.CHANGE = 'change'
-
-# 	#ユーザーアクション以外で URL の変更があった
-# 	KazitoriEvent.INTERNAL_CHANGE ='internal_change'
-
-# 	#ユーザー操作によって URL が変わった時
-# 	KazitoriEvent.USER_CHANGE = 'user_change'
-
-# 	#ヒストリーバックした時
-# 	KazitoriEvent.PREV = 'prev'
-
-# 	#ヒストリーネクストした時
-# 	KazitoriEvent.NEXT = 'next'
-
-# 	KazitoriEvent.REJECT = 'reject'
-
-# 	window.KazitoriEvent = KazitoriEvent
-
-
 Kazitori.started = false
