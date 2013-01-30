@@ -20,11 +20,24 @@ trailingSlash = /\/$/
 routeStripper = /^[#\/]|\s+$/g
 escapeRegExp = /[\-{}\[\]+?.,\\\^$|#\s]/g
 # namedParam = /:\w+/g
-namedParam = /<(\w+|[A-Za-z_]+:\w+)>$/g
-genericParam = /<([A-Za-z_]+):\w+>$/
+# namedParam = /<\w+>/g
+namedParam = /<(\w+|[A-Za-z_]+:\w+)>/g
+genericParam = /([A-Za-z_]+):(\w+)/
 
 optionalParam = /\((.*?)\)/g
 splatParam = /\*\w+/g
+
+#types
+VARIABLE_TYPES = [
+	{
+		name:"int"
+		cast:Number
+	},
+	{
+		name:"string"
+		cast:String
+	}
+]
 
 
 ###
@@ -164,6 +177,11 @@ class Kazitori
 		@.fragment = frag
 		next = @.fragment
 		#a-
+		###
+		 memo : 20130129
+		 本家 Backbone もそうだけど
+		 URL にマッチするものがあるかどうかのテストってここでするべきじゃない?
+		###
 		url = @.root + frag.replace(routeStripper, '')
 		if @._hasPushState
 			@.history[ if options.replace then 'replaceState' else 'pushState' ]({}, document.title, url)
@@ -180,36 +198,20 @@ class Kazitori
 		@loadURL(frag)
 		return 
 
-	#中断
+	#中断する
+	#メソッド名 intercept のほうがいいかな
 	reject:()->
-		# console.log @.fragment, "reject..."
 		@dispatchEvent({type:KazitoriEvent.REJECT})
 		@._beforeDeffer.removeEventListener KazitoriEvent.TASK_QUEUE_COMPLETE, @beforeComplete
 		@._beforeDeffer.removeEventListener KazitoriEvent.TASK_QUEUE_FAILD, @beforeFaild
 		@._beforeDeffer = null
 		return
 		
-
-
 	registHandler:(rule, name, isBefore, callback )->
-		# orgRule = null
-		# if typeof rule isnt RegExp
-			# orgRule = rule
-			# rule = @_ruleToRegExp(rule)
 		if not callback
 			callback = if isBefore then @_bindFunctions(name) else @[name]
 		target = if isBefore then @.beforeHandlers else @.handlers
 		
-	
-		# target.unshift {
-		# 	rule : rule
-		# 	orgRule : orgRule
-		# 	isVariable : isVariable
-		# 	callback:@_binder (fragment)->
-		# 		args = @._extractParams(rule, orgRule, fragment)				
-		# 		callback && callback.apply(@, args)
-		# 	,@
-		# }
 		target.unshift new Rule(rule, (fragment)->
 				args = @_extractParams(fragment)
 				callback && callback.apply(@.router, args)
@@ -221,61 +223,90 @@ class Kazitori
 		fragment = @.fragment = @getFragment(fragmentOverride)
 		matched = []
 
-		@._beforeDeffer = new Deffered()
-		@._beforeDeffer.queue = []
-		@._beforeDeffer.index = -1
-		if @.beforeAnytimeHandler?
-			@._beforeDeffer.deffered((d)=>
-				@.beforeAnytimeHandler.callback(fragment)
-				d.execute(d)
-				return
-			)
-
-		y = 0
-		for handler in @.beforeHandlers
-			if handler.isVariable
-				
-			else if handler.rule.test(fragment) is true
-				@._beforeDeffer.deffered((d)->
-					handler.callback(fragment)
+		if @.beforeAnytimeHandler or @.beforeHandlers.length > 0
+			@._beforeDeffer = new Deffered()
+			@._beforeDeffer.queue = []
+			@._beforeDeffer.index = -1
+			if @.beforeAnytimeHandler?
+				@._beforeDeffer.deffered((d)=>
+					@.beforeAnytimeHandler.callback(fragment)
 					d.execute(d)
 					return
 				)
 
-		@._beforeDeffer.addEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, @beforeComplete)
-		@._beforeDeffer.addEventListener(KazitoriEvent.TASK_QUEUE_FAILD, @beforeFaild)
-		@._beforeDeffer.execute(@._beforeDeffer)
+			y = 0
+			for handler in @.beforeHandlers
+				if handler.isVariable
+					
+				else if handler.rule.test(fragment) is true
+					@._beforeDeffer.deffered((d)->
+						handler.callback(fragment)
+						d.execute(d)
+						return
+					)
+
+			@._beforeDeffer.addEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, @beforeComplete)
+			@._beforeDeffer.addEventListener(KazitoriEvent.TASK_QUEUE_FAILD, @beforeFaild)
+			@._beforeDeffer.execute(@._beforeDeffer)
+		else
+			@executeHandlers()
 
 		
 	#before で登録した処理が無難に終わった
 	beforeComplete:(event)=>
 		@._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, @beforeComplete)
 		@._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_FAILD, @beforeFaild)
-		matched = []
+		
 		@._beforeDeffer.queue = []
 		@._beforeDeffer.index = -1
+		@executeHandlers()
+	
+	executeHandlers:()=>
+		matched = []
 		for handler in @.handlers
 			if handler.rule is @.fragment
 				handler.callback(@.fragment)
 				matched.push true
 				return matched
-			if handler.test(@.fragment)
 				#なんか判定のタイミングが違う気がしている
-				if handler.isVariable and handler.type isnt null
-					args = handler._extractParams(@.fragment)[0]
-					if handler.type is "int"
-						args = if Number(args) then Number(args) else false
-					else if handler.type is "string"
-						args = if String(args) then String(args) else false
+				#issue 書いた
 
-					if args isnt false
+			if handler.test(@.fragment)
+				#型指定付き
+
+				if handler.isVariable
+					if handler.types.length > 0
+						#型チェック用
+						args = handler._extractParams(@.fragment)						
+						argsMatch = []
+						len = args.length
+						i = 0
+
+						while i < len
+							a = args[i]
+							t = handler.types[i]
+
+							if t is null
+								argsMatch.push true
+							else if @_typeCheck(a,t)
+								argsMatch.push true
+							
+							i++
+				#ちょっとこのへんうんこなのでリファクタ
+						if not false in argsMatch
+							handler.callback(@.fragment)
+							matched.push true
+					else
 						handler.callback(@.fragment)
 						matched.push true
 				else
 					handler.callback(@.fragment)
 					matched.push true
-		if matched.length < 1 and @.notFound isnt null
-			@loadURL(@.notFound)
+		if matched.length < 1 
+			if @.notFound isnt null
+				#a- 2回呼ばれるので loadURL じゃなくて @.notFound.callback のほうがいいな
+				@loadURL(@.notFound)
+			@._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.NOT_FOUND))
 		return matched
 
 	
@@ -385,18 +416,6 @@ class Kazitori
 			return null
 
 
-	#url 正規化後 RegExp クラスに変換
-	_ruleToRegExp:(rule)->
-		# console.log rule, "org"
-		newRule = rule.replace(escapeRegExp, '\\$&')
-		newRUle = newRule.replace(optionalParam, '(?:$1)?')
-		newRule = newRule.replace(namedParam, '([^\/]+)')
-		newRule = newRule.replace(splatParam, '(.*?)')
-		# console.log rule.match(namedParam), "match"
-		# console.log newRule
-		return new RegExp('^' + newRule + '$')
-
-
 	#===============================================
 	#
 	# Event
@@ -497,6 +516,15 @@ class Kazitori
 			return
 		return callback
 
+	_typeCheck:(a,t)->
+		matched = false
+		for type in VARIABLE_TYPES
+			if t.toLowerCase() is type.name
+				if type.cast(a)
+					matched = true
+		return matched
+
+
 ###
 /////////////////////////////
 	URL を定義する Rule クラス
@@ -511,24 +539,24 @@ class Rule
 	callback:null
 	router:null
 	isVariable:false
-	type:null
+	types:[]
 	constructor:(string, callback, router)->
 		@rule = string
 		@callback = callback
 		@_regexp = @_ruleToRegExp(string)
+		# console.log @_regexp
 		#これ…どうなんだろ…
 		@router = router
+		@types = []
 
 		re = new RegExp(namedParam)
 		matched = string.match(re)
-		
 		if matched isnt null
 			@isVariable = true
 			for m in matched
-				t = m.match(genericParam)[1]
-				if t isnt null
-					@type = t
-					break
+				t = m.match(genericParam)||null
+				@types.push if t isnt null then t[1] else null
+
 
 	test:(fragment)->
 		return @_regexp.test(fragment)
@@ -542,9 +570,9 @@ class Rule
 
 	_ruleToRegExp:(rule)->
 		newRule = rule.replace(escapeRegExp, '\\$&')
-		.replace(optionalParam, '(?:$1)?')
-		.replace(namedParam, '([^\/]+)')
-		.replace(splatParam, '(.*?)')
+		newRule = newRule.replace(optionalParam, '(?:$1)?')
+		newRule = newRule.replace(namedParam, '([^\/]+)')
+		newRule = newRule.replace(splatParam, '(.*?)')
 		return new RegExp('^' + newRule + '$')
 
 
@@ -644,6 +672,8 @@ KazitoriEvent.NEXT = 'next'
 
 #中断
 KazitoriEvent.REJECT = 'reject'
+
+KazitoriEvent.NOT_FOUND = 'not_found'
 
 
 ###

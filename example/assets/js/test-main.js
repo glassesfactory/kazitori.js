@@ -13,17 +13,12 @@ Router = (function(_super) {
 
   Router.prototype.beforeAnytime = [];
 
-  Router.prototype.befores = {
-    '/admin/<int:id>': ['ninshou', 'beforeMinchi']
-  };
-
   Router.prototype.routes = {
     '/': 'index',
-    '/<int:id>': 'show',
-    '/admin/<int:id>': 'show',
     '/admin': 'admin',
     '/login': 'login',
-    '/logout': 'logout'
+    '/logout': 'logout',
+    '/<string:user>/<int:post>/<friend>': 'firend'
   };
 
   Router.prototype.index = function() {
@@ -58,6 +53,15 @@ Router = (function(_super) {
     window.App.change('');
     console.log("logout");
     $('#adminContainer').empty();
+  };
+
+  Router.prototype.post = function(username, postid) {
+    $('.currentPage').empty().append(username, postid);
+    return console.log(username, postid);
+  };
+
+  Router.prototype.firend = function(username, postid, firend) {
+    return $('.currentPage').empty().append(username, postid, firend);
   };
 
   /*
