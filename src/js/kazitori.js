@@ -192,7 +192,7 @@ Kazitori = (function() {
   };
 
   Kazitori.prototype.change = function(fragment, options) {
-    var frag, next, prev, url;
+    var frag, matched, next, prev, url;
     if (!Kazitori.started) {
       return false;
     }
@@ -215,7 +215,8 @@ Kazitori = (function() {
     */
 
     url = this.root + frag.replace(routeStripper, '');
-    if (this._matchCheck(this.fragment) === false) {
+    matched = this._matchCheck(this.fragment, this.handlers);
+    if (matched === false) {
       if (this.notFound !== null) {
         this.change(this.notFound);
       }
@@ -236,7 +237,7 @@ Kazitori = (function() {
       return this.location.assign(url);
     }
     this.dispatchEvent(new KazitoriEvent(KazitoriEvent.CHANGE, next, prev));
-    this.loadURL(frag);
+    this.loadURL(frag, matched);
   };
 
   Kazitori.prototype.reject = function() {
@@ -268,11 +269,12 @@ Kazitori = (function() {
     return this;
   };
 
-  Kazitori.prototype.loadURL = function(fragmentOverride) {
-    var a, args, argsMatch, fragment, handler, i, len, matched, t, y, _i, _len, _ref, _ref1,
+  Kazitori.prototype.loadURL = function(fragmentOverride, matched) {
+    var a, args, argsMatch, beforesMatched, fragment, handler, i, len, t, y, _i, _len, _ref, _ref1,
       _this = this;
     fragment = this.fragment = this.getFragment(fragmentOverride);
     matched = [];
+    beforesMatched = [];
     if (this.beforeAnytimeHandler || this.beforeHandlers.length > 0) {
       this._beforeDeffer = new Deffered();
       this._beforeDeffer.queue = [];
@@ -457,16 +459,14 @@ Kazitori = (function() {
     }
   };
 
-  Kazitori.prototype._matchCheck = function(fragment) {
-    var a, args, argsMatch, handler, i, len, matched, t, _i, _len, _ref, _ref1;
+  Kazitori.prototype._matchCheck = function(fragment, handlers) {
+    var a, args, argsMatch, handler, i, len, matched, t, _i, _len, _ref;
     matched = [];
-    _ref = this.handlers;
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      handler = _ref[_i];
+    for (_i = 0, _len = handlers.length; _i < _len; _i++) {
+      handler = handlers[_i];
       if (handler.rule === fragment) {
-        matched.push(true);
-      }
-      if (handler.test(fragment)) {
+        matched.push(handler);
+      } else if (handler.test(fragment)) {
         if (handler.isVariable && handler.types.length > 0) {
           args = handler._extractParams(fragment);
           argsMatch = [];
@@ -480,16 +480,16 @@ Kazitori = (function() {
             }
             i++;
           }
-          if (_ref1 = !false, __indexOf.call(argsMatch, _ref1) >= 0) {
-            matched.push(true);
+          if (_ref = !false, __indexOf.call(argsMatch, _ref) >= 0) {
+            matched.push(handler);
           }
         } else {
-          matched.push(true);
+          matched.push(handler);
         }
       }
     }
-    if (__indexOf.call(matched, true) >= 0) {
-      return true;
+    if (matched.length > 0) {
+      return matched;
     } else {
       return false;
     }
