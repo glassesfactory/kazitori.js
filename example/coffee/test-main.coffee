@@ -1,15 +1,24 @@
+test3 = ()->
+	console.log "/?"
+
+isLoaded = false
 class Router extends Kazitori
-	beforeAnytime:[]
+	# beforeAnytime:['checkMaterial']
 	befores:
-		'admin' :['ninshou']
-		'admin/:id':['beforeMinchi']
+		# 'admin' :['ninshou']
+		'/<string:user>/<int:post>/<friend>':['beforeMinchi']
+		'/<int:id>':['beforeShow']
 	routes :
-		# '/':'index'
-		'':'index'
-		'admin/:id':'show'
-		'admin':'admin'
-		'login':'login'
-		'logout':'logout'
+		'/':'index'		
+		'/<int:id>':'show'
+		# '/admin/<int:id>':'show'
+		'/admin':'admin'
+		'/login':'login'
+		'/logout':'logout'
+		# '/<string:user>/<int:post>':'post'
+		'/<string:user>/<int:post>/<friend>':'firend'
+		# '/hyoge':'hyoge'
+		
 
 	index:()->
 		console.log "index"
@@ -18,13 +27,17 @@ class Router extends Kazitori
 		$('.currentPage').empty().append "this page is index"
 
 	show:(id)->
-		console.log "showwww"
+		console.log "showwww", id
 		$('.currentPage').empty().append "this page is test" + id
 
+	hyoge:()->
+		console.log "oppai"
+		$('.currentPage').empty().append "(´･ω｀･)ｴｯ?"
+
 	admin:()->
+		console.log "admin"
 		$('.currentPage').empty().append "this is admin page"
-		$('#adminContainer').append('<a href="/admin/1" class="test">1</a><a href="/admin/2" class="test">2</a><a href="/admin/3" class="test">3</a>')
-		$('.test').on 'click', clickHandler
+		$('#adminContainer').empty().append('<a href="/admin/1" class="test">1</a><a href="/admin/2" class="test">2</a><a href="/admin/3" class="test">3</a>')
 
 	login:()->
 		$('#dialog').show()
@@ -36,11 +49,23 @@ class Router extends Kazitori
 		$('#adminContainer').empty()
 		return
 
+	post:(username, postid)->
+		$('.currentPage').empty().append username, postid
+		console.log username, postid
+
+	firend:(username, postid, firend)->
+		console.log "friend"
+		$('.currentPage').empty().append username, postid, firend
+
 	###
 		some before functions
 	###
 	test:(hiroshi)->
 		console.log "before 1", hiroshi
+
+	beforeShow:(id)->
+		console.log "before"
+		console.log id
 
 	beforeMinchi:()->
 		console.log "before minchi"
@@ -50,8 +75,11 @@ class Router extends Kazitori
 		if isLogined is true
 			return
 		else
-			window.App.change('login')
+			# @change('login')
+			@reject()
 			
+
+		# @change(@poolFragment)
 
 
 COOKIE_KEY = 'kazitoriExpCookie'
@@ -65,15 +93,35 @@ $(document).ready ()->
 	})
 	$('#dialog').hide()
 
+	
+
 
 	window.App = new Router({root:'/'})
-
 	#チェンジイベント
-	window.App.addEventListener(KazitoriEvent.CHANGE, (event)->
-		# console.log event
+	window.App.addEventListener( KazitoriEvent.CHANGE, (event)->
+		console.log event, "change"
+		)
+	window.App.addEventListener( KazitoriEvent.PREV, (event)->
+		console.log event, "prev"
+		)
+	window.App.addEventListener( KazitoriEvent.NEXT, (event)->
+		console.log event, "next"
+		)
+	#リジェクトイベント
+	window.App.addEventListener(KazitoriEvent.REJECT, (event)->
+		console.log event
+		)
+
+	#not foudn
+	window.App.addEventListener(KazitoriEvent.NOT_FOUND, (event)->
+		console.log "not found"
 		)
 
 	$('.test').on "click", clickHandler
+
+	$('.prev').on "click", prevHandler
+
+	$('.next').on "click", nextHandler
 	
 	$('form').on 'submit', (event)->
 		event.preventDefault()
@@ -89,8 +137,15 @@ $(document).ready ()->
 clickHandler =(event)->
 	event.preventDefault()
 	target = event.currentTarget.pathname
-	console.log "inclick", target
 	window.App.change(target)
+
+prevHandler =(event)->
+	event.preventDefault()
+	window.App.omokazi()
+
+nextHandler =(event)->
+	event.preventDefault()
+	window.App.torikazi()
 
 getCookie =(key)->
 	cookies = document.cookie.split(";")

@@ -91,6 +91,8 @@ Kazitori = (function() {
 
   Kazitori.prototype.lastFragment = null;
 
+  Kazitori.prototype.isUserAction = false;
+
   function Kazitori(options) {
     this.observeURLHandler = __bind(this.observeURLHandler, this);
 
@@ -186,13 +188,15 @@ Kazitori = (function() {
     this.lastFragment = this.getFragment();
     this.direct = direction;
     if (direction === "prev") {
+      this.isUserAction = true;
       this.history.back();
       current = this.getFragment();
       return this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.PREV, current, this.fragment));
     } else if (direction === "next") {
+      this.isUserAction = true;
       this.history.forward();
       current = this.getFragment();
-      return this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.PREV, current, this.fragment));
+      return this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.NEXT, current, this.fragment));
     } else {
 
     }
@@ -216,12 +220,6 @@ Kazitori = (function() {
     this.lastFragment = this.fragment;
     this.fragment = frag;
     next = this.fragment;
-    /*
-    		 memo : 20130129
-    		 本家 Backbone もそうだけど
-    		 URL にマッチするものがあるかどうかのテストってここでするべきじゃない?
-    */
-
     url = this.root + frag.replace(routeStripper, '');
     matched = this._matchCheck(this.fragment, this.handlers);
     if (matched === false) {
@@ -272,18 +270,18 @@ Kazitori = (function() {
     target.unshift(new Rule(rule, function(fragment) {
       var args;
       args = this._extractParams(fragment);
+      args = this._getCastedParams(args);
       return callback && callback.apply(this.router, args);
     }, this));
     return this;
   };
 
-  Kazitori.prototype.loadURL = function(fragmentOverride, matched) {
-    var a, args, argsMatch, beforesMatched, fragment, handler, i, len, t, y, _i, _len, _ref, _ref1,
+  Kazitori.prototype.loadURL = function(fragmentOverride) {
+    var a, args, argsMatch, fragment, handler, i, len, matchedHandler, t, y, _i, _j, _len, _len1, _ref, _ref1,
       _this = this;
     this.lastFragment = this.lastFragment;
     fragment = this.fragment = this.getFragment(fragmentOverride);
-    matched = [];
-    beforesMatched = [];
+    matchedHandler = [];
     if (this.beforeAnytimeHandler || this.beforeHandlers.length > 0) {
       this._beforeDeffer = new Deffered();
       this._beforeDeffer.queue = [];
@@ -299,10 +297,7 @@ Kazitori = (function() {
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         handler = _ref[_i];
         if (handler.rule === fragment) {
-          this._beforeDeffer.deffered(function(d) {
-            handler.callback(fragment);
-            d.execute(d);
-          });
+          matchedHandler.push(handler);
         } else if (handler.test(fragment) === true) {
           if (handler.isVariable && handler.types.length > 0) {
             args = handler._extractParams(this.fragment);
@@ -318,20 +313,19 @@ Kazitori = (function() {
               i++;
             }
             if (_ref1 = !false, __indexOf.call(argsMatch, _ref1) >= 0) {
-              this._beforeDeffer.deffered(function(d) {
-                handler.callback(fragment);
-                d.execute(d);
-              });
+              matchedHandler.push(handler);
             }
           } else {
-            this._beforeDeffer.deffered(function(d) {
-              handler.callback(fragment);
-              d.execute(d);
-            });
+            matchedHandler.push(handler);
           }
-        } else {
-          return this.executeHandlers();
         }
+      }
+      for (_j = 0, _len1 = matchedHandler.length; _j < _len1; _j++) {
+        handler = matchedHandler[_j];
+        this._beforeDeffer.deffered(function(d) {
+          handler.callback(fragment);
+          d.execute(d);
+        });
       }
       this._beforeDeffer.addEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, this.beforeComplete);
       this._beforeDeffer.addEventListener(KazitoriEvent.TASK_QUEUE_FAILD, this.beforeFaild);
@@ -415,11 +409,12 @@ Kazitori = (function() {
     if (this.iframe) {
       this.change(current);
     }
-    if (this.direct === "prev" || this.lastFragment === current) {
+    if (this.lastFragment === current && this.isUserAction === false) {
       this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.PREV, current, this.fragment));
-    } else if (this.direct === "next" || this.lastFragment === this.fragment) {
+    } else if (this.lastFragment === this.fragment && this.isUserAction === false) {
       this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.NEXT, current, this.lastFragment));
     }
+    this.isUserAction = false;
     this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.CHANGE, current, this.lastFragment));
     return this.loadURL(current);
   };
@@ -530,9 +525,9 @@ Kazitori = (function() {
     }
   };
 
-  Kazitori.prototype._extractParams = function(rule, orgRule, fragment) {
+  Kazitori.prototype._extractParams = function(fragment) {
     var param;
-    param = rule.exec(fragment);
+    param = this._regexp.exec(fragment);
     if (param != null) {
       return param.slice(1);
     } else {
@@ -736,6 +731,27 @@ Rule = (function() {
     }
   };
 
+  Rule.prototype._getCastedParams = function(params) {
+    var castedParams, i, len, type, _i, _len;
+    i = 0;
+    len = params.length;
+    castedParams = [];
+    while (i < len) {
+      if (this.types[i] === null) {
+        castedParams.push(params[i]);
+      } else {
+        for (_i = 0, _len = VARIABLE_TYPES.length; _i < _len; _i++) {
+          type = VARIABLE_TYPES[_i];
+          if (this.types[i] === type.name) {
+            castedParams.push(type.cast(params[i]));
+          }
+        }
+      }
+      i++;
+    }
+    return castedParams;
+  };
+
   Rule.prototype._ruleToRegExp = function(rule) {
     var newRule;
     newRule = rule.replace(escapeRegExp, '\\$&');
@@ -765,10 +781,30 @@ EventDispatcher = (function() {
   };
 
   EventDispatcher.prototype.removeEventListener = function(type, listener) {
-    var index;
-    index = this.listeners[type].indexOf(listener);
-    if (index !== -1) {
-      this.listeners[type].splice(index, 1);
+    var arr, i, len, prop;
+    len = 0;
+    for (prop in this.listeners) {
+      len++;
+    }
+    if (len < 1) {
+      return;
+    }
+    arr = this.listeners[type];
+    if (!arr) {
+      return;
+    }
+    i = 0;
+    len = arr.length;
+    while (i < len) {
+      if (arr[i] === listener) {
+        if (len === 1) {
+          delete this.listeners[type];
+        } else {
+          arr.splice(i, 1);
+        }
+        break;
+      }
+      i++;
     }
   };
 

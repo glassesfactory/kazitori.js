@@ -70,6 +70,7 @@ class Kazitori
 
 	fragment:null
 	lastFragment:null
+	isUserAction:false
 
 
 	constructor:(options)->
@@ -159,13 +160,15 @@ class Kazitori
 		@.lastFragment = @getFragment()
 		@.direct = direction
 		if direction is "prev"
+			@.isUserAction = true
 			@.history.back()
 			current = @getFragment()
-			@._dispatcher.dispatchEvent( new KazitoriEvent( KazitoriEvent.PREV, current, @.fragment ))
+			@._dispatcher.dispatchEvent( new KazitoriEvent( KazitoriEvent.PREV, current, @.fragment ))			
 		else if direction is "next"
+			@.isUserAction = true
 			@.history.forward()
 			current = @getFragment()
-			@._dispatcher.dispatchEvent( new KazitoriEvent( KazitoriEvent.PREV, current, @.fragment ))
+			@._dispatcher.dispatchEvent( new KazitoriEvent( KazitoriEvent.NEXT, current, @.fragment ))
 		else
 			return
 
@@ -183,13 +186,7 @@ class Kazitori
 		@.lastFragment = @.fragment
 		@.fragment = frag
 		next = @.fragment
-		#a-
-		###
-		 memo : 20130129
-		 本家 Backbone もそうだけど
-		 URL にマッチするものがあるかどうかのテストってここでするべきじゃない?
-		###
-
+		
 		url = @.root + frag.replace(routeStripper, '')
 		matched = @_matchCheck(@.fragment, @.handlers)
 		if matched is false
@@ -231,21 +228,19 @@ class Kazitori
 				callback = @[name]
 
 		target = if isBefore then @.beforeHandlers else @.handlers
-		
 		target.unshift new Rule(rule, (fragment)->
 				args = @_extractParams(fragment)
+				args = @_getCastedParams(args)
 				callback && callback.apply(@.router, args)
 			,@)
 		return @
 
 	#URL を読み込む
-	loadURL:(fragmentOverride, matched)->
+	loadURL:(fragmentOverride)->
 		@.lastFragment = @.lastFragment
 		fragment = @.fragment = @getFragment(fragmentOverride)
 		#リファクタ
-		matched = []
-		beforesMatched = []
-
+		matchedHandler = []
 		if @.beforeAnytimeHandler or @.beforeHandlers.length > 0
 			@._beforeDeffer = new Deffered()
 			@._beforeDeffer.queue = []
@@ -260,14 +255,9 @@ class Kazitori
 			y = 0
 			for handler in @.beforeHandlers
 				if handler.rule is fragment
-					@._beforeDeffer.deffered((d)->
-						handler.callback(fragment)
-						d.execute(d)
-						return
-					)
+					matchedHandler.push handler
 				else if handler.test(fragment) is true
 					if handler.isVariable and handler.types.length > 0
-						#型チェック用
 						args = handler._extractParams(@.fragment)						
 						argsMatch = []
 						len = args.length
@@ -278,23 +268,21 @@ class Kazitori
 							if t is null or @_typeCheck(a,t) is true
 								argsMatch.push true
 							i++
+						
 						if not false in argsMatch
-							@._beforeDeffer.deffered((d)->
-								handler.callback(fragment)
-								d.execute(d)
-								return
-							)
+							matchedHandler.push handler
 					else
-						@._beforeDeffer.deffered((d)->
-							handler.callback(fragment)
-							d.execute(d)
-							return
-						)
-				else
-					return @executeHandlers()
+						matchedHandler.push handler
+			for handler in matchedHandler
+				@._beforeDeffer.deffered((d)->
+					handler.callback(fragment)
+					d.execute(d)
+					return
+					)
 					
 			@._beforeDeffer.addEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, @beforeComplete)
 			@._beforeDeffer.addEventListener(KazitoriEvent.TASK_QUEUE_FAILD, @beforeFaild)
+			# console.log "!"
 			@._beforeDeffer.execute(@._beforeDeffer)
 		else
 			@executeHandlers()
@@ -367,10 +355,11 @@ class Kazitori
 			return false
 		if @.iframe
 			@change(current)
-		if @.direct is "prev" or @.lastFragment is current
+		if @.lastFragment is current and @.isUserAction is false
 			@._dispatcher.dispatchEvent( new KazitoriEvent( KazitoriEvent.PREV, current, @.fragment ))
-		else if @.direct is "next" or @.lastFragment is @.fragment
+		else if @.lastFragment is @.fragment and @.isUserAction is false
 			@._dispatcher.dispatchEvent( new KazitoriEvent( KazitoriEvent.NEXT, current, @.lastFragment ))
+		@.isUserAction = false
 		@._dispatcher.dispatchEvent( new KazitoriEvent( KazitoriEvent.CHANGE, current, @.lastFragment ))
 		return @loadURL(current)
 
@@ -440,7 +429,6 @@ class Kazitori
 				else
 					matched.push handler
 		return if matched.length > 0 then matched else false
-		# return if true in matched then true else false
 
 
 
@@ -461,7 +449,6 @@ class Kazitori
 					fragment = fragment.substr(root.length)
 			else
 				fragment = @getHash()
-		# return fragment.replace(routeStripper, '')
 		return fragment
 
 
@@ -473,16 +460,12 @@ class Kazitori
 		else
 			return ''
 
-
-	#URL パラメーターを取得
-	_extractParams:(rule, orgRule, fragment)->
-		param = rule.exec(fragment)
+	_extractParams:(fragment)->
+		param = @_regexp.exec(fragment)
 		if param?
-
 			return param.slice(1)
 		else
 			return null
-
 
 	#===============================================
 	#
@@ -612,7 +595,6 @@ class Rule
 		@rule = string
 		@callback = callback
 		@_regexp = @_ruleToRegExp(string)
-		# console.log @_regexp
 		#これ…どうなんだろ…
 		@router = router
 		@types = []
@@ -625,7 +607,6 @@ class Rule
 				t = m.match(genericParam)||null
 				@types.push if t isnt null then t[1] else null
 
-
 	test:(fragment)->
 		return @_regexp.test(fragment)
 
@@ -635,6 +616,20 @@ class Rule
 			return param.slice(1)
 		else
 			return null
+
+	_getCastedParams:(params)->
+		i = 0
+		len = params.length
+		castedParams = []
+		while i < len
+			if @types[i] is null
+				castedParams.push params[i]
+			else
+				for type in VARIABLE_TYPES
+					if @types[i] is type.name
+						castedParams.push type.cast(params[i])
+			i++
+		return castedParams
 
 	_ruleToRegExp:(rule)->
 		newRule = rule.replace(escapeRegExp, '\\$&')
@@ -657,10 +652,25 @@ class EventDispatcher
 		return
 
 	removeEventListener:(type, listener)->
-		index = @listeners[type].indexOf listener
-
-		if index isnt -1
-			@listeners[type].splice(index, 1)
+		len = 0
+		for prop of @listeners
+			len++
+		if len < 1
+			return
+		arr = @listeners[type]
+		if not arr
+			return
+		i = 0
+		len = arr.length
+		while i < len
+			if arr[i] is listener
+				if len is 1
+					delete @listeners[type]
+				else arr.splice(i,1)
+				break
+			i++
+		# if index isnt -1
+			# @listeners[type].splice(index, 1)
 		return
 
 	dispatchEvent:(event)->
@@ -727,7 +737,7 @@ KazitoriEvent.TASK_QUEUE_FAILD = 'task_queue_faild'
 KazitoriEvent.CHANGE = 'change'
 
 #ユーザーアクション以外で URL の変更があった
-KazitoriEvent.INTERNAL_CHANGE ='internal_change'
+KazitoriEvent.INTERNAL_CHANGE = 'internal_change'
 
 #ユーザー操作によって URL が変わった時
 KazitoriEvent.USER_CHANGE = 'user_change'
