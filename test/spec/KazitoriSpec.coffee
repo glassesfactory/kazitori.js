@@ -89,6 +89,10 @@ describe "Kazitori", ->
 
   describe "event", ->
 
+    it "should remove listener without listener added", ->
+      router.removeEventListener KazitoriEvent.START, (e) ->
+        true
+
     startHandler = jasmine.createSpy('START event')
 
     it "should dispatch start event when kazitori started", ->
