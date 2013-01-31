@@ -1,14 +1,21 @@
+view =
+  showEntry: (id) ->
+    # console.log "view.showEntry"
+
 controller =
   beforeAny: ->
-    console.log 'controller.beforeAny'
+    # console.log 'controller.beforeAny'
   beforeShow: (id) ->
-    console.log 'controller.beforeShow'
+    # console.log 'controller.beforeShow'
   index: ->
     # console.log 'controller.index'
   show: (id) ->
     # console.log "controller.show"
   search: ->
     # console.log "controller.search"
+  showEntry: (id) ->
+    # console.log "controller.showEntry"
+    view.showEntry(id)
 
 class Router extends Kazitori
   beforeAnytime:["beforeAny"]
@@ -24,7 +31,8 @@ class Router extends Kazitori
     '/posts/<int:id>': 'show'
     '/posts/new': 'new'
     '/posts/<int:id>/edit': 'edit'
-    '/users/<int:id>/posts/<int:id>':'show'
+    '/users/<int:id>/posts/<int:id>': 'show'
+    '/entries/<int:id>': controller.showEntry
 
   index: ->
     controller.index()
@@ -45,11 +53,6 @@ class Router extends Kazitori
 
 originalLocation = location.href
 
-window.addEventListener 'popstate', (e) ->
-  console.log 'popstate'
-window.addEventListener 'hashchange', (e) ->
-  console.log 'hashchangedddd'
-
 describe "Kazitori", ->
 
   beforeEach ->
@@ -65,7 +68,7 @@ describe "Kazitori", ->
     it "should started to be Truthy", ->
       expect(Kazitori.started).toBeTruthy()
 
-    it "test stop and restart", ->
+    it "should Kazitori.started to be Falsy when router.stop called", ->
       router.stop()
       expect(Kazitori.started).toBeFalsy()
       router.start()
@@ -210,9 +213,17 @@ describe "Kazitori", ->
 
       #KazitoriEvent.REJECT
 
+    rejectHandler = jasmine.createSpy('REJECT Event')
+
+    xit "should dispatch REJECT event when kazitori rejected", ->
+      router.addEventListener KazitoriEvent.REJECT, rejectHandler
+      router.reject()
+      expect(rejectHandler).toHaveBeenCalled()
+      expect(rejectHandler.calls.length).toEqual(1)
+
     prevHandler = jasmine.createSpy('PREV Event')
 
-    it "should dispatch prev event when kazitori omokazied", ->
+    it "should dispatch PREV event when kazitori omokazied", ->
       router.addEventListener KazitoriEvent.PREV, prevHandler
       router.omokazi()
       expect(prevHandler).toHaveBeenCalled()
@@ -223,11 +234,12 @@ describe "Kazitori", ->
       prevHandler.reset()
       router.omokazi()
       expect(prevHandler).not.toHaveBeenCalled()
-      router.torikazi()
 
     nextHandler = jasmine.createSpy('NEXT Event')
 
-    it "should dispatch prev event when kazitori torikazied", ->
+    it "should dispatch NEXT event when kazitori torikazied", ->
+      router.change('/posts/1')
+      router.omokazi()
 
       router.addEventListener KazitoriEvent.NEXT, nextHandler
       router.torikazi()
@@ -235,8 +247,11 @@ describe "Kazitori", ->
       expect(nextHandler.calls.length).toEqual(1)
 
     it "should not call handler when NEXT event listener removed", ->
-      router.removeEventListener KazitoriEvent.NEXT, nextHandler
+      router.change('/posts/1')
+      router.omokazi()
       nextHandler.reset()
+
+      router.removeEventListener KazitoriEvent.NEXT, nextHandler
       router.torikazi()
       expect(nextHandler).not.toHaveBeenCalled()
 
@@ -266,7 +281,7 @@ describe "Kazitori", ->
     router.change('/users/3/posts/1')
     expect(window.location.pathname).toEqual '/users/3/posts/1'
 
-  describe "with controller", ->
+  describe "router", ->
 
     # beforeEach ->
 
@@ -290,6 +305,16 @@ describe "Kazitori", ->
       router.change('/posts/1')
       expect(controller.beforeShow).toHaveBeenCalled()
 
+    it 'should call controller method directly', ->
+      spyOn(view, 'showEntry')
+      router.change('/entries/123')
+      expect(view.showEntry).toHaveBeenCalled()
+
+    it 'should call controller method directly with casted argments', ->
+      spyOn(view, 'showEntry')
+      router.change('/entries/12495876')
+      expect(view.showEntry).toHaveBeenCalledWith(12495876)
+
     it 'show should be called with casted argments', ->
       spyOn(controller, 'beforeShow')
       router.change('/posts/32941856')
@@ -302,24 +327,79 @@ describe "Kazitori", ->
       router.change('/posts/1')
       expect(controller.beforeAny).toHaveBeenCalled()
 
-  # describe "Asynchronous specs", ->
-  #   value = null
-  #   flag = null
+    it 'should navigate to root when router.change undefined path', ->
+      spyOn(controller, 'beforeShow')
+      router.change('/blahblahblah')
+      expect(window.location.pathname).toBe('/')
 
-  #   it "should support async execution of test preparation and exepectations", ->
+  describe "exception", ->
+    it "should throw error when Kazitori started and router.start called", ->
+      expect(Kazitori.started).toBeTruthy()
+      expect(router.start).toThrow()
 
-  #     runs ->
-  #       flag = false
-  #       value = 0
 
-  #       setTimeout ->
-  #         flag = true
-  #       , 500
+@d = new Deffered()
 
-  #     waitsFor ->
-  #       value++
-  #       flag
-  #     , "The Value should be incremented", 750
+describe "Deffered", ->
 
-  #     runs ->
-  #       expect(value).toBeGreaterThan(0)
+  defferedSpy = jasmine.createSpy('defferedSpy')
+  chaninedDefferedSpy = jasmine.createSpy('chaninedDefferedSpy')
+  defferedSpy2 = jasmine.createSpy('defferedSpy2')
+  taskQueueCompleteHandler = jasmine.createSpy('TASK_QUEUE_COMPLETE Event')
+  taskQueueFailedHandler = jasmine.createSpy('TASK_QUEUE_FAILD Event')
+
+  d.addEventListener KazitoriEvent.TASK_QUEUE_COMPLETE, taskQueueCompleteHandler
+  d.addEventListener KazitoriEvent.TASK_QUEUE_FAILD, taskQueueFailedHandler
+
+  beforeEach ->
+    defferedSpy.reset()
+    chaninedDefferedSpy.reset()
+    defferedSpy2.reset()
+    taskQueueFailedHandler.reset()
+    taskQueueCompleteHandler.reset()
+
+  afterEach ->
+
+  it 'should excecute method', ->
+    d.deffered (d)->
+      defferedSpy()
+
+    d.execute(d)
+
+    expect(defferedSpy).toHaveBeenCalled()
+
+  it 'should excecute chanined methods', ->
+    d.deffered (d)->
+      defferedSpy()
+      d.execute(d)
+    .deffered (d)->
+      chaninedDefferedSpy()
+
+    d.execute(d)
+    expect(defferedSpy).toHaveBeenCalled()
+    expect(chaninedDefferedSpy).toHaveBeenCalled()
+
+  it 'should excecute method directly', ->
+    d.deffered defferedSpy2
+    d.execute(d)
+
+  it 'should dispatch TASK_QUEUE_FAILD envet when defferd completed', ->
+    complete = false
+
+    runs ->
+      d.deffered (d)->
+        complete = true
+
+    waitsFor ->
+      d.execute(d)
+      complete
+
+    runs ->
+      expect(taskQueueCompleteHandler).toHaveBeenCalled()
+
+  it 'should dispatch TASK_QUEUE_FAILD envet when defferd.reject called', ->
+    d.deffered (d)->
+      d.reject()
+
+    d.execute(d)
+    expect(taskQueueFailedHandler).toHaveBeenCalled()
