@@ -87,7 +87,9 @@ Kazitori = (function() {
 
   Kazitori.prototype._beforeDeffer = null;
 
-  Kazitori.prototype.lastFragment = "";
+  Kazitori.prototype.fragment = null;
+
+  Kazitori.prototype.lastFragment = null;
 
   function Kazitori(options) {
     this.observeURLHandler = __bind(this.observeURLHandler, this);
@@ -133,7 +135,7 @@ Kazitori = (function() {
     }, this.options, options);
     this._hasPushState = !!(this.history && this.history.pushState);
     this._wantChangeHash = this.options.hashChange !== false;
-    fragment = this.getFragment();
+    fragment = this.fragment = this.getFragment();
     atRoot = this.location.pathname.replace(/[^\/]$/, '$&/') === this.root;
     if (this.isOldIE && this._wantChangeHash) {
       frame = document.createElement("iframe");

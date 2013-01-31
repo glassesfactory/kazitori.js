@@ -68,7 +68,8 @@ class Kazitori
 	#hum
 	_beforeDeffer:null
 
-	lastFragment:""
+	fragment:null
+	lastFragment:null
 
 
 	constructor:(options)->
@@ -106,7 +107,7 @@ class Kazitori
 		@.options = @_extend({}, {root:'/'}, @.options, options)
 		@._hasPushState = !!(@.history and @.history.pushState)
 		@._wantChangeHash = @.options.hashChange isnt false
-		fragment = @getFragment()
+		fragment = @.fragment = @getFragment()
 		atRoot = @.location.pathname.replace(/[^\/]$/, '$&/') is @.root
 
 		if @isOldIE and @._wantChangeHash
