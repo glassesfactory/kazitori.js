@@ -115,7 +115,7 @@ Kazitori = (function() {
     this._dispatcher = new EventDispatcher();
     this._bindBefores();
     this._bindRules();
-    if (__indexOf.call(options, "isAutoStart") < 0 || options["isAutoStart"] !== false) {
+    if (!(this.options.isAutoStart != null) || this.options.isAutoStart !== false) {
       this.start();
     }
     return;

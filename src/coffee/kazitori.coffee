@@ -92,7 +92,7 @@ class Kazitori
 		@_bindBefores()
 		@_bindRules()
 
-		if "isAutoStart" not in options or options["isAutoStart"] != false
+		if not @.options.isAutoStart? or @.options.isAutoStart != false
 			@start()
 		return
 
@@ -128,6 +128,7 @@ class Kazitori
 			@.history.replaceState({}, document.title, @.root + @.fragment + @.location.search)
 			# return
 		#スタートイベントをディスパッチ
+
 		@._dispatcher.dispatchEvent( new KazitoriEvent( KazitoriEvent.START, @.fragment ))
 		if !@.options.silent
 			return  @loadURL()
@@ -236,6 +237,7 @@ class Kazitori
 	loadURL:(fragmentOverride, matched)->
 		@.lastFragment = @.lastFragment
 		fragment = @.fragment = @getFragment(fragmentOverride)
+		#リファクタ
 		matched = []
 		beforesMatched = []
 
