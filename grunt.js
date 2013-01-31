@@ -25,9 +25,16 @@ module.exports = function(grunt) {
         dest:'src/js/kazitori.min.js'
       }
     },
+    reload: {
+        port: 35729,
+        proxy: {
+            host: 'localhost'
+        },
+        liveReload: {}
+    },
     watch: {
       files: ['src/coffee/*.coffee','example/coffee/*.coffee','test/spec/*.coffee'],
-      tasks: 'coffee min jasmine'
+      tasks: 'coffee min jasmine reload'
     },
     jasmine : {
       src : 'test/src/*.js',
@@ -62,6 +69,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-jasmine-runner');
   grunt.loadNpmTasks('grunt-coffee');
   grunt.loadNpmTasks('grunt-coffeelint');
+  grunt.loadNpmTasks('grunt-reload');
 
   // Default task.
   grunt.registerTask('default', 'coffeelint coffee jasmine');
