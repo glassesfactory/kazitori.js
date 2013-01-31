@@ -15,6 +15,9 @@ module.exports = function(grunt) {
       app:{
         src:'src/coffee/*.coffee', dest:'src/js/'
       },
+      example:{
+        src:'example/coffee/*.coffee', dest:'example/assets/js/'
+      },
       tests:{
         src:'test/spec/*.coffee', dest:'test/spec/'
       }
