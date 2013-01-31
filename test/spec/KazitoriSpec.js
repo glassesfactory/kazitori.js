@@ -3,8 +3,12 @@ var Router, controller, originalLocation,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
 controller = {
-  beforeAny: function() {},
-  beforeShow: function(id) {},
+  beforeAny: function() {
+    return console.log('controller.beforeAny');
+  },
+  beforeShow: function(id) {
+    return console.log('controller.beforeShow');
+  },
   index: function() {},
   show: function(id) {},
   search: function() {}
@@ -63,13 +67,19 @@ this.router = new Router();
 
 originalLocation = location.href;
 
+window.addEventListener('popstate', function(e) {
+  return console.log('popstate');
+});
+
+window.addEventListener('hashchange', function(e) {
+  return console.log('hashchangedddd');
+});
+
 describe("Kazitori", function() {
   beforeEach(function() {
-    console.log('_beforeEach');
     return router.change('/');
   });
   afterEach(function() {
-    console.log('^-afterEach');
     return router.change('/');
   });
   describe("property", function() {
@@ -101,37 +111,41 @@ describe("Kazitori", function() {
     });
   });
   describe("event", function() {
-    var nextHandler, notFoundHandler, prevHandler, stopHandlerSpy;
+    var nextHandler, notFoundHandler, prevHandler, startHandler, stopHandler;
+    startHandler = jasmine.createSpy('START event');
     it("should dispatch start event when kazitori started", function() {
-      var startHandlerSpy;
-      startHandlerSpy = jasmine.createSpy('START event');
-      router.addEventListener(KazitoriEvent.START, startHandlerSpy);
+      router.addEventListener(KazitoriEvent.START, startHandler);
       router.stop();
       router.start();
-      expect(startHandlerSpy).toHaveBeenCalled();
-      expect(startHandlerSpy.calls.length).toEqual(1);
-      router.removeEventListener(KazitoriEvent.START, startHandlerSpy);
-      startHandlerSpy.reset();
-      router.stop();
-      router.start();
-      return expect(startHandlerSpy).not.toHaveBeenCalled();
+      return expect(startHandler).toHaveBeenCalled();
     });
-    stopHandlerSpy = jasmine.createSpy('STOP event');
-    it("should dispatch stop event when kazitori stoped", function() {
-      router.addEventListener(KazitoriEvent.START, stopHandlerSpy);
-      router.stop();
-      expect(stopHandlerSpy).toHaveBeenCalled();
-      return expect(stopHandlerSpy.calls.length).toEqual(1);
+    it("should dispatch start event once", function() {
+      return expect(startHandler.calls.length).toEqual(1);
     });
     it("should not call handler when START event listener removed", function() {
-      router.removeEventListener(KazitoriEvent.START, stopHandlerSpy);
-      stopHandlerSpy.reset();
-      router.start();
+      router.removeEventListener(KazitoriEvent.START, startHandler);
+      startHandler.reset();
       router.stop();
-      expect(stopHandlerSpy).not.toHaveBeenCalled();
+      router.start();
+      return expect(startHandler).not.toHaveBeenCalled();
+    });
+    stopHandler = jasmine.createSpy('STOP event');
+    it("should dispatch stop event when kazitori stoped", function() {
+      router.addEventListener(KazitoriEvent.STOP, stopHandler);
+      router.stop();
+      return expect(stopHandler).toHaveBeenCalled();
+    });
+    it("should dispatch stop event once", function() {
+      return expect(stopHandler.calls.length).toEqual(1);
+    });
+    it("should not call handler when STOP event listener removed", function() {
+      router.removeEventListener(KazitoriEvent.STOP, stopHandler);
+      stopHandler.reset();
+      router.stop();
+      expect(stopHandler).not.toHaveBeenCalled();
       return router.start();
     });
-    it("should dispatch change events when kazitori changed", function() {
+    xit("should dispatch change events when kazitori changed", function() {
       var listener, _next, _prev;
       _prev = "/posts";
       _next = "/posts/new";

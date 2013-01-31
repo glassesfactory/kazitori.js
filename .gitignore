@@ -1,3 +1,8 @@
 _SpecRunner.html
 node_modules
 .idea
+.DS_Store
+.gitignore
+src/sass
+src/slim
+stash

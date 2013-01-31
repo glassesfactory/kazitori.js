@@ -1,8 +1,8 @@
 controller =
   beforeAny: ->
-    # console.log 'controller.beforeAny'
+    console.log 'controller.beforeAny'
   beforeShow: (id) ->
-    # console.log 'controller.beforeShow'
+    console.log 'controller.beforeShow'
   index: ->
     # console.log 'controller.index'
   show: (id) ->
@@ -45,14 +45,19 @@ class Router extends Kazitori
 
 originalLocation = location.href
 
+window.addEventListener 'popstate', (e) ->
+  console.log 'popstate'
+window.addEventListener 'hashchange', (e) ->
+  console.log 'hashchangedddd'
+
 describe "Kazitori", ->
 
   beforeEach ->
-    console.log '_beforeEach'
+    # console.log '_beforeEach'
     router.change('/')
 
   afterEach ->
-    console.log '^-afterEach'
+    # console.log '^-afterEach'
     router.change('/')
 
   describe "property", ->
@@ -84,38 +89,44 @@ describe "Kazitori", ->
 
   describe "event", ->
 
+    startHandler = jasmine.createSpy('START event')
+
     it "should dispatch start event when kazitori started", ->
-      startHandlerSpy = jasmine.createSpy('START event')
-      router.addEventListener KazitoriEvent.START, startHandlerSpy
+      router.addEventListener KazitoriEvent.START, startHandler
 
       router.stop()
       router.start()
-      expect(startHandlerSpy).toHaveBeenCalled()
-      expect(startHandlerSpy.calls.length).toEqual(1)
+      expect(startHandler).toHaveBeenCalled()
 
-      router.removeEventListener KazitoriEvent.START, startHandlerSpy
-      startHandlerSpy.reset()
-      router.stop()
-      router.start()
-      expect(startHandlerSpy).not.toHaveBeenCalled()
-
-    stopHandlerSpy = jasmine.createSpy('STOP event')
-
-    it "should dispatch stop event when kazitori stoped", ->
-      router.addEventListener KazitoriEvent.START, stopHandlerSpy
-      router.stop()
-      expect(stopHandlerSpy).toHaveBeenCalled()
-      expect(stopHandlerSpy.calls.length).toEqual(1)
+    it "should dispatch start event once", ->
+      expect(startHandler.calls.length).toEqual(1)
 
     it "should not call handler when START event listener removed", ->
-      router.removeEventListener KazitoriEvent.START, stopHandlerSpy
-      stopHandlerSpy.reset()
-      router.start()
+
+      router.removeEventListener KazitoriEvent.START, startHandler
+      startHandler.reset()
       router.stop()
-      expect(stopHandlerSpy).not.toHaveBeenCalled()
+      router.start()
+      expect(startHandler).not.toHaveBeenCalled()
+
+    stopHandler = jasmine.createSpy('STOP event')
+
+    it "should dispatch stop event when kazitori stoped", ->
+      router.addEventListener KazitoriEvent.STOP, stopHandler
+      router.stop()
+      expect(stopHandler).toHaveBeenCalled()
+
+    it "should dispatch stop event once", ->
+      expect(stopHandler.calls.length).toEqual(1)
+
+    it "should not call handler when STOP event listener removed", ->
+      router.removeEventListener KazitoriEvent.STOP, stopHandler
+      stopHandler.reset()
+      router.stop()
+      expect(stopHandler).not.toHaveBeenCalled()
       router.start()
 
-    it "should dispatch change events when kazitori changed", ->
+    xit "should dispatch change events when kazitori changed", ->
       _prev = "/posts"
       _next = "/posts/new"
       router.change("#{_prev}")
