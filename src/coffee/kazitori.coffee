@@ -183,8 +183,8 @@ class Kazitori
 		###
 
 		url = @.root + frag.replace(routeStripper, '')
-
-		if @_matchCheck(@.fragment) is false
+		matched = @_matchCheck(@.fragment, @.handlers)
+		if matched is false
 			if @.notFound isnt null
 				@change(@.notFound)
 			@._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.NOT_FOUND))
@@ -201,7 +201,7 @@ class Kazitori
 			return @.location.assign(url)
 		#イベントディスパッチ
 		@dispatchEvent(new KazitoriEvent(KazitoriEvent.CHANGE, next, prev))
-		@loadURL(frag)
+		@loadURL(frag, matched)
 		return 
 
 	#中断する
@@ -231,10 +231,11 @@ class Kazitori
 		return @
 
 	#URL を読み込む
-	loadURL:(fragmentOverride)->
+	loadURL:(fragmentOverride, matched)->
 		fragment = @.fragment = @getFragment(fragmentOverride)
 		matched = []
-
+		beforesMatched = []
+		
 		if @.beforeAnytimeHandler or @.beforeHandlers.length > 0
 			@._beforeDeffer = new Deffered()
 			@._beforeDeffer.queue = []
@@ -405,13 +406,12 @@ class Kazitori
 	# ここでここまでのチェックを実際に行うなら
 	# loadURL, executeHandler 内で同じチェックは行う必要がないはずなので
 	# それぞれのメソッドが簡潔になるようにリファクタする必要がある
-	_matchCheck:(fragment)->
+	_matchCheck:(fragment, handlers)->
 		matched = []
-		for handler in @.handlers
+		for handler in handlers
 			if handler.rule is fragment
-				matched.push true
-				
-			if handler.test(fragment)
+				matched.push handler
+			else if handler.test(fragment)
 				if handler.isVariable and handler.types.length > 0
 					#型チェック用
 					args = handler._extractParams(fragment)						
@@ -426,10 +426,11 @@ class Kazitori
 							argsMatch.push true
 						i++
 					if not false in argsMatch
-						matched.push true
+						matched.push handler
 				else
-					matched.push true
-		return if true in matched then true else false
+					matched.push handler
+		return if matched.length > 0 then matched else false
+		# return if true in matched then true else false
 
 
 
