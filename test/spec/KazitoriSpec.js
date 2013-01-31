@@ -65,9 +65,11 @@ originalLocation = location.href;
 
 describe("Kazitori", function() {
   beforeEach(function() {
+    console.log('_beforeEach');
     return router.change('/');
   });
   afterEach(function() {
+    console.log('^-afterEach');
     return router.change('/');
   });
   describe("property", function() {
@@ -99,6 +101,7 @@ describe("Kazitori", function() {
     });
   });
   describe("event", function() {
+    var nextHandler, notFoundHandler, prevHandler, stopHandlerSpy;
     it("should dispatch start event when kazitori started", function() {
       var startHandlerSpy;
       startHandlerSpy = jasmine.createSpy('START event');
@@ -113,13 +116,14 @@ describe("Kazitori", function() {
       router.start();
       return expect(startHandlerSpy).not.toHaveBeenCalled();
     });
+    stopHandlerSpy = jasmine.createSpy('STOP event');
     it("should dispatch stop event when kazitori stoped", function() {
-      var stopHandlerSpy;
-      stopHandlerSpy = jasmine.createSpy('STOP event');
       router.addEventListener(KazitoriEvent.START, stopHandlerSpy);
       router.stop();
       expect(stopHandlerSpy).toHaveBeenCalled();
-      expect(stopHandlerSpy.calls.length).toEqual(1);
+      return expect(stopHandlerSpy.calls.length).toEqual(1);
+    });
+    it("should not call handler when START event listener removed", function() {
       router.removeEventListener(KazitoriEvent.START, stopHandlerSpy);
       stopHandlerSpy.reset();
       router.start();
@@ -184,42 +188,45 @@ describe("Kazitori", function() {
       expect(listener.onInternalChange).not.toHaveBeenCalled();
       return expect(listener.onUserChange).not.toHaveBeenCalled();
     });
+    prevHandler = jasmine.createSpy('PREV Event');
     it("should dispatch prev event when kazitori omokazied", function() {
-      var handlerSpy;
-      handlerSpy = jasmine.createSpy('PREV Event');
-      router.addEventListener(KazitoriEvent.PREV, handlerSpy);
+      router.addEventListener(KazitoriEvent.PREV, prevHandler);
       router.omokazi();
-      expect(handlerSpy).toHaveBeenCalled();
-      expect(handlerSpy.calls.length).toEqual(1);
-      router.removeEventListener(KazitoriEvent.PREV, handlerSpy);
-      handlerSpy.reset();
+      expect(prevHandler).toHaveBeenCalled();
+      return expect(prevHandler.calls.length).toEqual(1);
+    });
+    it("should not call handler when PREV event listener removed", function() {
+      router.removeEventListener(KazitoriEvent.PREV, prevHandler);
+      prevHandler.reset();
       router.omokazi();
-      expect(handlerSpy).not.toHaveBeenCalled();
+      expect(prevHandler).not.toHaveBeenCalled();
       return router.torikazi();
     });
+    nextHandler = jasmine.createSpy('NEXT Event');
     it("should dispatch prev event when kazitori torikazied", function() {
-      var handlerSpy;
-      handlerSpy = jasmine.createSpy('NEXT Event');
-      router.addEventListener(KazitoriEvent.NEXT, handlerSpy);
+      router.addEventListener(KazitoriEvent.NEXT, nextHandler);
       router.torikazi();
-      expect(handlerSpy).toHaveBeenCalled();
-      expect(handlerSpy.calls.length).toEqual(1);
-      router.removeEventListener(KazitoriEvent.NEXT, handlerSpy);
-      handlerSpy.reset();
-      router.torikazi();
-      return expect(handlerSpy).not.toHaveBeenCalled();
+      expect(nextHandler).toHaveBeenCalled();
+      return expect(nextHandler.calls.length).toEqual(1);
     });
-    return it("should dispatch not_found event when kazitori router undefined", function() {
-      var handlerSpy;
-      handlerSpy = jasmine.createSpy('NOT_FOUND Event');
-      router.addEventListener(KazitoriEvent.NOT_FOUND, handlerSpy);
+    it("should not call handler when NEXT event listener removed", function() {
+      router.removeEventListener(KazitoriEvent.NEXT, nextHandler);
+      nextHandler.reset();
+      router.torikazi();
+      return expect(nextHandler).not.toHaveBeenCalled();
+    });
+    notFoundHandler = jasmine.createSpy('NOT_FOUND Event');
+    it("should dispatch not_found event when kazitori router undefined", function() {
+      router.addEventListener(KazitoriEvent.NOT_FOUND, notFoundHandler);
       router.change("/hageeeeeee");
-      expect(handlerSpy).toHaveBeenCalled();
-      expect(handlerSpy.calls.length).toEqual(1);
-      router.removeEventListener(KazitoriEvent.NOT_FOUND, handlerSpy);
-      handlerSpy.reset();
+      expect(notFoundHandler).toHaveBeenCalled();
+      return expect(notFoundHandler.calls.length).toEqual(1);
+    });
+    return it("should not call handler when NEXT event listener removed", function() {
+      router.removeEventListener(KazitoriEvent.NOT_FOUND, notFoundHandler);
+      notFoundHandler.reset();
       router.change("/hogeeeeeee");
-      return expect(handlerSpy).not.toHaveBeenCalled();
+      return expect(notFoundHandler).not.toHaveBeenCalled();
     });
   });
   xit("test routes (simple)", function() {

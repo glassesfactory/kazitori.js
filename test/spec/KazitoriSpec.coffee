@@ -48,9 +48,11 @@ originalLocation = location.href
 describe "Kazitori", ->
 
   beforeEach ->
+    console.log '_beforeEach'
     router.change('/')
 
   afterEach ->
+    console.log '^-afterEach'
     router.change('/')
 
   describe "property", ->
@@ -97,14 +99,15 @@ describe "Kazitori", ->
       router.start()
       expect(startHandlerSpy).not.toHaveBeenCalled()
 
-    it "should dispatch stop event when kazitori stoped", ->
-      stopHandlerSpy = jasmine.createSpy('STOP event')
+    stopHandlerSpy = jasmine.createSpy('STOP event')
 
+    it "should dispatch stop event when kazitori stoped", ->
       router.addEventListener KazitoriEvent.START, stopHandlerSpy
       router.stop()
       expect(stopHandlerSpy).toHaveBeenCalled()
       expect(stopHandlerSpy.calls.length).toEqual(1)
 
+    it "should not call handler when START event listener removed", ->
       router.removeEventListener KazitoriEvent.START, stopHandlerSpy
       stopHandlerSpy.reset()
       router.start()
@@ -192,45 +195,49 @@ describe "Kazitori", ->
 
       #KazitoriEvent.REJECT
 
+    prevHandler = jasmine.createSpy('PREV Event')
+
     it "should dispatch prev event when kazitori omokazied", ->
-      handlerSpy = jasmine.createSpy('PREV Event')
-
-      router.addEventListener KazitoriEvent.PREV, handlerSpy
+      router.addEventListener KazitoriEvent.PREV, prevHandler
       router.omokazi()
-      expect(handlerSpy).toHaveBeenCalled()
-      expect(handlerSpy.calls.length).toEqual(1)
+      expect(prevHandler).toHaveBeenCalled()
+      expect(prevHandler.calls.length).toEqual(1)
 
-      router.removeEventListener KazitoriEvent.PREV, handlerSpy
-      handlerSpy.reset()
+    it "should not call handler when PREV event listener removed", ->
+      router.removeEventListener KazitoriEvent.PREV, prevHandler
+      prevHandler.reset()
       router.omokazi()
-      expect(handlerSpy).not.toHaveBeenCalled()
+      expect(prevHandler).not.toHaveBeenCalled()
       router.torikazi()
+
+    nextHandler = jasmine.createSpy('NEXT Event')
 
     it "should dispatch prev event when kazitori torikazied", ->
-      handlerSpy = jasmine.createSpy('NEXT Event')
 
-      router.addEventListener KazitoriEvent.NEXT, handlerSpy
+      router.addEventListener KazitoriEvent.NEXT, nextHandler
       router.torikazi()
-      expect(handlerSpy).toHaveBeenCalled()
-      expect(handlerSpy.calls.length).toEqual(1)
+      expect(nextHandler).toHaveBeenCalled()
+      expect(nextHandler.calls.length).toEqual(1)
 
-      router.removeEventListener KazitoriEvent.NEXT, handlerSpy
-      handlerSpy.reset()
+    it "should not call handler when NEXT event listener removed", ->
+      router.removeEventListener KazitoriEvent.NEXT, nextHandler
+      nextHandler.reset()
       router.torikazi()
-      expect(handlerSpy).not.toHaveBeenCalled()
+      expect(nextHandler).not.toHaveBeenCalled()
+
+    notFoundHandler = jasmine.createSpy('NOT_FOUND Event')
 
     it "should dispatch not_found event when kazitori router undefined", ->
-      handlerSpy = jasmine.createSpy('NOT_FOUND Event')
-
-      router.addEventListener KazitoriEvent.NOT_FOUND, handlerSpy
+      router.addEventListener KazitoriEvent.NOT_FOUND, notFoundHandler
       router.change("/hageeeeeee")
-      expect(handlerSpy).toHaveBeenCalled()
-      expect(handlerSpy.calls.length).toEqual(1)
+      expect(notFoundHandler).toHaveBeenCalled()
+      expect(notFoundHandler.calls.length).toEqual(1)
 
-      router.removeEventListener KazitoriEvent.NOT_FOUND, handlerSpy
-      handlerSpy.reset()
+    it "should not call handler when NEXT event listener removed", ->
+      router.removeEventListener KazitoriEvent.NOT_FOUND, notFoundHandler
+      notFoundHandler.reset()
       router.change("/hogeeeeeee")
-      expect(handlerSpy).not.toHaveBeenCalled()
+      expect(notFoundHandler).not.toHaveBeenCalled()
 
   xit "test routes (simple)", ->
     location.replace("#{location.origin}/posts/1")
