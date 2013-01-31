@@ -1,9 +1,9 @@
 /*
-  (c) 2013 Eikichi Yamaguchi
-  kazitori.js may be freely distributed under the MIT license.
-  http://dev.hageee.net
+	(c) 2013 Eikichi Yamaguchi
+	kazitori.js may be freely distributed under the MIT license.
+	http://dev.hageee.net
 
-  inspired from::
+	inspired from::
 //     (c) 2010-2012 Jeremy Ashkenas, DocumentCloud Inc.
 //     Backbone may be freely distributed under the MIT license.
 //     For all details and documentation:
@@ -208,9 +208,9 @@ Kazitori = (function() {
     this.fragment = frag;
     next = this.fragment;
     /*
-         memo : 20130129
-         本家 Backbone もそうだけど
-         URL にマッチするものがあるかどうかのテストってここでするべきじゃない?
+    		 memo : 20130129
+    		 本家 Backbone もそうだけど
+    		 URL にマッチするものがあるかどうかのテストってここでするべきじゃない?
     */
 
     url = this.root + frag.replace(routeStripper, '');
@@ -672,9 +672,9 @@ Kazitori = (function() {
 
 /*
 /////////////////////////////
-  URL を定義する Rule クラス
-  ちょっと大げさな気もするけど外部的には変わらんし
-  今後を見据えてクラス化しておく
+	URL を定義する Rule クラス
+	ちょっと大げさな気もするけど外部的には変わらんし
+	今後を見据えてクラス化しておく
 /////////////////////////////
 */
 
