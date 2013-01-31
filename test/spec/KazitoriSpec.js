@@ -112,6 +112,11 @@ describe("Kazitori", function() {
   });
   describe("event", function() {
     var nextHandler, notFoundHandler, prevHandler, startHandler, stopHandler;
+    it("should remove listener without listener added", function() {
+      return router.removeEventListener(KazitoriEvent.START, function(e) {
+        return true;
+      });
+    });
     startHandler = jasmine.createSpy('START event');
     it("should dispatch start event when kazitori started", function() {
       router.addEventListener(KazitoriEvent.START, startHandler);
