@@ -86,7 +86,9 @@ Kazitori = (function() {
 
   Kazitori.prototype._beforeDeffer = null;
 
-  Kazitori.prototype._prevFragment = null;
+  Kazitori.prototype.fragment = null;
+
+  Kazitori.prototype.lastFragment = null;
 
   function Kazitori(options) {
     this.observeURLHandler = __bind(this.observeURLHandler, this);
@@ -114,7 +116,7 @@ Kazitori = (function() {
     this._dispatcher = new EventDispatcher();
     this._bindBefores();
     this._bindRules();
-    if (__indexOf.call(options, "isAutoStart") < 0 || options["isAutoStart"] !== false) {
+    if (!(this.options.isAutoStart != null) || this.options.isAutoStart !== false) {
       this.start();
     }
     return;
@@ -132,7 +134,7 @@ Kazitori = (function() {
     }, this.options, options);
     this._hasPushState = !!(this.history && this.history.pushState);
     this._wantChangeHash = this.options.hashChange !== false;
-    fragment = this.getFragment();
+    fragment = this.fragment = this.getFragment();
     atRoot = this.location.pathname.replace(/[^\/]$/, '$&/') === this.root;
     if (this.isOldIE && this._wantChangeHash) {
       frame = document.createElement("iframe");
@@ -149,7 +151,7 @@ Kazitori = (function() {
       win.addEventListener('hashchange', this.observeURLHandler);
     }
     if (this._hasPushState && atRoot && this.location.hash) {
-      this.fragment = this.getHash().replace(routeStripper, '');
+      this.fragment = this.lastFragment = this.getHash().replace(routeStripper, '');
       this.history.replaceState({}, document.title, this.root + this.fragment + this.location.search);
     }
     this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.START, this.fragment));
@@ -176,22 +178,27 @@ Kazitori = (function() {
   };
 
   Kazitori.prototype.direction = function(option, direction) {
+    var current;
     if (!Kazitori.started) {
       return false;
     }
-    this._prevFragment = this.getFragment();
+    this.lastFragment = this.getFragment();
     this.direct = direction;
     if (direction === "prev") {
-      return this.history.back();
+      this.history.back();
+      current = this.getFragment();
+      return this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.PREV, current, this.fragment));
     } else if (direction === "next") {
-      return this.history.forward();
+      this.history.forward();
+      current = this.getFragment();
+      return this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.PREV, current, this.fragment));
     } else {
 
     }
   };
 
   Kazitori.prototype.change = function(fragment, options) {
-    var frag, next, prev, url;
+    var frag, matched, next, prev, url;
     if (!Kazitori.started) {
       return false;
     }
@@ -205,6 +212,7 @@ Kazitori = (function() {
     if (this.fragment === frag) {
       return;
     }
+    this.lastFragment = this.fragment;
     this.fragment = frag;
     next = this.fragment;
     /*
@@ -214,7 +222,8 @@ Kazitori = (function() {
     */
 
     url = this.root + frag.replace(routeStripper, '');
-    if (this._matchCheck(this.fragment) === false) {
+    matched = this._matchCheck(this.fragment, this.handlers);
+    if (matched === false) {
       if (this.notFound !== null) {
         this.change(this.notFound);
       }
@@ -235,7 +244,7 @@ Kazitori = (function() {
       return this.location.assign(url);
     }
     this.dispatchEvent(new KazitoriEvent(KazitoriEvent.CHANGE, next, prev));
-    this.loadURL(frag);
+    this.loadURL(frag, matched);
   };
 
   Kazitori.prototype.reject = function() {
@@ -267,11 +276,13 @@ Kazitori = (function() {
     return this;
   };
 
-  Kazitori.prototype.loadURL = function(fragmentOverride) {
-    var a, args, argsMatch, fragment, handler, i, len, matched, t, y, _i, _len, _ref, _ref1,
+  Kazitori.prototype.loadURL = function(fragmentOverride, matched) {
+    var a, args, argsMatch, beforesMatched, fragment, handler, i, len, t, y, _i, _len, _ref, _ref1,
       _this = this;
+    this.lastFragment = this.lastFragment;
     fragment = this.fragment = this.getFragment(fragmentOverride);
     matched = [];
+    beforesMatched = [];
     if (this.beforeAnytimeHandler || this.beforeHandlers.length > 0) {
       this._beforeDeffer = new Deffered();
       this._beforeDeffer.queue = [];
@@ -403,12 +414,12 @@ Kazitori = (function() {
     if (this.iframe) {
       this.change(current);
     }
-    if (this.direct === "prev") {
-      this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.PREV, current, this._prevFragment));
-    } else if (this.direct === "next") {
-      this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.NEXT, current, this._prevFragment));
+    if (this.direct === "prev" || this.lastFragment === current) {
+      this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.PREV, current, this.fragment));
+    } else if (this.direct === "next" || this.lastFragment === this.fragment) {
+      this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.NEXT, current, this.lastFragment));
     }
-    this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.CHANGE, current, this._prevFragment));
+    this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.CHANGE, current, this.lastFragment));
     return this.loadURL(current);
   };
 
@@ -456,16 +467,14 @@ Kazitori = (function() {
     }
   };
 
-  Kazitori.prototype._matchCheck = function(fragment) {
-    var a, args, argsMatch, handler, i, len, matched, t, _i, _len, _ref, _ref1;
+  Kazitori.prototype._matchCheck = function(fragment, handlers) {
+    var a, args, argsMatch, handler, i, len, matched, t, _i, _len, _ref;
     matched = [];
-    _ref = this.handlers;
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      handler = _ref[_i];
+    for (_i = 0, _len = handlers.length; _i < _len; _i++) {
+      handler = handlers[_i];
       if (handler.rule === fragment) {
-        matched.push(true);
-      }
-      if (handler.test(fragment)) {
+        matched.push(handler);
+      } else if (handler.test(fragment)) {
         if (handler.isVariable && handler.types.length > 0) {
           args = handler._extractParams(fragment);
           argsMatch = [];
@@ -479,16 +488,16 @@ Kazitori = (function() {
             }
             i++;
           }
-          if (_ref1 = !false, __indexOf.call(argsMatch, _ref1) >= 0) {
-            matched.push(true);
+          if (_ref = !false, __indexOf.call(argsMatch, _ref) >= 0) {
+            matched.push(handler);
           }
         } else {
-          matched.push(true);
+          matched.push(handler);
         }
       }
     }
-    if (__indexOf.call(matched, true) >= 0) {
-      return true;
+    if (matched.length > 0) {
+      return matched;
     } else {
       return false;
     }
