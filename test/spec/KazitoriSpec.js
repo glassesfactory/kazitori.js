@@ -1,17 +1,20 @@
-var Router, controller, originalLocation,
+var Router, controller, originalLocation, view,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
+view = {
+  showEntry: function(id) {}
+};
+
 controller = {
-  beforeAny: function() {
-    return console.log('controller.beforeAny');
-  },
-  beforeShow: function(id) {
-    return console.log('controller.beforeShow');
-  },
+  beforeAny: function() {},
+  beforeShow: function(id) {},
   index: function() {},
   show: function(id) {},
-  search: function() {}
+  search: function() {},
+  showEntry: function(id) {
+    return view.showEntry(id);
+  }
 };
 
 Router = (function(_super) {
@@ -36,7 +39,8 @@ Router = (function(_super) {
     '/posts/<int:id>': 'show',
     '/posts/new': 'new',
     '/posts/<int:id>/edit': 'edit',
-    '/users/<int:id>/posts/<int:id>': 'show'
+    '/users/<int:id>/posts/<int:id>': 'show',
+    '/entries/<int:id>': controller.showEntry
   };
 
   Router.prototype.index = function() {
@@ -67,14 +71,6 @@ this.router = new Router();
 
 originalLocation = location.href;
 
-window.addEventListener('popstate', function(e) {
-  return console.log('popstate');
-});
-
-window.addEventListener('hashchange', function(e) {
-  return console.log('hashchangedddd');
-});
-
 describe("Kazitori", function() {
   beforeEach(function() {
     return router.change('/');
@@ -86,7 +82,7 @@ describe("Kazitori", function() {
     it("should started to be Truthy", function() {
       return expect(Kazitori.started).toBeTruthy();
     });
-    it("test stop and restart", function() {
+    it("should Kazitori.started to be Falsy when router.stop called", function() {
       router.stop();
       expect(Kazitori.started).toBeFalsy();
       return router.start();
@@ -111,7 +107,7 @@ describe("Kazitori", function() {
     });
   });
   describe("event", function() {
-    var nextHandler, notFoundHandler, prevHandler, startHandler, stopHandler;
+    var nextHandler, notFoundHandler, prevHandler, rejectHandler, startHandler, stopHandler;
     it("should remove listener without listener added", function() {
       return router.removeEventListener(KazitoriEvent.START, function(e) {
         return true;
@@ -207,8 +203,15 @@ describe("Kazitori", function() {
       expect(listener.onInternalChange).not.toHaveBeenCalled();
       return expect(listener.onUserChange).not.toHaveBeenCalled();
     });
+    rejectHandler = jasmine.createSpy('REJECT Event');
+    xit("should dispatch REJECT event when kazitori rejected", function() {
+      router.addEventListener(KazitoriEvent.REJECT, rejectHandler);
+      router.reject();
+      expect(rejectHandler).toHaveBeenCalled();
+      return expect(rejectHandler.calls.length).toEqual(1);
+    });
     prevHandler = jasmine.createSpy('PREV Event');
-    it("should dispatch prev event when kazitori omokazied", function() {
+    it("should dispatch PREV event when kazitori omokazied", function() {
       router.addEventListener(KazitoriEvent.PREV, prevHandler);
       router.omokazi();
       expect(prevHandler).toHaveBeenCalled();
@@ -218,19 +221,22 @@ describe("Kazitori", function() {
       router.removeEventListener(KazitoriEvent.PREV, prevHandler);
       prevHandler.reset();
       router.omokazi();
-      expect(prevHandler).not.toHaveBeenCalled();
-      return router.torikazi();
+      return expect(prevHandler).not.toHaveBeenCalled();
     });
     nextHandler = jasmine.createSpy('NEXT Event');
-    it("should dispatch prev event when kazitori torikazied", function() {
+    it("should dispatch NEXT event when kazitori torikazied", function() {
+      router.change('/posts/1');
+      router.omokazi();
       router.addEventListener(KazitoriEvent.NEXT, nextHandler);
       router.torikazi();
       expect(nextHandler).toHaveBeenCalled();
       return expect(nextHandler.calls.length).toEqual(1);
     });
     it("should not call handler when NEXT event listener removed", function() {
-      router.removeEventListener(KazitoriEvent.NEXT, nextHandler);
+      router.change('/posts/1');
+      router.omokazi();
       nextHandler.reset();
+      router.removeEventListener(KazitoriEvent.NEXT, nextHandler);
       router.torikazi();
       return expect(nextHandler).not.toHaveBeenCalled();
     });
@@ -260,7 +266,7 @@ describe("Kazitori", function() {
     router.change('/users/3/posts/1');
     return expect(window.location.pathname).toEqual('/users/3/posts/1');
   });
-  return describe("with controller", function() {
+  describe("router", function() {
     it('index should be called', function() {
       spyOn(controller, 'index');
       router.change('/posts');
@@ -281,17 +287,104 @@ describe("Kazitori", function() {
       router.change('/posts/1');
       return expect(controller.beforeShow).toHaveBeenCalled();
     });
+    it('should call controller method directly', function() {
+      spyOn(view, 'showEntry');
+      router.change('/entries/123');
+      return expect(view.showEntry).toHaveBeenCalled();
+    });
+    it('should call controller method directly with casted argments', function() {
+      spyOn(view, 'showEntry');
+      router.change('/entries/12495876');
+      return expect(view.showEntry).toHaveBeenCalledWith(12495876);
+    });
     it('show should be called with casted argments', function() {
       spyOn(controller, 'beforeShow');
       router.change('/posts/32941856');
       return expect(controller.beforeShow).toHaveBeenCalledWith(32941856);
     });
-    return it('beforeAny should be before called', function() {
+    it('beforeAny should be before called', function() {
       spyOn(controller, 'beforeAny');
       router.change('/posts');
       expect(controller.beforeAny).toHaveBeenCalled();
       router.change('/posts/1');
       return expect(controller.beforeAny).toHaveBeenCalled();
     });
+    return it('should navigate to root when router.change undefined path', function() {
+      spyOn(controller, 'beforeShow');
+      router.change('/blahblahblah');
+      return expect(window.location.pathname).toBe('/');
+    });
+  });
+  return describe("exception", function() {
+    return it("should throw error when Kazitori started and router.start called", function() {
+      expect(Kazitori.started).toBeTruthy();
+      return expect(router.start).toThrow();
+    });
+  });
+});
+
+this.d = new Deffered();
+
+describe("Deffered", function() {
+  var chaninedDefferedSpy, defferedSpy, defferedSpy2, taskQueueCompleteHandler, taskQueueFailedHandler;
+  defferedSpy = jasmine.createSpy('defferedSpy');
+  chaninedDefferedSpy = jasmine.createSpy('chaninedDefferedSpy');
+  defferedSpy2 = jasmine.createSpy('defferedSpy2');
+  taskQueueCompleteHandler = jasmine.createSpy('TASK_QUEUE_COMPLETE Event');
+  taskQueueFailedHandler = jasmine.createSpy('TASK_QUEUE_FAILD Event');
+  d.addEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, taskQueueCompleteHandler);
+  d.addEventListener(KazitoriEvent.TASK_QUEUE_FAILD, taskQueueFailedHandler);
+  beforeEach(function() {
+    defferedSpy.reset();
+    chaninedDefferedSpy.reset();
+    defferedSpy2.reset();
+    taskQueueFailedHandler.reset();
+    return taskQueueCompleteHandler.reset();
+  });
+  afterEach(function() {});
+  it('should excecute method', function() {
+    d.deffered(function(d) {
+      return defferedSpy();
+    });
+    d.execute(d);
+    return expect(defferedSpy).toHaveBeenCalled();
+  });
+  it('should excecute chanined methods', function() {
+    d.deffered(function(d) {
+      defferedSpy();
+      return d.execute(d);
+    }).deffered(function(d) {
+      return chaninedDefferedSpy();
+    });
+    d.execute(d);
+    expect(defferedSpy).toHaveBeenCalled();
+    return expect(chaninedDefferedSpy).toHaveBeenCalled();
+  });
+  it('should excecute method directly', function() {
+    d.deffered(defferedSpy2);
+    return d.execute(d);
+  });
+  it('should dispatch TASK_QUEUE_FAILD envet when defferd completed', function() {
+    var complete;
+    complete = false;
+    runs(function() {
+      return d.deffered(function(d) {
+        return complete = true;
+      });
+    });
+    waitsFor(function() {
+      d.execute(d);
+      return complete;
+    });
+    return runs(function() {
+      return expect(taskQueueCompleteHandler).toHaveBeenCalled();
+    });
+  });
+  return it('should dispatch TASK_QUEUE_FAILD envet when defferd.reject called', function() {
+    d.deffered(function(d) {
+      return d.reject();
+    });
+    d.execute(d);
+    return expect(taskQueueFailedHandler).toHaveBeenCalled();
   });
 });
