@@ -6,4 +6,4 @@ node_modules
 src/sass
 src/slim
 stash
-src/test-main.coffee
+src/coffee/test-main.coffee
