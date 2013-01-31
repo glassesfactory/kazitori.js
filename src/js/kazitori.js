@@ -87,7 +87,7 @@ Kazitori = (function() {
 
   Kazitori.prototype._beforeDeffer = null;
 
-  Kazitori.prototype._prevFragment = null;
+  Kazitori.prototype.lastFragment = "";
 
   function Kazitori(options) {
     this.observeURLHandler = __bind(this.observeURLHandler, this);
@@ -150,7 +150,7 @@ Kazitori = (function() {
       win.addEventListener('hashchange', this.observeURLHandler);
     }
     if (this._hasPushState && atRoot && this.location.hash) {
-      this.fragment = this.getHash().replace(routeStripper, '');
+      this.fragment = this.lastFragment = this.getHash().replace(routeStripper, '');
       this.history.replaceState({}, document.title, this.root + this.fragment + this.location.search);
     }
     this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.START, this.fragment));
@@ -180,7 +180,7 @@ Kazitori = (function() {
     if (!Kazitori.started) {
       return false;
     }
-    this._prevFragment = this.getFragment();
+    this.lastFragment = this.getFragment();
     this.direct = direction;
     if (direction === "prev") {
       return this.history.back();
@@ -206,6 +206,7 @@ Kazitori = (function() {
     if (this.fragment === frag) {
       return;
     }
+    this.lastFragment = this.fragment;
     this.fragment = frag;
     next = this.fragment;
     /*
@@ -272,6 +273,7 @@ Kazitori = (function() {
   Kazitori.prototype.loadURL = function(fragmentOverride, matched) {
     var a, args, argsMatch, beforesMatched, fragment, handler, i, len, t, y, _i, _len, _ref, _ref1,
       _this = this;
+    this.lastFragment = this.lastFragment;
     fragment = this.fragment = this.getFragment(fragmentOverride);
     matched = [];
     beforesMatched = [];
@@ -406,12 +408,12 @@ Kazitori = (function() {
     if (this.iframe) {
       this.change(current);
     }
-    if (this.direct === "prev") {
-      this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.PREV, current, this._prevFragment));
-    } else if (this.direct === "next") {
-      this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.NEXT, current, this._prevFragment));
+    if (this.direct === "prev" || this.lastFragment === current) {
+      this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.PREV, current, this.fragment));
+    } else if (this.direct === "next" || this.lastFragment === this.fragment) {
+      this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.NEXT, current, this.lastFragment));
     }
-    this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.CHANGE, current, this._prevFragment));
+    this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.CHANGE, current, this.lastFragment));
     return this.loadURL(current);
   };
 

@@ -68,7 +68,7 @@ class Kazitori
 	#hum
 	_beforeDeffer:null
 
-	_prevFragment:null
+	lastFragment:""
 
 
 	constructor:(options)->
@@ -124,7 +124,7 @@ class Kazitori
 			win.addEventListener 'hashchange', @observeURLHandler
 
 		if @._hasPushState and atRoot and @.location.hash
-			@.fragment = @.getHash().replace(routeStripper, '')
+			@.fragment = @.lastFragment = @.getHash().replace(routeStripper, '')
 			@.history.replaceState({}, document.title, @.root + @.fragment + @.location.search)
 			# return
 		#スタートイベントをディスパッチ
@@ -153,7 +153,8 @@ class Kazitori
 	direction:(option, direction)->
 		if not Kazitori.started
 			return false
-		@._prevFragment = @getFragment()
+
+		@.lastFragment = @getFragment()
 		@.direct = direction
 		if direction is "prev"
 			@.history.back()
@@ -173,6 +174,7 @@ class Kazitori
 		frag = @getFragment(fragment || '')
 		if @.fragment is frag
 			return
+		@.lastFragment = @.fragment
 		@.fragment = frag
 		next = @.fragment
 		#a-
@@ -232,10 +234,11 @@ class Kazitori
 
 	#URL を読み込む
 	loadURL:(fragmentOverride, matched)->
+		@.lastFragment = @.lastFragment
 		fragment = @.fragment = @getFragment(fragmentOverride)
 		matched = []
 		beforesMatched = []
-		
+
 		if @.beforeAnytimeHandler or @.beforeHandlers.length > 0
 			@._beforeDeffer = new Deffered()
 			@._beforeDeffer.queue = []
@@ -357,11 +360,11 @@ class Kazitori
 			return false
 		if @.iframe
 			@change(current)
-		if @.direct is "prev"
-			@._dispatcher.dispatchEvent( new KazitoriEvent( KazitoriEvent.PREV, current, @._prevFragment ))
-		else if @.direct is "next"
-			@._dispatcher.dispatchEvent( new KazitoriEvent( KazitoriEvent.NEXT, current, @._prevFragment ))
-		@._dispatcher.dispatchEvent( new KazitoriEvent( KazitoriEvent.CHANGE, current, @._prevFragment ))
+		if @.direct is "prev" or @.lastFragment is current
+			@._dispatcher.dispatchEvent( new KazitoriEvent( KazitoriEvent.PREV, current, @.fragment ))
+		else if @.direct is "next" or @.lastFragment is @.fragment
+			@._dispatcher.dispatchEvent( new KazitoriEvent( KazitoriEvent.NEXT, current, @.lastFragment ))
+		@._dispatcher.dispatchEvent( new KazitoriEvent( KazitoriEvent.CHANGE, current, @.lastFragment ))
 		return @loadURL(current)
 
 
@@ -734,7 +737,7 @@ KazitoriEvent.REJECT = 'reject'
 #見つからなかった
 KazitoriEvent.NOT_FOUND = 'not_found'
 
-#スタート　
+#スタート
 KazitoriEvent.START = 'start'
 
 #ストップ
