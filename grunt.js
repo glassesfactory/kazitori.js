@@ -19,9 +19,15 @@ module.exports = function(grunt) {
         src:'test/spec/*.coffee', dest:'test/spec/'
       }
     },
+    min: {
+      dist: {
+        src:['src/js/kazitori.js'],
+        dest:'src/js/kazitori.min.js'
+      }
+    },
     watch: {
       files: ['src/coffee/*.coffee','example/coffee/*.coffee','test/spec/*.coffee'],
-      tasks: 'coffee jasmine'
+      tasks: 'coffee min jasmine'
     },
     jasmine : {
       src : 'test/src/*.js',
