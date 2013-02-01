@@ -125,7 +125,7 @@ Kazitori = (function() {
   }
 
   Kazitori.prototype.start = function(options) {
-    var atRoot, fragment, frame, win;
+    var atRoot, fragment, frame, override, win;
     if (Kazitori.started) {
       throw new Error('mou hazim matteru');
     }
@@ -154,7 +154,11 @@ Kazitori = (function() {
     }
     this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.START, this.fragment));
     if (!this.options.silent) {
-      return this.loadURL();
+      override = '';
+      if (!this._hasPushState && atRoot) {
+        override = this.root + this.fragment.replace(routeStripper, '');
+      }
+      return this.loadURL(override);
     }
   };
 
@@ -274,11 +278,9 @@ Kazitori = (function() {
   };
 
   Kazitori.prototype.loadURL = function(fragmentOverride) {
-    var fragment, handler, matched, matchedHandler, y, _i, _len,
+    var fragment, handler, matched, _i, _len,
       _this = this;
-    this.lastFragment = this.lastFragment;
     fragment = this.fragment = this.getFragment(fragmentOverride);
-    matchedHandler = [];
     if (this.beforeAnytimeHandler || this.beforeHandlers.length > 0) {
       this._beforeDeffer = new Deffered();
       this._beforeDeffer.queue = [];
@@ -289,7 +291,6 @@ Kazitori = (function() {
           d.execute(d);
         });
       }
-      y = 0;
       matched = this._matchCheck(fragment, this.beforeHandlers);
       for (_i = 0, _len = matched.length; _i < _len; _i++) {
         handler = matched[_i];
@@ -425,8 +426,10 @@ Kazitori = (function() {
           while (i < len) {
             a = args[i];
             t = handler.types[i];
-            if (t === null || this._typeCheck(a, t) === true) {
-              argsMatch.push(true);
+            if (typeof a !== "object") {
+              if (t === null || this._typeCheck(a, t) === true) {
+                argsMatch.push(true);
+              }
             }
             i++;
           }
@@ -450,6 +453,7 @@ Kazitori = (function() {
     if (!(fragment != null)) {
       if (this._hasPushState || !this._wantChangeHash) {
         fragment = this.location.pathname;
+        fragment = fragment + this.location.search;
         root = this.root.replace(trailingSlash, '');
         if (!fragment.indexOf(root)) {
           fragment = fragment.substr(root.length);
@@ -468,16 +472,6 @@ Kazitori = (function() {
       return match[1];
     } else {
       return '';
-    }
-  };
-
-  Kazitori.prototype._extractParams = function(fragment) {
-    var param;
-    param = this._regexp.exec(fragment);
-    if (param != null) {
-      return param.slice(1);
-    } else {
-      return null;
     }
   };
 
@@ -686,10 +680,34 @@ Rule = (function() {
   };
 
   Rule.prototype._extractParams = function(fragment) {
-    var param;
+    var k, kv, last, newParam, newQueries, obj, param, queries, query, queryParams, v, _i, _len;
     param = this._regexp.exec(fragment);
     if (param != null) {
-      return param.slice(1);
+      newParam = param.slice(1);
+      last = param[param.length - 1];
+      if (last.indexOf('?') > -1) {
+        newQueries = [];
+        queries = last.split('?')[1];
+        queryParams = queries.split('&');
+        for (_i = 0, _len = queryParams.length; _i < _len; _i++) {
+          query = queryParams[_i];
+          kv = query.split('=');
+          k = kv[0];
+          v = kv[1] ? kv[1] : "";
+          if (v.indexOf('|') > -1) {
+            v = v.split("|");
+          }
+          obj = {};
+          obj[k] = v;
+          newQueries.push(obj);
+        }
+        newParam.pop();
+        newParam.push(last.split('?')[0]);
+        newParam.push({
+          "queries": newQueries
+        });
+      }
+      return newParam;
     } else {
       return null;
     }
@@ -702,6 +720,8 @@ Rule = (function() {
     castedParams = [];
     while (i < len) {
       if (this.types[i] === null) {
+        castedParams.push(params[i]);
+      } else if (typeof params[i] === "object") {
         castedParams.push(params[i]);
       } else {
         for (_i = 0, _len = VARIABLE_TYPES.length; _i < _len; _i++) {

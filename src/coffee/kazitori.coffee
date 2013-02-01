@@ -238,8 +238,8 @@ class Kazitori
 
 	#URL を読み込む
 	loadURL:(fragmentOverride)->
-		# @.lastFragment = @.lastFragment
 		fragment = @.fragment = @getFragment(fragmentOverride)
+
 		if @.beforeAnytimeHandler or @.beforeHandlers.length > 0
 			@._beforeDeffer = new Deffered()
 			@._beforeDeffer.queue = []
@@ -401,6 +401,7 @@ class Kazitori
 		if not fragment?
 			if @._hasPushState or !@._wantChangeHash
 				fragment = @.location.pathname
+				fragment = fragment + @.location.search
 				root = @.root.replace(trailingSlash, '')
 				if not fragment.indexOf(root)
 					fragment = fragment.substr(root.length)
