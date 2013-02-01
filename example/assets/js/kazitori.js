@@ -454,6 +454,7 @@ Kazitori = (function() {
     if (!(fragment != null)) {
       if (this._hasPushState || !this._wantChangeHash) {
         fragment = this.location.pathname;
+        fragment = fragment + this.location.search;
         root = this.root.replace(trailingSlash, '');
         if (!fragment.indexOf(root)) {
           fragment = fragment.substr(root.length);
