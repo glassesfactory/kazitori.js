@@ -17,13 +17,11 @@ Router = (function(_super) {
   }
 
   Router.prototype.befores = {
-    '/<string:user>/<int:post>/<friend>': ['beforeMinchi'],
-    '/<int:id>': ['beforeShow']
+    '/<string:user>/<int:post>/<friend>': ['beforeMinchi']
   };
 
   Router.prototype.routes = {
     '/': 'index',
-    '/<int:id>': 'show',
     '/admin': 'admin',
     '/login': 'login',
     '/logout': 'logout',
@@ -81,11 +79,6 @@ Router = (function(_super) {
 
   Router.prototype.test = function(hiroshi) {
     return console.log("before 1", hiroshi);
-  };
-
-  Router.prototype.beforeShow = function(id) {
-    console.log("before");
-    return console.log(id);
   };
 
   Router.prototype.beforeMinchi = function() {

@@ -24,13 +24,13 @@ routes に対して URL マップを定義。
 
 ```coffee
 class Router extends Kazitori
-	beforeAnytime:["test-before"]
+	beforeAnytime:["test_before"]
 	befores:
-		':id':['test-show']
+		'/<int:id>':['test_show']
 	routes :
-		'':'index'
 		'/':'index'
-		':id':'show'
+		'/<int:id>':'show'
+		'/<string:username>/<int:id>':'post'
 		
 	index:()->
 		# console.log "index"
@@ -40,12 +40,15 @@ class Router extends Kazitori
 		# console.log id
 		$('.currentPage').empty().append "this page is test" + id
 
+	post:(username, id)->
+		$('.currentPage').empty().append username + "post " + id
+
 	###
 		some before handlers
 	###
-	test-before:()->
+	test_before:()->
 		console.log "before!"
-	test-show:()->
+	test_show:()->
 		console.log "before show"
 
 
@@ -100,6 +103,15 @@ LICENSE
 
 Change Log
 --------------
+
+**2013 01 31 ver 0.2**
+
+* URL variable の型チェックに対応しました。
+* 併せて URL variable のネストにも対応しています。
+* 型チェック実現のため、URL variable の定義方法が変更になりました。
+* ヒストリーバック/ネクストをする omokazi / torikazi メソッドを追加しました。
+* 要求された URL 対し適切なコントローラーが見つからなかった場合、代替として実行させるコントローラーを指定できるようにしました。
+
 
 **2013 01 28 ver 0.1.3**
 
