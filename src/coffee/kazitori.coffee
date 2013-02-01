@@ -118,10 +118,7 @@ class Kazitori
 			@.iframe = frame.contentWindow
 			@change(fragment)
 
-		if @._hasPushState is true
-			win.addEventListener 'popstate', @observeURLHandler
-		else if @._wantChangeHash is true and ('onhashchange' in win) and not @.isOldIE
-			win.addEventListener 'hashchange', @observeURLHandler
+		@._addPopStateHandler()
 
 		if @._hasPushState and atRoot and @.location.hash
 			@.fragment = @.lastFragment = @.getHash().replace(routeStripper, '')
@@ -156,18 +153,18 @@ class Kazitori
 		tmpFrag = @.lastFragment
 		@.lastFragment = @getFragment()
 		@.direct = direction
+		@.isUserAction = true
+		@._removePopStateHandler()
 		if direction is "prev"
-			@.isUserAction = true
-			@change(tmpFrag, {internal:true})
-			current = @getFragment()
-			@._dispatcher.dispatchEvent( new KazitoriEvent( KazitoriEvent.PREV, current, @.lastFragment ))
+			@.history.back()
+			@._dispatcher.dispatchEvent( new KazitoriEvent( KazitoriEvent.PREV, tmpFrag, @.lastFragment ))
 		else if direction is "next"
-			@.isUserAction = true
-			@change(tmpFrag, {internal:true})
-			current = @getFragment()
-			@._dispatcher.dispatchEvent( new KazitoriEvent( KazitoriEvent.NEXT, current, @.lastFragment ))
+			@.history.forward()
+			@._dispatcher.dispatchEvent( new KazitoriEvent( KazitoriEvent.NEXT, tmpFrag, @.lastFragment ))
 		else
 			return
+		@._addPopStateHandler()
+		return @loadURL(tmpFrag)
 
 
 	#url を変更する
@@ -239,8 +236,6 @@ class Kazitori
 	loadURL:(fragmentOverride)->
 		@.lastFragment = @.lastFragment
 		fragment = @.fragment = @getFragment(fragmentOverride)
-		#リファクタ
-		matchedHandler = []
 		if @.beforeAnytimeHandler or @.beforeHandlers.length > 0
 			@._beforeDeffer = new Deffered()
 			@._beforeDeffer.queue = []
@@ -251,29 +246,8 @@ class Kazitori
 					d.execute(d)
 					return
 				)
-
-			y = 0
-			for handler in @.beforeHandlers
-				if handler.rule is fragment
-					matchedHandler.push handler
-				else if handler.test(fragment) is true
-					if handler.isVariable and handler.types.length > 0
-						args = handler._extractParams(@.fragment)
-						argsMatch = []
-						len = args.length
-						i = 0
-						while i < len
-							a = args[i]
-							t = handler.types[i]
-							if t is null or @_typeCheck(a,t) is true
-								argsMatch.push true
-							i++
-						
-						if not false in argsMatch
-							matchedHandler.push handler
-					else
-						matchedHandler.push handler
-			for handler in matchedHandler
+			matched = @._matchCheck(fragment, @.beforeHandlers)
+			for handler in matched
 				@._beforeDeffer.deffered((d)->
 					handler.callback(fragment)
 					d.execute(d)
@@ -300,39 +274,17 @@ class Kazitori
 		return
 	
 	executeHandlers:()=>
-		matched = []
-		for handler in @.handlers
-			if handler.rule is @.fragment
-				handler.callback(@.fragment)
-				matched.push true
-				return matched
-				#なんか判定のタイミングが違う気がしている
-				#issue 書いた
-			if handler.test(@.fragment)
-				if handler.isVariable and handler.types.length > 0
-					#型チェック用
-					args = handler._extractParams(@.fragment)
-					argsMatch = []
-					len = args.length
-					i = 0
-
-					while i < len
-						a = args[i]
-						t = handler.types[i]
-						if t is null or @_typeCheck(a,t) is true
-							argsMatch.push true
-						i++
-					if not false in argsMatch
-						handler.callback(@.fragment)
-						matched.push true
-				else
-					handler.callback(@.fragment)
-					matched.push true
+		matched = @._matchCheck(@.fragment, @.handlers)
 		if matched.length < 1 
 			if @.notFound isnt null
 				#a- 2回呼ばれるので loadURL じゃなくて @.notFound.callback のほうがいいな
 				@loadURL(@.notFound)
 			@._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.NOT_FOUND))
+		else if matched.length > 1
+			console.log "too many matched..."
+		else
+			for handler in matched
+				handler.callback(@.fragment)
 		return matched
 
 	
@@ -482,6 +434,19 @@ class Kazitori
 
 	dispatchEvent:(event)->
 		@_dispatcher.dispatchEvent(event)
+
+
+	_addPopStateHandler:()->
+		win = window
+		if @._hasPushState is true
+			win.addEventListener 'popstate', @observeURLHandler
+		if @._wantChangeHash is true and ('onhashchange' in win) and not @.isOldIE
+			win.addEventListener 'hashchange', @observeURLHandler
+
+	_removePopStateHandler:()->
+		win = window
+		win.removeEventListener 'popstate', @observeURLHandler
+		win.removeEventListener 'hashchange', @observeURLHandler
 
 
 	#==============================================

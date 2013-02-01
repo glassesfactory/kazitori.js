@@ -147,11 +147,7 @@ Kazitori = (function() {
       this.iframe = frame.contentWindow;
       this.change(fragment);
     }
-    if (this._hasPushState === true) {
-      win.addEventListener('popstate', this.observeURLHandler);
-    } else if (this._wantChangeHash === true && (__indexOf.call(win, 'onhashchange') >= 0) && !this.isOldIE) {
-      win.addEventListener('hashchange', this.observeURLHandler);
-    }
+    this._addPopStateHandler();
     if (this._hasPushState && atRoot && this.location.hash) {
       this.fragment = this.lastFragment = this.getHash().replace(routeStripper, '');
       this.history.replaceState({}, document.title, this.root + this.fragment + this.location.search);
@@ -180,30 +176,26 @@ Kazitori = (function() {
   };
 
   Kazitori.prototype.direction = function(option, direction) {
-    var current, tmpFrag;
+    var tmpFrag;
     if (!Kazitori.started) {
       return false;
     }
     tmpFrag = this.lastFragment;
     this.lastFragment = this.getFragment();
     this.direct = direction;
+    this.isUserAction = true;
+    this._removePopStateHandler();
     if (direction === "prev") {
-      this.isUserAction = true;
-      this.change(tmpFrag, {
-        internal: true
-      });
-      current = this.getFragment();
-      return this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.PREV, current, this.lastFragment));
+      this.history.back();
+      this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.PREV, tmpFrag, this.lastFragment));
     } else if (direction === "next") {
-      this.isUserAction = true;
-      this.change(tmpFrag, {
-        internal: true
-      });
-      current = this.getFragment();
-      return this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.NEXT, current, this.lastFragment));
+      this.history.forward();
+      this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.NEXT, tmpFrag, this.lastFragment));
     } else {
-
+      return;
     }
+    this._addPopStateHandler();
+    return this.loadURL(tmpFrag);
   };
 
   Kazitori.prototype.change = function(fragment, options) {
@@ -282,7 +274,7 @@ Kazitori = (function() {
   };
 
   Kazitori.prototype.loadURL = function(fragmentOverride) {
-    var a, args, argsMatch, fragment, handler, i, len, matchedHandler, t, y, _i, _j, _len, _len1, _ref, _ref1,
+    var fragment, handler, matched, matchedHandler, y, _i, _len,
       _this = this;
     this.lastFragment = this.lastFragment;
     fragment = this.fragment = this.getFragment(fragmentOverride);
@@ -298,35 +290,9 @@ Kazitori = (function() {
         });
       }
       y = 0;
-      _ref = this.beforeHandlers;
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        handler = _ref[_i];
-        if (handler.rule === fragment) {
-          matchedHandler.push(handler);
-        } else if (handler.test(fragment) === true) {
-          if (handler.isVariable && handler.types.length > 0) {
-            args = handler._extractParams(this.fragment);
-            argsMatch = [];
-            len = args.length;
-            i = 0;
-            while (i < len) {
-              a = args[i];
-              t = handler.types[i];
-              if (t === null || this._typeCheck(a, t) === true) {
-                argsMatch.push(true);
-              }
-              i++;
-            }
-            if (_ref1 = !false, __indexOf.call(argsMatch, _ref1) >= 0) {
-              matchedHandler.push(handler);
-            }
-          } else {
-            matchedHandler.push(handler);
-          }
-        }
-      }
-      for (_j = 0, _len1 = matchedHandler.length; _j < _len1; _j++) {
-        handler = matchedHandler[_j];
+      matched = this._matchCheck(fragment, this.beforeHandlers);
+      for (_i = 0, _len = matched.length; _i < _len; _i++) {
+        handler = matched[_i];
         this._beforeDeffer.deffered(function(d) {
           handler.callback(fragment);
           d.execute(d);
@@ -349,45 +315,20 @@ Kazitori = (function() {
   };
 
   Kazitori.prototype.executeHandlers = function() {
-    var a, args, argsMatch, handler, i, len, matched, t, _i, _len, _ref, _ref1;
-    matched = [];
-    _ref = this.handlers;
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      handler = _ref[_i];
-      if (handler.rule === this.fragment) {
-        handler.callback(this.fragment);
-        matched.push(true);
-        return matched;
-      }
-      if (handler.test(this.fragment)) {
-        if (handler.isVariable && handler.types.length > 0) {
-          args = handler._extractParams(this.fragment);
-          argsMatch = [];
-          len = args.length;
-          i = 0;
-          while (i < len) {
-            a = args[i];
-            t = handler.types[i];
-            if (t === null || this._typeCheck(a, t) === true) {
-              argsMatch.push(true);
-            }
-            i++;
-          }
-          if (_ref1 = !false, __indexOf.call(argsMatch, _ref1) >= 0) {
-            handler.callback(this.fragment);
-            matched.push(true);
-          }
-        } else {
-          handler.callback(this.fragment);
-          matched.push(true);
-        }
-      }
-    }
+    var handler, matched, _i, _len;
+    matched = this._matchCheck(this.fragment, this.handlers);
     if (matched.length < 1) {
       if (this.notFound !== null) {
         this.loadURL(this.notFound);
       }
       this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.NOT_FOUND));
+    } else if (matched.length > 1) {
+      console.log("too many matched...");
+    } else {
+      for (_i = 0, _len = matched.length; _i < _len; _i++) {
+        handler = matched[_i];
+        handler.callback(this.fragment);
+      }
     }
     return matched;
   };
@@ -550,6 +491,24 @@ Kazitori = (function() {
 
   Kazitori.prototype.dispatchEvent = function(event) {
     return this._dispatcher.dispatchEvent(event);
+  };
+
+  Kazitori.prototype._addPopStateHandler = function() {
+    var win;
+    win = window;
+    if (this._hasPushState === true) {
+      win.addEventListener('popstate', this.observeURLHandler);
+    }
+    if (this._wantChangeHash === true && (__indexOf.call(win, 'onhashchange') >= 0) && !this.isOldIE) {
+      return win.addEventListener('hashchange', this.observeURLHandler);
+    }
+  };
+
+  Kazitori.prototype._removePopStateHandler = function() {
+    var win;
+    win = window;
+    win.removeEventListener('popstate', this.observeURLHandler);
+    return win.removeEventListener('hashchange', this.observeURLHandler);
   };
 
   Kazitori.prototype._slice = Array.prototype.slice;
