@@ -346,10 +346,10 @@ describe "Deffered", ->
   chaninedDefferedSpy = jasmine.createSpy('chaninedDefferedSpy')
   defferedSpy2 = jasmine.createSpy('defferedSpy2')
   taskQueueCompleteHandler = jasmine.createSpy('TASK_QUEUE_COMPLETE Event')
-  taskQueueFailedHandler = jasmine.createSpy('TASK_QUEUE_FAILD Event')
+  taskQueueFailedHandler = jasmine.createSpy('TASK_QUEUE_FAILED Event')
 
   d.addEventListener KazitoriEvent.TASK_QUEUE_COMPLETE, taskQueueCompleteHandler
-  d.addEventListener KazitoriEvent.TASK_QUEUE_FAILD, taskQueueFailedHandler
+  d.addEventListener KazitoriEvent.TASK_QUEUE_FAILED, taskQueueFailedHandler
 
   beforeEach ->
     defferedSpy.reset()
@@ -398,7 +398,7 @@ describe "Deffered", ->
     runs ->
       expect(taskQueueCompleteHandler).toHaveBeenCalled()
 
-  it 'should dispatch TASK_QUEUE_FAILD envet when defferd.reject called', ->
+  it 'should dispatch TASK_QUEUE_FAILED envet when defferd.reject called', ->
     d.deffered (d)->
       d.reject()
 
