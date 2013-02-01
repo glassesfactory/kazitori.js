@@ -126,7 +126,10 @@ class Kazitori
 		#スタートイベントをディスパッチ
 		@._dispatcher.dispatchEvent( new KazitoriEvent( KazitoriEvent.START, @.fragment ))
 		if !@.options.silent
-			return  @loadURL()
+			override = ''
+			if not @._hasPushState and atRoot
+				override = @.root + @.fragment.replace(routeStripper, '')
+			return  @loadURL(override)
 
 
 	#止める
@@ -182,6 +185,7 @@ class Kazitori
 		next = @.fragment
 		
 		url = @.root + frag.replace(routeStripper, '')
+		
 		matched = @_matchCheck(@.fragment, @.handlers)
 		if matched is false
 			if @.notFound isnt null
@@ -234,7 +238,7 @@ class Kazitori
 
 	#URL を読み込む
 	loadURL:(fragmentOverride)->
-		@.lastFragment = @.lastFragment
+		# @.lastFragment = @.lastFragment
 		fragment = @.fragment = @getFragment(fragmentOverride)
 		if @.beforeAnytimeHandler or @.beforeHandlers.length > 0
 			@._beforeDeffer = new Deffered()
@@ -374,8 +378,9 @@ class Kazitori
 					while i < len
 						a = args[i]
 						t = handler.types[i]
-						if t is null or @_typeCheck(a,t) is true
-							argsMatch.push true
+						if typeof a isnt "object"
+							if t is null or @_typeCheck(a,t) is true
+								argsMatch.push true
 						i++
 					if not false in argsMatch
 						matched.push handler
@@ -413,12 +418,14 @@ class Kazitori
 		else
 			return ''
 
-	_extractParams:(fragment)->
-		param = @_regexp.exec(fragment)
-		if param?
-			return param.slice(1)
-		else
-			return null
+	# _extractParams:(fragment)->
+	# 	param = @_regexp.exec(fragment)
+	# 	if param?
+	# 		console.log "?"
+	# 		console.log param
+	# 		return param.slice(1)
+	# 	else
+	# 		return null
 
 	#===============================================
 	#
@@ -573,22 +580,45 @@ class Rule
 				t = m.match(genericParam)||null
 				@types.push if t isnt null then t[1] else null
 
+	#マッチするかどうかテスト
 	test:(fragment)->
 		return @_regexp.test(fragment)
 
+	#URL パラメータを分解
 	_extractParams:(fragment)->
 		param = @_regexp.exec(fragment)
 		if param?
-			return param.slice(1)
+			newParam = param.slice(1)
+			last = param[param.length - 1]
+			if last.indexOf('?') > -1
+				newQueries = []
+				queries = last.split('?')[1]
+				queryParams = queries.split('&')
+				for query in queryParams
+					kv = query.split('=')
+					k = kv[0]
+					v = if kv[1] then kv[1] else ""
+					if v.indexOf('|') > -1
+						v = v.split("|")
+					obj = {}
+					obj[k] = v
+					newQueries.push obj
+				newParam.pop()
+				newParam.push last.split('?')[0]
+				newParam.push {"queries":newQueries}
+			return newParam
 		else
 			return null
 
+	#パラメーターを指定された型でキャスト
 	_getCastedParams:(params)->
 		i = 0
 		len = params.length
 		castedParams = []
 		while i < len
 			if @types[i] is null
+				castedParams.push params[i]
+			else if typeof params[i] is "object"
 				castedParams.push params[i]
 			else
 				for type in VARIABLE_TYPES
