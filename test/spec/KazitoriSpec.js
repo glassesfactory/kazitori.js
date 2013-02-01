@@ -364,7 +364,7 @@ describe("Deffered", function() {
     d.deffered(defferedSpy2);
     return d.execute(d);
   });
-  it('should dispatch TASK_QUEUE_FAILD envet when defferd completed', function() {
+  it('should dispatch TASK_QUEUE_COMPLETE envet when defferd completed', function() {
     var complete;
     complete = false;
     runs(function() {

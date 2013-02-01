@@ -684,31 +684,28 @@ class EventDispatcher
 
 class Deffered extends EventDispatcher
 	queue : []
-	index : -1
 
 	constructor:()->
 		@queue = []
-		@index = -1
 	
 	deffered:(func)->
 		@queue.push func
 		return @
 
 	execute:()->
-		@index++
 		try
-			if @queue[@index]
-				@queue[@index].apply(this, arguments)
-				if @queue.length is @index
-					@queue = []
-					@index = -1
-					@.dispatchEvent({type:KazitoriEvent.TASK_QUEUE_COMPLETE})
-					
-		catch error
+			task = @queue.shift()
+			if task
+				task.apply(@, arguments)
+			if @queue.length < 1
+				@queue = []
+				@.dispatchEvent(new KazitoriEvent(KazitoriEvent.TASK_QUEUE_COMPLETE))
+		catch error			
 			@reject(error)
 
 	reject:(error)->
-		@dispatchEvent({type:KazitoriEvent.TASK_QUEUE_FAILD, index:@index, message:error.message })
+		message = if not error then "user reject" else error
+		@dispatchEvent({type:KazitoriEvent.TASK_QUEUE_FAILD, index:@index, message:message })
 
 class KazitoriEvent
 	next:null

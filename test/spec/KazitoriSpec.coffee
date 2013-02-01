@@ -374,7 +374,6 @@ describe "Deffered", ->
       d.execute(d)
     .deffered (d)->
       chaninedDefferedSpy()
-
     d.execute(d)
     expect(defferedSpy).toHaveBeenCalled()
     expect(chaninedDefferedSpy).toHaveBeenCalled()
@@ -383,7 +382,9 @@ describe "Deffered", ->
     d.deffered defferedSpy2
     d.execute(d)
 
-  it 'should dispatch TASK_QUEUE_FAILD envet when defferd completed', ->
+
+  # it 'should dispatch TASK_QUEUE_FAILD envet when defferd completed', ->
+  it 'should dispatch TASK_QUEUE_COMPLETE envet when defferd completed', ->
     complete = false
 
     runs ->

@@ -827,10 +827,6 @@ Deffered = (function(_super) {
 
   __extends(Deffered, _super);
 
-  Deffered.prototype.queue = [];
-
-  Deffered.prototype.index = -1;
-
   function Deffered() {
     this.queue = [];
     this.index = -1;
@@ -842,17 +838,15 @@ Deffered = (function(_super) {
   };
 
   Deffered.prototype.execute = function() {
-    this.index++;
+    var task;
     try {
-      if (this.queue[this.index]) {
-        this.queue[this.index].apply(this, arguments);
-        if (this.queue.length === this.index) {
-          this.queue = [];
-          this.index = -1;
-          return this.dispatchEvent({
-            type: KazitoriEvent.TASK_QUEUE_COMPLETE
-          });
-        }
+      task = this.queue.shift();
+      if (task) {
+        task.apply(this, arguments);
+      }
+      if (this.queue.length < 1) {
+        this.queue = [];
+        return this.dispatchEvent(new KazitoriEvent(KazitoriEvent.TASK_QUEUE_COMPLETE));
       }
     } catch (error) {
       return this.reject(error);
@@ -860,10 +854,12 @@ Deffered = (function(_super) {
   };
 
   Deffered.prototype.reject = function(error) {
+    var message;
+    message = !error ? "user reject" : error;
     return this.dispatchEvent({
       type: KazitoriEvent.TASK_QUEUE_FAILD,
       index: this.index,
-      message: error.message
+      message: message
     });
   };
 
