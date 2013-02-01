@@ -17,11 +17,6 @@ Router = (function(_super) {
     return Router.__super__.constructor.apply(this, arguments);
   }
 
-  Router.prototype.befores = {
-    '/<string:user>/<int:post>/<friend>': ['beforeMinchi'],
-    '/<int:id>': ['beforeShow']
-  };
-
   Router.prototype.routes = {
     '/': 'index',
     '/<int:id>': 'show',
@@ -70,8 +65,9 @@ Router = (function(_super) {
     return console.log(username, postid);
   };
 
-  Router.prototype.firend = function(username, postid, firend) {
+  Router.prototype.firend = function(username, postid, firend, queries) {
     console.log("friend");
+    console.log(queries);
     return $('.currentPage').empty().append(username, postid, firend);
   };
 
@@ -156,10 +152,11 @@ $(document).ready(function() {
 });
 
 clickHandler = function(event) {
-  var target;
+  var target, url;
   event.preventDefault();
-  target = event.currentTarget.pathname;
-  return window.App.change(target);
+  target = $(event.currentTarget);
+  url = target.attr('href');
+  return window.App.change(url);
 };
 
 prevHandler = function(event) {

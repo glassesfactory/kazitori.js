@@ -4,10 +4,10 @@ test3 = ()->
 isLoaded = false
 class Router extends Kazitori
 	# beforeAnytime:['checkMaterial']
-	befores:
+	# befores:
 		# 'admin' :['ninshou']
-		'/<string:user>/<int:post>/<friend>':['beforeMinchi']
-		'/<int:id>':['beforeShow']
+		# '/<string:user>/<int:post>/<friend>':['beforeMinchi']
+		# '/<int:id>':['beforeShow']
 	routes :
 		'/':'index'		
 		'/<int:id>':'show'
@@ -53,8 +53,9 @@ class Router extends Kazitori
 		$('.currentPage').empty().append username, postid
 		console.log username, postid
 
-	firend:(username, postid, firend)->
+	firend:(username, postid, firend, queries)->
 		console.log "friend"
+		console.log queries
 		$('.currentPage').empty().append username, postid, firend
 
 	###
@@ -136,8 +137,9 @@ $(document).ready ()->
 
 clickHandler =(event)->
 	event.preventDefault()
-	target = event.currentTarget.pathname
-	window.App.change(target)
+	target = $(event.currentTarget)
+	url = target.attr('href')
+	window.App.change(url)
 
 prevHandler =(event)->
 	event.preventDefault()
