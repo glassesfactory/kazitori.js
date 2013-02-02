@@ -25,7 +25,7 @@ genericParam = /([A-Za-z_]+):(\w+)/
 optionalParam = /\((.*?)\)/g
 splatParam = /\*\w+/g
 
-#types
+## URL 変数に対して指定できる型
 VARIABLE_TYPES = [
 	{
 		name:"int"
@@ -38,14 +38,12 @@ VARIABLE_TYPES = [
 ]
 
 
-###
-# ほとんど Backbone.Router と Backbone.History から拝借。
-# jQuery や underscore に依存していないのでいろいろなライブラリと組み合わせられるはず。
-# もっと高級なことしたけりゃ素直に Backbone 使うことをおぬぬめ。
-#
-###
+## Kazitori.js
+# pushState をいい感じに捌けるルーターライブラリ
+# ひと通りのことはこれでまかなえるはず。
+
 class Kazitori
-	VERSION:"0.1.3"
+	VERSION:"0.2"
 	history:null
 	location:null
 	handlers:[]
@@ -55,7 +53,9 @@ class Kazitori
 	notFound:null
 	beforeAnytimeHandler:null
 	direct:null
-	#失敗した時
+	###beforeFailedHandler ###
+	# before 処理が失敗した時に実行されます。
+	# デフォルトでは空の function になっています。
 	beforeFailedHandler:()->
 		return
 	isBeforeForce:false
@@ -63,7 +63,6 @@ class Kazitori
 	breaker:{}
 
 	_dispatcher:null
-	#hum
 	_beforeDeffer:null
 
 	fragment:null
@@ -215,8 +214,7 @@ class Kazitori
 		@dispatchEvent(new KazitoriEvent(KazitoriEvent.CHANGE, next, prev))
 		if options.internal and options.internal is true
 			@._dispatcher.dispatchEvent( new KazitoriEvent(KazitoriEvent.INTERNAL_CHANGE, next, prev))
-
-		@loadURL(frag, matched, options)
+		@loadURL(frag, options)
 		return 
 
 	#中断する
@@ -246,21 +244,19 @@ class Kazitori
 		return @
 
 	#URL を読み込む
-	loadURL:(fragmentOverride, matched, options)->
+	loadURL:(fragmentOverride, options)->
 		fragment = @.fragment = @getFragment(fragmentOverride)
-
+		
 		if @.beforeAnytimeHandler or @.beforeHandlers.length > 0
 			@._beforeDeffer = new Deffered()
-			@._beforeDeffer.queue = []
-			@._beforeDeffer.index = -1
 			if @.beforeAnytimeHandler?
 				@._beforeDeffer.deffered((d)=>
 					@.beforeAnytimeHandler.callback(fragment)
 					d.execute(d)
 					return
 				)
-			if matched is undefined
-				 matched = @._matchCheck(fragment, @.beforeHandlers)
+			
+			matched = @._matchCheck(fragment, @.beforeHandlers)
 			for handler in matched
 				@._beforeDeffer.deffered((d)->
 					handler.callback(fragment)
@@ -282,12 +278,13 @@ class Kazitori
 		@._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_FAILED, @beforeFailed)
 		
 		@._beforeDeffer.queue = []
-		# @._beforeDeffer.index = -1
 
 		@executeHandlers()
 		return
 	
+	#routes で登録されたメソッドを実行
 	executeHandlers:()=>
+		#毎回 match チェックしてるので使いまわしたいのでリファクタ
 		matched = @._matchCheck(@.fragment, @.handlers)
 		if matched.length < 1 
 			if @.notFound isnt null

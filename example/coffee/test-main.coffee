@@ -4,10 +4,11 @@ test3 = ()->
 isLoaded = false
 class Router extends Kazitori
 	# beforeAnytime:['checkMaterial']
-	# befores:
+	befores:
+		
 		# 'admin' :['ninshou']
 		# '/<string:user>/<int:post>/<friend>':['beforeMinchi']
-		# '/<int:id>':['beforeShow']
+		'/<int:id>':['beforeShow']
 	routes :
 		'/':'index'		
 		'/<int:id>':'show'

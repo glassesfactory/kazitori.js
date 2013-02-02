@@ -46,17 +46,9 @@ VARIABLE_TYPES = [
   }
 ];
 
-/*
-# ほとんど Backbone.Router と Backbone.History から拝借。
-# jQuery や underscore に依存していないのでいろいろなライブラリと組み合わせられるはず。
-# もっと高級なことしたけりゃ素直に Backbone 使うことをおぬぬめ。
-#
-*/
-
-
 Kazitori = (function() {
 
-  Kazitori.prototype.VERSION = "0.1.3";
+  Kazitori.prototype.VERSION = "0.2";
 
   Kazitori.prototype.history = null;
 
@@ -75,6 +67,10 @@ Kazitori = (function() {
   Kazitori.prototype.beforeAnytimeHandler = null;
 
   Kazitori.prototype.direct = null;
+
+  /*beforeFailedHandler
+  */
+
 
   Kazitori.prototype.beforeFailedHandler = function() {};
 
@@ -156,9 +152,11 @@ Kazitori = (function() {
     }
     this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.START, this.fragment));
     if (!this.options.silent) {
-      override = '';
+      override = this.root;
       if (!this._hasPushState && atRoot) {
         override = this.root + this.fragment.replace(routeStripper, '');
+      } else if (!atRoot) {
+        override = this.fragment;
       }
       return this.loadURL(override);
     }
@@ -249,7 +247,7 @@ Kazitori = (function() {
     if (options.internal && options.internal === true) {
       this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.INTERNAL_CHANGE, next, prev));
     }
-    this.loadURL(frag, matched);
+    this.loadURL(frag, options);
   };
 
   Kazitori.prototype.reject = function() {
@@ -280,14 +278,12 @@ Kazitori = (function() {
     return this;
   };
 
-  Kazitori.prototype.loadURL = function(fragmentOverride) {
+  Kazitori.prototype.loadURL = function(fragmentOverride, options) {
     var fragment, handler, matched, _i, _len,
       _this = this;
     fragment = this.fragment = this.getFragment(fragmentOverride);
     if (this.beforeAnytimeHandler || this.beforeHandlers.length > 0) {
       this._beforeDeffer = new Deffered();
-      this._beforeDeffer.queue = [];
-      this._beforeDeffer.index = -1;
       if (this.beforeAnytimeHandler != null) {
         this._beforeDeffer.deffered(function(d) {
           _this.beforeAnytimeHandler.callback(fragment);
@@ -302,6 +298,7 @@ Kazitori = (function() {
           d.execute(d);
         });
       }
+      console.log("unbaa");
       this._beforeDeffer.addEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, this.beforeComplete);
       this._beforeDeffer.addEventListener(KazitoriEvent.TASK_QUEUE_FAILED, this.beforeFailed);
       this._beforeDeffer.execute(this._beforeDeffer);
@@ -314,12 +311,12 @@ Kazitori = (function() {
     this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, this.beforeComplete);
     this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_FAILED, this.beforeFailed);
     this._beforeDeffer.queue = [];
-    this._beforeDeffer.index = -1;
     this.executeHandlers();
   };
 
   Kazitori.prototype.executeHandlers = function() {
-    var handler, matched, _i, _len;
+    var handler, matched, _i, _len,
+      _this = this;
     matched = this._matchCheck(this.fragment, this.handlers);
     if (matched.length < 1) {
       if (this.notFound !== null) {
@@ -334,9 +331,10 @@ Kazitori = (function() {
         handler.callback(this.fragment);
       }
     }
-    console.log(matched, "?");
     if (this._isFirstRequest) {
-      this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.FIRST_REQUEST, next, prev));
+      setTimeout(function() {
+        return _this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.FIRST_REQUEST, _this.fragment, null));
+      }, 0);
       this._isFirstRequest = false;
     }
     return matched;
