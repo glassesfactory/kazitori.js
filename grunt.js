@@ -83,6 +83,6 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-docco');
 
   // Default task.
-  grunt.registerTask('default', 'coffeelint coffee jasmine yuidoc');
+  grunt.registerTask('default', 'coffeelint coffee jasmine');
 
 };
