@@ -1,14 +1,21 @@
-###
-	(c) 2013 Eikichi Yamaguchi
-	kazitori.js may be freely distributed under the MIT license.
-	http://dev.hageee.net
+# pushState をいい感じに捌けるルーターライブラリ  
+# pushState を使ったコンテンツで必要なことはひと通り出来るはず。
+#
+#----------------------------------------------
 
-	inspired from::
-//     (c) 2010-2012 Jeremy Ashkenas, DocumentCloud Inc.
-//     Backbone may be freely distributed under the MIT license.
-//     For all details and documentation:
-//     http://backbonejs.org
-###
+#### Copyrights
+#	(c) 2013 Eikichi Yamaguchi
+#	kazitori.js may be freely distributed under the MIT license.
+#	http://dev.hageee.net
+
+#	inspired from::
+#     (c) 2010-2012 Jeremy Ashkenas, DocumentCloud Inc.
+#     Backbone may be freely distributed under the MIT license.
+#     For all details and documentation:
+#     http://backbonejs.org
+#
+#----------------------------------------------
+
 
 #delegate
 delegater = (target, func)->
@@ -25,7 +32,15 @@ genericParam = /([A-Za-z_]+):(\w+)/
 optionalParam = /\((.*?)\)/g
 splatParam = /\*\w+/g
 
-## URL 変数に対して指定できる型
+#--------------------------------------------
+
+###URL 変数に対して指定できる型###
+# **Default:**  
+#	int : Number としてキャストされます  
+#	string : String としてキャストされます
+#
+
+
 VARIABLE_TYPES = [
 	{
 		name:"int"
@@ -37,11 +52,9 @@ VARIABLE_TYPES = [
 	}
 ]
 
+#--------------------------------------------
 
-## Kazitori.js
-# pushState をいい感じに捌けるルーターライブラリ
-# ひと通りのことはこれでまかなえるはず。
-
+## Kazitori クラス
 class Kazitori
 	VERSION:"0.2"
 	history:null
@@ -56,8 +69,14 @@ class Kazitori
 	###beforeFailedHandler ###
 	# before 処理が失敗した時に実行されます。
 	# デフォルトでは空の function になっています。
+	#
+	#--------------------------------------------
 	beforeFailedHandler:()->
 		return
+
+
+
+	###isBeforeForce###
 	isBeforeForce:false
 
 	breaker:{}
