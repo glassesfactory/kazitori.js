@@ -1,15 +1,3 @@
-/*
-	(c) 2013 Eikichi Yamaguchi
-	kazitori.js may be freely distributed under the MIT license.
-	http://dev.hageee.net
-
-	inspired from::
-//     (c) 2010-2012 Jeremy Ashkenas, DocumentCloud Inc.
-//     Backbone may be freely distributed under the MIT license.
-//     For all details and documentation:
-//     http://backbonejs.org
-*/
-
 var Deffered, EventDispatcher, Kazitori, KazitoriEvent, Rule, VARIABLE_TYPES, delegater, escapeRegExp, genericParam, namedParam, optionalParam, routeStripper, splatParam, trailingSlash,
   __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
@@ -35,6 +23,10 @@ genericParam = /([A-Za-z_]+):(\w+)/;
 optionalParam = /\((.*?)\)/g;
 
 splatParam = /\*\w+/g;
+
+/*URL 変数に対して指定できる型
+*/
+
 
 VARIABLE_TYPES = [
   {
@@ -73,6 +65,10 @@ Kazitori = (function() {
 
 
   Kazitori.prototype.beforeFailedHandler = function() {};
+
+  /*isBeforeForce
+  */
+
 
   Kazitori.prototype.isBeforeForce = false;
 
@@ -298,7 +294,6 @@ Kazitori = (function() {
           d.execute(d);
         });
       }
-      console.log("unbaa");
       this._beforeDeffer.addEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, this.beforeComplete);
       this._beforeDeffer.addEventListener(KazitoriEvent.TASK_QUEUE_FAILED, this.beforeFailed);
       this._beforeDeffer.execute(this._beforeDeffer);
