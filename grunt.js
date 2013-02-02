@@ -2,6 +2,7 @@ module.exports = function(grunt) {
 
   // Project configuration.
   grunt.initConfig({
+    pkg: grunt.file.readJSON('package.json'),
     coffeelintOptions: {
       "max_line_length" : {
         "value": 120,
@@ -39,6 +40,12 @@ module.exports = function(grunt) {
       files: ['src/coffee/*.coffee','example/coffee/*.coffee','test/spec/*.coffee'],
       tasks: 'coffee min jasmine reload'
     },
+    docco: {
+      debug: {
+        src: ['src/coffee/kazitori.coffee'],
+        dest: 'docs/'
+      }
+    },
     jasmine : {
       src : 'test/src/*.js',
       specs : 'test/spec/*.js'
@@ -73,8 +80,9 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-coffee');
   grunt.loadNpmTasks('grunt-coffeelint');
   grunt.loadNpmTasks('grunt-reload');
+  grunt.loadNpmTasks('grunt-docco');
 
   // Default task.
-  grunt.registerTask('default', 'coffeelint coffee jasmine');
+  grunt.registerTask('default', 'coffeelint coffee jasmine yuidoc');
 
 };
