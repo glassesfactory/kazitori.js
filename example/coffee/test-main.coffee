@@ -95,9 +95,6 @@ $(document).ready ()->
 	})
 	$('#dialog').hide()
 
-	
-
-
 	window.App = new Router({root:'/'})
 	
 	#チェンジイベント
@@ -146,7 +143,7 @@ clickHandler =(event)->
 	event.preventDefault()
 	target = $(event.currentTarget)
 	url = target.attr('href')
-	window.App.change(url)
+	window.App.change(url,{replace:true})
 
 prevHandler =(event)->
 	event.preventDefault()

@@ -163,7 +163,9 @@ clickHandler = function(event) {
   event.preventDefault();
   target = $(event.currentTarget);
   url = target.attr('href');
-  return window.App.change(url);
+  return window.App.change(url, {
+    replace: true
+  });
 };
 
 prevHandler = function(event) {
