@@ -165,11 +165,13 @@ class Kazitori
 		#ストップイベントをディスパッチ
 		@._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.STOP, @.fragment))
 
-	#ヒストリーネクスト
+	## torikazi
+	# ヒストリーネクストを実行します。
 	torikazi:(options)->
 		return @direction(options, "next")
 
-	#ヒストリーバック
+	## omokazi
+	# ヒストリーバックを実行します
 	omokazi:(options)->
 		return @direction(options, "prev")
 
