@@ -77,7 +77,7 @@ Kazitori = (function() {
 
   Kazitori.prototype.direct = null;
 
-  Kazitori.prototype.beforeFaildHandler = function() {};
+  Kazitori.prototype.beforeFailedHandler = function() {};
 
   Kazitori.prototype.isBeforeForce = false;
 
@@ -96,7 +96,7 @@ Kazitori = (function() {
   function Kazitori(options) {
     this.observeURLHandler = __bind(this.observeURLHandler, this);
 
-    this.beforeFaild = __bind(this.beforeFaild, this);
+    this.beforeFailed = __bind(this.beforeFailed, this);
 
     this.executeHandlers = __bind(this.executeHandlers, this);
 
@@ -181,22 +181,27 @@ Kazitori = (function() {
   };
 
   Kazitori.prototype.direction = function(option, direction) {
-    var current;
+    var current, tmpFrag;
     if (!Kazitori.started) {
       return false;
     }
+    tmpFrag = this.lastFragment;
     this.lastFragment = this.getFragment();
     this.direct = direction;
     if (direction === "prev") {
       this.isUserAction = true;
-      this.history.back();
+      this.change(tmpFrag, {
+        internal: true
+      });
       current = this.getFragment();
-      return this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.PREV, current, this.fragment));
+      return this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.PREV, current, this.lastFragment));
     } else if (direction === "next") {
       this.isUserAction = true;
-      this.history.forward();
+      this.change(tmpFrag, {
+        internal: true
+      });
       current = this.getFragment();
-      return this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.NEXT, current, this.fragment));
+      return this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.NEXT, current, this.lastFragment));
     } else {
 
     }
@@ -243,15 +248,16 @@ Kazitori = (function() {
       return this.location.assign(url);
     }
     this.dispatchEvent(new KazitoriEvent(KazitoriEvent.CHANGE, next, prev));
+    if (options.internal && options.internal === true) {
+      this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.INTERNAL_CHANGE, next, prev));
+    }
     this.loadURL(frag, matched);
   };
 
   Kazitori.prototype.reject = function() {
-    this.dispatchEvent({
-      type: KazitoriEvent.REJECT
-    });
+    this.dispatchEvent(new KazitoriEvent(KazitoriEvent.REJECT, this.fragment));
     this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, this.beforeComplete);
-    this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_FAILED, this.beforeFaild);
+    this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_FAILED, this.beforeFailed);
     this._beforeDeffer = null;
   };
 
@@ -328,19 +334,18 @@ Kazitori = (function() {
         });
       }
       this._beforeDeffer.addEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, this.beforeComplete);
-      this._beforeDeffer.addEventListener(KazitoriEvent.TASK_QUEUE_FAILED, this.beforeFaild);
-      return this._beforeDeffer.execute(this._beforeDeffer);
+      this._beforeDeffer.addEventListener(KazitoriEvent.TASK_QUEUE_FAILED, this.beforeFailed);
+      this._beforeDeffer.execute(this._beforeDeffer);
     } else {
-      return this.executeHandlers();
+      this.executeHandlers();
     }
   };
 
   Kazitori.prototype.beforeComplete = function(event) {
     this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, this.beforeComplete);
     this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_FAILED, this.beforeFaild);
-    this._beforeDeffer.queue = [];
-    this._beforeDeffer.index = -1;
-    return this.executeHandlers();
+    this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_FAILED, this.beforeFailed);
+    this.executeHandlers();
   };
 
   Kazitori.prototype.executeHandlers = function() {
@@ -387,14 +392,14 @@ Kazitori = (function() {
     return matched;
   };
 
-  Kazitori.prototype.beforeFaild = function(event) {
-    this.beforeFaildHandler.apply(this, arguments);
-    this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_FAILED, this.beforeFaild);
+  Kazitori.prototype.beforeFailed = function(event) {
+    this.beforeFailedHandler.apply(this, arguments);
+    this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_FAILED, this.beforeFailed);
     this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, this.beforeComplete);
     if (this.isBeforeForce) {
       this.beforeComplete();
     }
-    return this._beforeDeffer = null;
+    this._beforeDeffer = null;
   };
 
   Kazitori.prototype.observeURLHandler = function(event) {
@@ -859,7 +864,7 @@ Deffered = (function(_super) {
     var message;
     message = !error ? "user reject" : error;
     return this.dispatchEvent({
-      type: KazitoriEvent.TASK_QUEUE_FAILD,
+      type: KazitoriEvent.TASK_QUEUE_FAILED,
       index: this.index,
       message: message
     });
@@ -897,7 +902,7 @@ KazitoriEvent = (function() {
 
 KazitoriEvent.TASK_QUEUE_COMPLETE = 'task_queue_complete';
 
-KazitoriEvent.TASK_QUEUE_FAILED = 'task_queue_failEd';
+KazitoriEvent.TASK_QUEUE_FAILED = 'task_queue_failed';
 
 KazitoriEvent.CHANGE = 'change';
 

@@ -19,8 +19,6 @@ delegater = (target, func)->
 trailingSlash = /\/$/
 routeStripper = /^[#\/]|\s+$/g
 escapeRegExp = /[\-{}\[\]+?.,\\\^$|#\s]/g
-# namedParam = /:\w+/g
-# namedParam = /<\w+>/g
 namedParam = /<(\w+|[A-Za-z_]+:\w+)>/g
 genericParam = /([A-Za-z_]+):(\w+)/
 
@@ -58,7 +56,7 @@ class Kazitori
 	beforeAnytimeHandler:null
 	direct:null
 	#失敗した時
-	beforeFaildHandler:()->
+	beforeFailedHandler:()->
 		return
 	isBeforeForce:false
 
@@ -128,9 +126,7 @@ class Kazitori
 		if @._hasPushState and atRoot and @.location.hash
 			@.fragment = @.lastFragment = @.getHash().replace(routeStripper, '')
 			@.history.replaceState({}, document.title, @.root + @.fragment + @.location.search)
-			# return
 		#スタートイベントをディスパッチ
-
 		@._dispatcher.dispatchEvent( new KazitoriEvent( KazitoriEvent.START, @.fragment ))
 		if !@.options.silent
 			return  @loadURL()
@@ -157,18 +153,20 @@ class Kazitori
 		if not Kazitori.started
 			return false
 
+		tmpFrag = @.lastFragment
 		@.lastFragment = @getFragment()
 		@.direct = direction
 		if direction is "prev"
 			@.isUserAction = true
-			@.history.back()
+			@change(tmpFrag, {internal:true})
 			current = @getFragment()
-			@._dispatcher.dispatchEvent( new KazitoriEvent( KazitoriEvent.PREV, current, @.fragment ))
+
+			@._dispatcher.dispatchEvent( new KazitoriEvent( KazitoriEvent.PREV, current, @.lastFragment ))
 		else if direction is "next"
 			@.isUserAction = true
-			@.history.forward()
+			@change(tmpFrag, {internal:true})
 			current = @getFragment()
-			@._dispatcher.dispatchEvent( new KazitoriEvent( KazitoriEvent.NEXT, current, @.fragment ))
+			@._dispatcher.dispatchEvent( new KazitoriEvent( KazitoriEvent.NEXT, current, @.lastFragment ))
 		else
 			return
 
@@ -206,15 +204,18 @@ class Kazitori
 			return @.location.assign(url)
 		#イベントディスパッチ
 		@dispatchEvent(new KazitoriEvent(KazitoriEvent.CHANGE, next, prev))
+		if options.internal and options.internal is true
+			@._dispatcher.dispatchEvent( new KazitoriEvent(KazitoriEvent.INTERNAL_CHANGE, next, prev))
+
 		@loadURL(frag, matched)
 		return
 
 	#中断する
 	#メソッド名 intercept のほうがいいかな
 	reject:()->
-		@dispatchEvent({type:KazitoriEvent.REJECT})
+		@dispatchEvent(new KazitoriEvent(KazitoriEvent.REJECT, @.fragment))
 		@._beforeDeffer.removeEventListener KazitoriEvent.TASK_QUEUE_COMPLETE, @beforeComplete
-		@._beforeDeffer.removeEventListener KazitoriEvent.TASK_QUEUE_FAILED, @beforeFaild
+		@._beforeDeffer.removeEventListener KazitoriEvent.TASK_QUEUE_FAILED, @beforeFailed
 		@._beforeDeffer = null
 		return
 
@@ -281,21 +282,22 @@ class Kazitori
 					)
 
 			@._beforeDeffer.addEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, @beforeComplete)
-			@._beforeDeffer.addEventListener(KazitoriEvent.TASK_QUEUE_FAILED, @beforeFaild)
+			@._beforeDeffer.addEventListener(KazitoriEvent.TASK_QUEUE_FAILED, @beforeFailed)
 			@._beforeDeffer.execute(@._beforeDeffer)
 		else
 			@executeHandlers()
+		return
 
 
 	#before で登録した処理が無難に終わった
 	beforeComplete:(event)=>
 		@._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, @beforeComplete)
 		@._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_FAILED, @beforeFaild)
-
-		@._beforeDeffer.queue = []
-		@._beforeDeffer.index = -1
-
+		@._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_FAILED, @beforeFailed)
 		@executeHandlers()
+
+		return
+	
 
 	executeHandlers:()=>
 		matched = []
@@ -335,14 +337,14 @@ class Kazitori
 
 
 
-	beforeFaild:(event)=>
-		@.beforeFaildHandler.apply(@, arguments)
-		@._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_FAILED, @beforeFaild)
+	beforeFailed:(event)=>
+		@.beforeFailedHandler.apply(@, arguments)
+		@._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_FAILED, @beforeFailed)
 		@._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, @beforeComplete)
 		if @isBeforeForce
 			@beforeComplete()
 		@._beforeDeffer = null
-
+		return
 
 
 	#URL の変更を監視
@@ -705,7 +707,7 @@ class Deffered extends EventDispatcher
 
 	reject:(error)->
 		message = if not error then "user reject" else error
-		@dispatchEvent({type:KazitoriEvent.TASK_QUEUE_FAILD, index:@index, message:message })
+		@dispatchEvent({type:KazitoriEvent.TASK_QUEUE_FAILED, index:@index, message:message })
 
 class KazitoriEvent
 	next:null
@@ -728,7 +730,7 @@ class KazitoriEvent
 KazitoriEvent.TASK_QUEUE_COMPLETE = 'task_queue_complete'
 
 #タスクキューが中断された
-KazitoriEvent.TASK_QUEUE_FAILED = 'task_queue_failEd'
+KazitoriEvent.TASK_QUEUE_FAILED = 'task_queue_failed'
 
 #URL が変わった時
 KazitoriEvent.CHANGE = 'change'

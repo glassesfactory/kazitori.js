@@ -76,7 +76,7 @@ Kazitori = (function() {
 
   Kazitori.prototype.direct = null;
 
-  Kazitori.prototype.beforeFaildHandler = function() {};
+  Kazitori.prototype.beforeFailedHandler = function() {};
 
   Kazitori.prototype.isBeforeForce = false;
 
@@ -95,7 +95,7 @@ Kazitori = (function() {
   function Kazitori(options) {
     this.observeURLHandler = __bind(this.observeURLHandler, this);
 
-    this.beforeFaild = __bind(this.beforeFaild, this);
+    this.beforeFailed = __bind(this.beforeFailed, this);
 
     this.executeHandlers = __bind(this.executeHandlers, this);
 
@@ -180,22 +180,27 @@ Kazitori = (function() {
   };
 
   Kazitori.prototype.direction = function(option, direction) {
-    var current;
+    var current, tmpFrag;
     if (!Kazitori.started) {
       return false;
     }
+    tmpFrag = this.lastFragment;
     this.lastFragment = this.getFragment();
     this.direct = direction;
     if (direction === "prev") {
       this.isUserAction = true;
-      this.history.back();
+      this.change(tmpFrag, {
+        internal: true
+      });
       current = this.getFragment();
-      return this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.PREV, current, this.fragment));
+      return this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.PREV, current, this.lastFragment));
     } else if (direction === "next") {
       this.isUserAction = true;
-      this.history.forward();
+      this.change(tmpFrag, {
+        internal: true
+      });
       current = this.getFragment();
-      return this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.NEXT, current, this.fragment));
+      return this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.NEXT, current, this.lastFragment));
     } else {
 
     }
@@ -242,19 +247,20 @@ Kazitori = (function() {
       return this.location.assign(url);
     }
     this.dispatchEvent(new KazitoriEvent(KazitoriEvent.CHANGE, next, prev));
+    if (options.internal && options.internal === true) {
+      this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.INTERNAL_CHANGE, next, prev));
+    }
     this.loadURL(frag, matched);
   };
 
   Kazitori.prototype.reject = function() {
-    this.dispatchEvent({
-      type: KazitoriEvent.REJECT
-    });
+    this.dispatchEvent(new KazitoriEvent(KazitoriEvent.REJECT, this.fragment));
     this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, this.beforeComplete);
-    this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_FAILD, this.beforeFaild);
+    this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_FAILED, this.beforeFailed);
     this._beforeDeffer = null;
   };
 
-  Kazitori.prototype.registHandler = function(rule, name, isBefore, callback) {
+  Kazitori.prototype.registerHandler = function(rule, name, isBefore, callback) {
     var target;
     if (!callback) {
       if (isBefore) {
@@ -327,19 +333,19 @@ Kazitori = (function() {
         });
       }
       this._beforeDeffer.addEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, this.beforeComplete);
-      this._beforeDeffer.addEventListener(KazitoriEvent.TASK_QUEUE_FAILD, this.beforeFaild);
-      return this._beforeDeffer.execute(this._beforeDeffer);
+      this._beforeDeffer.addEventListener(KazitoriEvent.TASK_QUEUE_FAILED, this.beforeFailed);
+      this._beforeDeffer.execute(this._beforeDeffer);
     } else {
-      return this.executeHandlers();
+      this.executeHandlers();
     }
   };
 
   Kazitori.prototype.beforeComplete = function(event) {
     this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, this.beforeComplete);
-    this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_FAILD, this.beforeFaild);
+    this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_FAILED, this.beforeFailed);
     this._beforeDeffer.queue = [];
     this._beforeDeffer.index = -1;
-    return this.executeHandlers();
+    this.executeHandlers();
   };
 
   Kazitori.prototype.executeHandlers = function() {
@@ -386,14 +392,14 @@ Kazitori = (function() {
     return matched;
   };
 
-  Kazitori.prototype.beforeFaild = function(event) {
-    this.beforeFaildHandler.apply(this, arguments);
-    this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_FAILD, this.beforeFaild);
+  Kazitori.prototype.beforeFailed = function(event) {
+    this.beforeFailedHandler.apply(this, arguments);
+    this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_FAILED, this.beforeFailed);
     this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, this.beforeComplete);
     if (this.isBeforeForce) {
       this.beforeComplete();
     }
-    return this._beforeDeffer = null;
+    this._beforeDeffer = null;
   };
 
   Kazitori.prototype.observeURLHandler = function(event) {
@@ -426,7 +432,7 @@ Kazitori = (function() {
     routes = this._keys(this.routes);
     for (_i = 0, _len = routes.length; _i < _len; _i++) {
       rule = routes[_i];
-      this.registHandler(rule, this.routes[rule], false);
+      this.registerHandler(rule, this.routes[rule], false);
     }
   };
 
@@ -438,7 +444,7 @@ Kazitori = (function() {
     befores = this._keys(this.befores);
     for (_i = 0, _len = befores.length; _i < _len; _i++) {
       key = befores[_i];
-      this.registHandler(key, this.befores[key], true);
+      this.registerHandler(key, this.befores[key], true);
     }
     if (this.beforeAnytime) {
       callback = this._bindFunctions(this.beforeAnytime);
@@ -827,9 +833,10 @@ Deffered = (function(_super) {
 
   __extends(Deffered, _super);
 
+  Deffered.prototype.queue = [];
+
   function Deffered() {
     this.queue = [];
-    this.index = -1;
   }
 
   Deffered.prototype.deffered = function(func) {
@@ -857,7 +864,7 @@ Deffered = (function(_super) {
     var message;
     message = !error ? "user reject" : error;
     return this.dispatchEvent({
-      type: KazitoriEvent.TASK_QUEUE_FAILD,
+      type: KazitoriEvent.TASK_QUEUE_FAILED,
       index: this.index,
       message: message
     });
@@ -895,7 +902,7 @@ KazitoriEvent = (function() {
 
 KazitoriEvent.TASK_QUEUE_COMPLETE = 'task_queue_complete';
 
-KazitoriEvent.TASK_QUEUE_FAILD = 'task_queue_faild';
+KazitoriEvent.TASK_QUEUE_FAILED = 'task_queue_failed';
 
 KazitoriEvent.CHANGE = 'change';
 

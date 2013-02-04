@@ -332,9 +332,9 @@ describe("Deffered", function() {
   chaninedDefferedSpy = jasmine.createSpy('chaninedDefferedSpy');
   defferedSpy2 = jasmine.createSpy('defferedSpy2');
   taskQueueCompleteHandler = jasmine.createSpy('TASK_QUEUE_COMPLETE Event');
-  taskQueueFailedHandler = jasmine.createSpy('TASK_QUEUE_FAILD Event');
+  taskQueueFailedHandler = jasmine.createSpy('TASK_QUEUE_FAILED Event');
   d.addEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, taskQueueCompleteHandler);
-  d.addEventListener(KazitoriEvent.TASK_QUEUE_FAILD, taskQueueFailedHandler);
+  d.addEventListener(KazitoriEvent.TASK_QUEUE_FAILED, taskQueueFailedHandler);
   beforeEach(function() {
     defferedSpy.reset();
     chaninedDefferedSpy.reset();
@@ -381,7 +381,7 @@ describe("Deffered", function() {
       return expect(taskQueueCompleteHandler).toHaveBeenCalled();
     });
   });
-  return it('should dispatch TASK_QUEUE_FAILD envet when defferd.reject called', function() {
+  return it('should dispatch TASK_QUEUE_FAILED envet when defferd.reject called', function() {
     d.deffered(function(d) {
       return d.reject();
     });
