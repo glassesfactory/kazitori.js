@@ -93,6 +93,8 @@ Kazitori = (function() {
 
   Kazitori.prototype.isUserAction = false;
 
+  Kazitori.prototype._isFirstRequest = true;
+
   function Kazitori(options) {
     this.observeURLHandler = __bind(this.observeURLHandler, this);
 
@@ -155,9 +157,11 @@ Kazitori = (function() {
     }
     this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.START, this.fragment));
     if (!this.options.silent) {
-      override = '';
+      override = this.root;
       if (!this._hasPushState && atRoot) {
         override = this.root + this.fragment.replace(routeStripper, '');
+      } else if (!atRoot) {
+        override = this.fragment;
       }
       return this.loadURL(override);
     }
@@ -214,6 +218,7 @@ Kazitori = (function() {
         'trigger': options
       };
     }
+    this.isBeforeForce = options.isBeforeForce !== false;
     frag = this.getFragment(fragment || '');
     if (this.fragment === frag) {
       return;
@@ -247,7 +252,7 @@ Kazitori = (function() {
     if (options.internal && options.internal === true) {
       this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.INTERNAL_CHANGE, next, prev));
     }
-    this.loadURL(frag, matched);
+    this.loadURL(frag, matched, options);
   };
 
   Kazitori.prototype.reject = function() {
@@ -278,8 +283,8 @@ Kazitori = (function() {
     return this;
   };
 
-  Kazitori.prototype.loadURL = function(fragmentOverride) {
-    var fragment, handler, matched, _i, _len,
+  Kazitori.prototype.loadURL = function(fragmentOverride, matched, options) {
+    var fragment, handler, _i, _len,
       _this = this;
     fragment = this.fragment = this.getFragment(fragmentOverride);
     if (this.beforeAnytimeHandler || this.beforeHandlers.length > 0) {
@@ -292,7 +297,9 @@ Kazitori = (function() {
           d.execute(d);
         });
       }
-      matched = this._matchCheck(fragment, this.beforeHandlers);
+      if (matched === void 0) {
+        matched = this._matchCheck(fragment, this.beforeHandlers);
+      }
       for (_i = 0, _len = matched.length; _i < _len; _i++) {
         handler = matched[_i];
         this._beforeDeffer.deffered(function(d) {
@@ -312,11 +319,13 @@ Kazitori = (function() {
     this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, this.beforeComplete);
     this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_FAILED, this.beforeFaild);
     this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_FAILED, this.beforeFailed);
+    this._beforeDeffer.queue = [];
     this.executeHandlers();
   };
 
   Kazitori.prototype.executeHandlers = function() {
-    var handler, matched, _i, _len;
+    var handler, matched, _i, _len,
+      _this = this;
     matched = this._matchCheck(this.fragment, this.handlers);
     if (matched.length < 1) {
       if (this.notFound !== null) {
@@ -330,6 +339,12 @@ Kazitori = (function() {
         handler = matched[_i];
         handler.callback(this.fragment);
       }
+    }
+    if (this._isFirstRequest) {
+      setTimeout(function() {
+        return _this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.FIRST_REQUEST, _this.fragment, null));
+      }, 0);
+      this._isFirstRequest = false;
     }
     return matched;
   };
@@ -900,5 +915,7 @@ KazitoriEvent.NOT_FOUND = 'not_found';
 KazitoriEvent.START = 'start';
 
 KazitoriEvent.STOP = 'stop';
+
+KazitoriEvent.FIRST_REQUEST = 'first_request';
 
 Kazitori.started = false;

@@ -98,10 +98,16 @@ $(document).ready ()->
 
 
 	window.App = new Router({root:'/'})
+	
 	#チェンジイベント
 	window.App.addEventListener( KazitoriEvent.CHANGE, (event)->
 		console.log event, "change"
 		)
+
+	window.App.addEventListener( KazitoriEvent.FIRST_REQUEST, (event)->
+		console.log event, "firstrequest"
+		)
+	
 	window.App.addEventListener( KazitoriEvent.PREV, (event)->
 		console.log event, "prev"
 		)

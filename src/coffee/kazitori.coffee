@@ -70,6 +70,10 @@ class Kazitori
 	lastFragment:null
 	isUserAction:false
 
+	_isFirstRequest:true
+
+
+
 
 	constructor:(options)->
 		@.options = options || (options = {})
@@ -126,9 +130,11 @@ class Kazitori
 		#スタートイベントをディスパッチ
 		@._dispatcher.dispatchEvent( new KazitoriEvent( KazitoriEvent.START, @.fragment ))
 		if !@.options.silent
-			override = ''
+			override = @.root
 			if not @._hasPushState and atRoot
 				override = @.root + @.fragment.replace(routeStripper, '')
+			else if not atRoot
+				override = @.fragment
 			return  @loadURL(override)
 
 
@@ -177,6 +183,8 @@ class Kazitori
 		prev = @.fragment
 		if not options
 			options = {'trigger':options}
+
+		@.isBeforeForce = options.isBeforeForce isnt false
 		frag = @getFragment(fragment || '')
 		if @.fragment is frag
 			return
@@ -202,13 +210,14 @@ class Kazitori
 				@_updateHash(@.iframe.location, frag, options.replace)
 		else
 			return @.location.assign(url)
+
 		#イベントディスパッチ
 		@dispatchEvent(new KazitoriEvent(KazitoriEvent.CHANGE, next, prev))
 		if options.internal and options.internal is true
 			@._dispatcher.dispatchEvent( new KazitoriEvent(KazitoriEvent.INTERNAL_CHANGE, next, prev))
 
-		@loadURL(frag, matched)
-		return
+		@loadURL(frag, matched, options)
+		return 
 
 	#中断する
 	#メソッド名 intercept のほうがいいかな
@@ -237,7 +246,7 @@ class Kazitori
 		return @
 
 	#URL を読み込む
-	loadURL:(fragmentOverride)->
+	loadURL:(fragmentOverride, matched, options)->
 		fragment = @.fragment = @getFragment(fragmentOverride)
 
 		if @.beforeAnytimeHandler or @.beforeHandlers.length > 0
@@ -250,7 +259,8 @@ class Kazitori
 					d.execute(d)
 					return
 				)
-			matched = @._matchCheck(fragment, @.beforeHandlers)
+			if matched is undefined
+				 matched = @._matchCheck(fragment, @.beforeHandlers)
 			for handler in matched
 				@._beforeDeffer.deffered((d)->
 					handler.callback(fragment)
@@ -271,6 +281,9 @@ class Kazitori
 		@._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, @beforeComplete)
 		@._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_FAILED, @beforeFaild)
 		@._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_FAILED, @beforeFailed)
+		
+		@._beforeDeffer.queue = []
+
 		@executeHandlers()
 
 		return
@@ -288,6 +301,13 @@ class Kazitori
 		else
 			for handler in matched
 				handler.callback(@.fragment)
+
+		if @._isFirstRequest
+			#間に合わないので遅延させて発行
+			setTimeout ()=>
+				@._dispatcher.dispatchEvent( new KazitoriEvent(KazitoriEvent.FIRST_REQUEST, @.fragment, null))
+			,0
+			@._isFirstRequest = false
 		return matched
 
 
@@ -665,8 +685,6 @@ class EventDispatcher
 				else arr.splice(i,1)
 				break
 			i++
-		# if index isnt -1
-			# @listeners[type].splice(index, 1)
 		return
 
 	dispatchEvent:(event)->
@@ -753,5 +771,7 @@ KazitoriEvent.START = 'start'
 
 #ストップ
 KazitoriEvent.STOP = 'stop'
+
+KazitoriEvent.FIRST_REQUEST = 'first_request'
 
 Kazitori.started = false
