@@ -74,8 +74,6 @@ class Kazitori
 	beforeFailedHandler:()->
 		return
 
-
-
 	###isBeforeForce###
 	isBeforeForce:false
 
@@ -294,17 +292,14 @@ class Kazitori
 			@executeHandlers()
 		return
 
-
 	#before で登録した処理が無難に終わった
 	beforeComplete:(event)=>
 		@._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, @beforeComplete)
-		@._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_FAILED, @beforeFaild)
 		@._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_FAILED, @beforeFailed)
 		
 		@._beforeDeffer.queue = []
 
 		@executeHandlers()
-
 		return
 	
 	#routes で登録されたメソッドを実行
@@ -329,8 +324,6 @@ class Kazitori
 			,0
 			@._isFirstRequest = false
 		return matched
-
-
 
 	beforeFailed:(event)=>
 		@.beforeFailedHandler.apply(@, arguments)

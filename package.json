@@ -13,6 +13,9 @@
     "type": "git",
     "url": "git@github.com:glassesfactory/kazitori.js.git"
   },
+  "engines": {
+    "node": ">= 0.8.0"
+  },
   "scripts": {
     "test": "grunt jasmine"
   },
@@ -25,10 +28,6 @@
       "url": "https://github.com/glassesfactory/kazitori.js/blob/master/LICENSE-MIT"
     }
   ],
-  "main": "grunt.js",
-  "engines": {
-    "node": ">= 0.8.0"
-  },
   "devDependencies": {
     "grunt-coffee": "latest",
     "grunt-coffeelint": "latest",
@@ -38,6 +37,7 @@
     "grunt": "0.3.17"
   },
   "keywords": [
-    "router"
+    "router",
+    "browser"
   ]
 }

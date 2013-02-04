@@ -307,7 +307,6 @@ Kazitori = (function() {
 
   Kazitori.prototype.beforeComplete = function(event) {
     this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, this.beforeComplete);
-    this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_FAILED, this.beforeFaild);
     this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_FAILED, this.beforeFailed);
     this._beforeDeffer.queue = [];
     this.executeHandlers();
