@@ -1,6 +1,8 @@
 kazitori.js
 ===============
 
+[![Build Status](https://travis-ci.org/glassesfactory/kazitori.js.png?branch=master)](https://travis-ci.org/glassesfactory/kazitori.js)
+
 kazitori.js は pushState を良い感じにさばいてくれるライブラリです。  
 依存している外部ライブラリなどは存在しないので  
 様々なコンテンツに組み合わせることができます。  
