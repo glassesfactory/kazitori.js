@@ -18,7 +18,8 @@ Router = (function(_super) {
   }
 
   Router.prototype.befores = {
-    '/<int:id>': ['beforeShow']
+    'admin': ['ninshou'],
+    'admin/:id': ['ninshou', 'beforeMinchi']
   };
 
   Router.prototype.routes = {
@@ -50,7 +51,12 @@ Router = (function(_super) {
   Router.prototype.admin = function() {
     console.log("admin");
     $('.currentPage').empty().append("this is admin page");
+<<<<<<< HEAD
     return $('#adminContainer').empty().append('<a href="/admin/1" class="test">1</a><a href="/admin/2" class="test">2</a><a href="/admin/3" class="test">3</a>');
+=======
+    $('#adminContainer').empty().append('<a href="/admin/1" class="test">1</a><a href="/admin/2" class="test">2</a><a href="/admin/3" class="test">3</a>');
+    return $('.test').on('click', clickHandler);
+>>>>>>> Revert "a"
   };
 
   Router.prototype.login = function() {
@@ -123,6 +129,7 @@ $(document).ready(function() {
     root: '/'
   });
   window.App.addEventListener(KazitoriEvent.CHANGE, function(event) {
+<<<<<<< HEAD
     return console.log(event, "change");
   });
   window.App.addEventListener(KazitoriEvent.FIRST_REQUEST, function(event) {
@@ -137,9 +144,11 @@ $(document).ready(function() {
   window.App.addEventListener(KazitoriEvent.REJECT, function(event) {
     return console.log(event);
   });
+
   window.App.addEventListener(KazitoriEvent.NOT_FOUND, function(event) {
     return console.log("not found");
   });
+
   $('.test').on("click", clickHandler);
   $('.prev').on("click", prevHandler);
   $('.next').on("click", nextHandler);
