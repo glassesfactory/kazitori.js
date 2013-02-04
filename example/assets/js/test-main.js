@@ -17,6 +17,10 @@ Router = (function(_super) {
     return Router.__super__.constructor.apply(this, arguments);
   }
 
+  Router.prototype.befores = {
+    '/<int:id>': ['beforeShow']
+  };
+
   Router.prototype.routes = {
     '/': 'index',
     '/<int:id>': 'show',

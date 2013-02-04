@@ -47,17 +47,9 @@ VARIABLE_TYPES = [
   }
 ];
 
-/*
-# ほとんど Backbone.Router と Backbone.History から拝借。
-# jQuery や underscore に依存していないのでいろいろなライブラリと組み合わせられるはず。
-# もっと高級なことしたけりゃ素直に Backbone 使うことをおぬぬめ。
-#
-*/
-
-
 Kazitori = (function() {
 
-  Kazitori.prototype.VERSION = "0.1.3";
+  Kazitori.prototype.VERSION = "0.2";
 
   Kazitori.prototype.history = null;
 
@@ -76,6 +68,10 @@ Kazitori = (function() {
   Kazitori.prototype.beforeAnytimeHandler = null;
 
   Kazitori.prototype.direct = null;
+
+  /*beforeFailedHandler
+  */
+
 
   Kazitori.prototype.beforeFailedHandler = function() {};
 
@@ -252,7 +248,7 @@ Kazitori = (function() {
     if (options.internal && options.internal === true) {
       this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.INTERNAL_CHANGE, next, prev));
     }
-    this.loadURL(frag, matched, options);
+    this.loadURL(frag, options);
   };
 
   Kazitori.prototype.reject = function() {
@@ -283,23 +279,19 @@ Kazitori = (function() {
     return this;
   };
 
-  Kazitori.prototype.loadURL = function(fragmentOverride, matched, options) {
-    var fragment, handler, _i, _len,
+  Kazitori.prototype.loadURL = function(fragmentOverride, options) {
+    var fragment, handler, matched, _i, _len,
       _this = this;
     fragment = this.fragment = this.getFragment(fragmentOverride);
     if (this.beforeAnytimeHandler || this.beforeHandlers.length > 0) {
       this._beforeDeffer = new Deffered();
-      this._beforeDeffer.queue = [];
-      this._beforeDeffer.index = -1;
       if (this.beforeAnytimeHandler != null) {
         this._beforeDeffer.deffered(function(d) {
           _this.beforeAnytimeHandler.callback(fragment);
           d.execute(d);
         });
       }
-      if (matched === void 0) {
-        matched = this._matchCheck(fragment, this.beforeHandlers);
-      }
+      matched = this._matchCheck(fragment, this.beforeHandlers);
       for (_i = 0, _len = matched.length; _i < _len; _i++) {
         handler = matched[_i];
         this._beforeDeffer.deffered(function(d) {
