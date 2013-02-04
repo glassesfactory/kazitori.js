@@ -73,6 +73,8 @@ Kazitori = (function() {
 
   Kazitori.prototype.isBeforeForce = false;
 
+  Kazitori.prototype.isNotFoundForce = false;
+
   Kazitori.prototype.breaker = {};
 
   Kazitori.prototype._dispatcher = null;
@@ -220,7 +222,7 @@ Kazitori = (function() {
     next = this.fragment;
     url = this.root + frag.replace(routeStripper, '');
     matched = this._matchCheck(this.fragment, this.handlers);
-    if (matched === false) {
+    if (matched === false && this.isNotFoundForce === false) {
       if (this.notFound !== null) {
         this.change(this.notFound);
       }
@@ -634,15 +636,6 @@ Kazitori = (function() {
   return Kazitori;
 
 })();
-
-/*
-/////////////////////////////
-	URL を定義する Rule クラス
-	ちょっと大げさな気もするけど外部的には変わらんし
-	今後を見据えてクラス化しておく
-/////////////////////////////
-*/
-
 
 Rule = (function() {
 

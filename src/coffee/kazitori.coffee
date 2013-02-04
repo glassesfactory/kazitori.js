@@ -79,6 +79,8 @@ class Kazitori
 	###isBeforeForce###
 	isBeforeForce:false
 
+	isNotFoundForce:false
+
 	breaker:{}
 
 	_dispatcher:null
@@ -215,7 +217,7 @@ class Kazitori
 		url = @.root + frag.replace(routeStripper, '')
 		
 		matched = @_matchCheck(@.fragment, @.handlers)
-		if matched is false
+		if matched is false and @.isNotFoundForce is false
 			if @.notFound isnt null
 				@change(@.notFound)
 			@._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.NOT_FOUND))
@@ -585,14 +587,10 @@ class Kazitori
 		return matched
 
 
-###
-/////////////////////////////
-	URL を定義する Rule クラス
-	ちょっと大げさな気もするけど外部的には変わらんし
-	今後を見据えてクラス化しておく
-/////////////////////////////
-###
-
+## Rule
+# URL を定義する Rule クラス
+# ちょっと大げさな気もするけど外部的には変わらんし
+# 今後を見据えてクラス化しておく
 class Rule
 	rule:null
 	_regexp:null
@@ -617,6 +615,10 @@ class Rule
 				@types.push if t isnt null then t[1] else null
 
 	#マッチするかどうかテスト
+	# **args**
+	# fragment : テスト対象となる URL
+	# **return**
+	# Boolean : テスト結果の真偽値
 	test:(fragment)->
 		return @_regexp.test(fragment)
 
@@ -712,6 +714,9 @@ class EventDispatcher
 				handler.call(@, event)
 		return
 
+## Deffered
+# **internal**
+# before を確実に処理するための簡易的な Deffered クラス
 class Deffered extends EventDispatcher
 	queue : []
 
@@ -737,6 +742,10 @@ class Deffered extends EventDispatcher
 		message = if not error then "user reject" else error
 		@dispatchEvent({type:KazitoriEvent.TASK_QUEUE_FAILED, index:@index, message:message })
 
+
+
+## KazitoriEvent
+# Kazitori がディスパッチするイベント
 class KazitoriEvent
 	next:null
 	prev:null
@@ -787,6 +796,7 @@ KazitoriEvent.START = 'start'
 #ストップ
 KazitoriEvent.STOP = 'stop'
 
+#一番最初のアクセスがあった
 KazitoriEvent.FIRST_REQUEST = 'first_request'
 
 Kazitori.started = false
