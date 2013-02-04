@@ -133,3 +133,13 @@ Change Log
 
 * バージョン名をつけました。今回から 0.1.2 です。
 * routes で登録した handler が処理される前に、事前処理を行う before 機能を実装しました。
+
+
+Authors
+-------------------
+* [@__hage__](https://twitter.com/__hage__)
+
+Thanks for assistance and contributions:
+
+* [@matsumos](https://twitter.com/matsumos)
+* [@alumican_net](https://twitter.com/alumican_net)
