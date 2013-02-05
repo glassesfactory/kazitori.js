@@ -39,6 +39,7 @@ Router = (function(_super) {
 
   Router.prototype.show = function(id) {
     console.log("showwww", id);
+    console.log(Oar.GET_CSS_PATH(Oar.RELATIVE));
     return $('.currentPage').empty().append("this page is test" + id);
   };
 
@@ -72,6 +73,7 @@ Router = (function(_super) {
   Router.prototype.firend = function(username, postid, firend, queries) {
     console.log("friend");
     console.log(queries);
+    console.log(Oar.GET_CSS_PATH(Oar.RELATIVE));
     return $('.currentPage').empty().append(username, postid, firend);
   };
 
@@ -120,7 +122,7 @@ $(document).ready(function() {
   });
   $('#dialog').hide();
   window.App = new Router({
-    root: '/'
+    root: '/hage/'
   });
   window.App.addEventListener(KazitoriEvent.CHANGE, function(event) {
     return console.log(event, "change");
@@ -143,7 +145,7 @@ $(document).ready(function() {
   $('.test').on("click", clickHandler);
   $('.prev').on("click", prevHandler);
   $('.next').on("click", nextHandler);
-  return $('form').on('submit', function(event) {
+  $('form').on('submit', function(event) {
     var pw, userID;
     event.preventDefault();
     userID = $('input[name=user]').val();
@@ -156,6 +158,7 @@ $(document).ready(function() {
       return alert('バルス');
     }
   });
+  return console.log(Oar.GET_CSS_PATH(Oar.RELATIVE));
 });
 
 clickHandler = function(event) {

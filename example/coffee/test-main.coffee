@@ -29,6 +29,7 @@ class Router extends Kazitori
 
 	show:(id)->
 		console.log "showwww", id
+		console.log Oar.GET_CSS_PATH(Oar.RELATIVE)
 		$('.currentPage').empty().append "this page is test" + id
 
 	hyoge:()->
@@ -57,6 +58,7 @@ class Router extends Kazitori
 	firend:(username, postid, firend, queries)->
 		console.log "friend"
 		console.log queries
+		console.log Oar.GET_CSS_PATH(Oar.RELATIVE)
 		$('.currentPage').empty().append username, postid, firend
 
 	###
@@ -95,7 +97,7 @@ $(document).ready ()->
 	})
 	$('#dialog').hide()
 
-	window.App = new Router({root:'/'})
+	window.App = new Router({root:'/hage/'})
 	
 	#チェンジイベント
 	window.App.addEventListener( KazitoriEvent.CHANGE, (event)->
@@ -138,6 +140,7 @@ $(document).ready ()->
 			window.App.change('admin')
 		else
 			alert('バルス')
+	console.log Oar.GET_CSS_PATH(Oar.RELATIVE)
 
 clickHandler =(event)->
 	event.preventDefault()
