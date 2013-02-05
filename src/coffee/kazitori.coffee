@@ -62,6 +62,7 @@ class Kazitori
 	handlers:[]
 	beforeHandlers:[]
 	afterhandlers:[]
+	rootFile: ['index.html', 'index.htm', 'index.php', 'unko.html']
 	root:null
 	notFound:null
 	beforeAnytimeHandler:null
@@ -439,6 +440,13 @@ class Kazitori
 		if not fragment?
 			if @._hasPushState or !@._wantChangeHash
 				fragment = @.location.pathname
+				matched = false
+				frag = fragment.replace('/', '')
+				for index in @.rootFile
+					if index is frag
+						matched = true
+				if matched
+					fragment = @.root
 				fragment = fragment + @.location.search
 				root = @.root.replace(trailingSlash, '')
 				if not fragment.indexOf(root)

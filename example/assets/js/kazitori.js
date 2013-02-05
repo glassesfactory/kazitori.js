@@ -53,6 +53,8 @@ Kazitori = (function() {
 
   Kazitori.prototype.afterhandlers = [];
 
+  Kazitori.prototype.rootFile = ['index.html', 'index.htm', 'index.php', 'unko.html'];
+
   Kazitori.prototype.root = null;
 
   Kazitori.prototype.notFound = null;
@@ -453,10 +455,22 @@ Kazitori = (function() {
   };
 
   Kazitori.prototype.getFragment = function(fragment) {
-    var root;
+    var frag, index, matched, root, _i, _len, _ref;
     if (!(fragment != null)) {
       if (this._hasPushState || !this._wantChangeHash) {
         fragment = this.location.pathname;
+        matched = false;
+        frag = fragment.replace('/', '');
+        _ref = this.rootFile;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          index = _ref[_i];
+          if (index === frag) {
+            matched = true;
+          }
+        }
+        if (matched) {
+          fragment = this.root;
+        }
         fragment = fragment + this.location.search;
         root = this.root.replace(trailingSlash, '');
         if (!fragment.indexOf(root)) {
