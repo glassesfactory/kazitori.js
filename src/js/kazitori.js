@@ -52,6 +52,8 @@ Kazitori = (function() {
 
   Kazitori.prototype.afterhandlers = [];
 
+  Kazitori.prototype.rootFile = ['index.html', 'index.htm', 'index.php', 'unko.html'];
+
   Kazitori.prototype.root = null;
 
   Kazitori.prototype.notFound = null;
@@ -71,6 +73,8 @@ Kazitori = (function() {
 
 
   Kazitori.prototype.isBeforeForce = false;
+
+  Kazitori.prototype.isNotFoundForce = false;
 
   Kazitori.prototype.breaker = {};
 
@@ -219,7 +223,7 @@ Kazitori = (function() {
     next = this.fragment;
     url = this.root + frag.replace(routeStripper, '');
     matched = this._matchCheck(this.fragment, this.handlers);
-    if (matched === false) {
+    if (matched === false && this.isNotFoundForce === false) {
       if (this.notFound !== null) {
         this.change(this.notFound);
       }
@@ -450,10 +454,22 @@ Kazitori = (function() {
   };
 
   Kazitori.prototype.getFragment = function(fragment) {
-    var root;
+    var frag, index, matched, root, _i, _len, _ref;
     if (!(fragment != null)) {
       if (this._hasPushState || !this._wantChangeHash) {
         fragment = this.location.pathname;
+        matched = false;
+        frag = fragment.replace('/', '');
+        _ref = this.rootFile;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          index = _ref[_i];
+          if (index === frag) {
+            matched = true;
+          }
+        }
+        if (matched) {
+          fragment = this.root;
+        }
         fragment = fragment + this.location.search;
         root = this.root.replace(trailingSlash, '');
         if (!fragment.indexOf(root)) {
@@ -633,15 +649,6 @@ Kazitori = (function() {
   return Kazitori;
 
 })();
-
-/*
-/////////////////////////////
-	URL を定義する Rule クラス
-	ちょっと大げさな気もするけど外部的には変わらんし
-	今後を見据えてクラス化しておく
-/////////////////////////////
-*/
-
 
 Rule = (function() {
 

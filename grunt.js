@@ -24,25 +24,39 @@ module.exports = function(grunt) {
       }
     },
     min: {
-      dist: {
+      kazitori: {
         src:['src/js/kazitori.js'],
         dest:'src/js/kazitori.min.js'
+      },
+      kai: {
+        src:['src/js/kai.js'],
+        dest:'src/js/kai.min.js'
       }
     },
     reload: {
-        port: 35729,
-        proxy: {
-            host: 'localhost'
-        },
-        liveReload: {}
+      port: 35729,
+      proxy: {
+          host: 'localhost'
+      },
+      liveReload: {}
     },
     watch: {
-      files: ['src/coffee/*.coffee','example/coffee/*.coffee','test/spec/*.coffee'],
-      tasks: 'coffee min jasmine reload'
+      product: {
+        files: ['src/coffee/*.coffee','example/coffee/*.coffee'],
+        tasks: 'coffee min jasmine'
+      },
+      test: {
+        files: ['test/spec/*.coffee'],
+        tasks: 'coffee jasmine'
+      }
     },
     docco: {
-      debug: {
+      kazitori: {
         src: ['src/coffee/kazitori.coffee'],
+        dest: 'docs/'
+      },
+      kai: {
+        src: ['src/coffee/kai.coffee'],
         dest: 'docs/'
       }
     },
