@@ -52,8 +52,6 @@ Kazitori = (function() {
 
   Kazitori.prototype.afterhandlers = [];
 
-  Kazitori.prototype.replaceHandlers = [];
-
   Kazitori.prototype.rootFile = ['index.html', 'index.htm', 'index.php', 'unko.html'];
 
   Kazitori.prototype.root = null;
@@ -252,6 +250,19 @@ Kazitori = (function() {
     this.loadURL(frag, options);
   };
 
+  Kazitori.prototype.replace = function(fragment, options) {
+    var prev;
+    if (!Kazitori.started) {
+      return false;
+    }
+    prev = this.fragment;
+    if (!options) {
+      options = {
+        'trigger': options
+      };
+    }
+  };
+
   Kazitori.prototype.reject = function() {
     this.dispatchEvent(new KazitoriEvent(KazitoriEvent.REJECT, this.fragment));
     this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, this.beforeComplete);
@@ -335,7 +346,8 @@ Kazitori = (function() {
     this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.EXECUTED, this.fragment, this.lastFragment));
     if (this._isFirstRequest) {
       setTimeout(function() {
-        return _this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.FIRST_REQUEST, _this.fragment, null));
+        _this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.FIRST_REQUEST, _this.fragment, null));
+        return _this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.EXECUTED, _this.fragment, null));
       }, 0);
       this._isFirstRequest = false;
     }

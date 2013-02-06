@@ -62,8 +62,6 @@ class Kazitori
   handlers:[]
   beforeHandlers:[]
   afterhandlers:[]
-  #anytime replace
-  replaceHandlers:[]
   rootFile: ['index.html', 'index.htm', 'index.php', 'unko.html']
   root:null
   notFound:null
@@ -209,6 +207,7 @@ class Kazitori
     if not options
       options = {'trigger':options}
 
+    #TODO : @ に突っ込んじゃうとこのあと全部 BeforeForce されてまう
     @.isBeforeForce = options.isBeforeForce isnt false
     frag = @getFragment(fragment || '')
     if @.fragment is frag
@@ -241,6 +240,17 @@ class Kazitori
     if options.internal and options.internal is true
       @._dispatcher.dispatchEvent( new KazitoriEvent(KazitoriEvent.INTERNAL_CHANGE, next, prev))
     @loadURL(frag, options)
+    return
+
+  #pushState ではなく replaceState で処理する
+  replace:(fragment, options)->
+    if not Kazitori.started
+      return false
+    prev = @.fragment
+    if not options
+      options = {'trigger':options }
+
+
     return
 
   #中断する
@@ -322,12 +332,13 @@ class Kazitori
     else
       for handler in matched
         handler.callback(@.fragment)
-        
+
     @._dispatcher.dispatchEvent( new KazitoriEvent(KazitoriEvent.EXECUTED, @.fragment, @.lastFragment))
     if @._isFirstRequest
       #間に合わないので遅延させて発行
       setTimeout ()=>
         @._dispatcher.dispatchEvent( new KazitoriEvent(KazitoriEvent.FIRST_REQUEST, @.fragment, null))
+        @._dispatcher.dispatchEvent( new KazitoriEvent(KazitoriEvent.EXECUTED, @.fragment, null))
       ,0
       @._isFirstRequest = false
     

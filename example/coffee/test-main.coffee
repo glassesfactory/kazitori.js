@@ -29,7 +29,7 @@ class Router extends Kazitori
 
 	show:(id)->
 		console.log "showwww", id
-		console.log Oar.GET_CSS_PATH(Oar.RELATIVE)
+		# console.log Kai.GET_CSS_PATH(Kai.RELATIVE)
 		$('.currentPage').empty().append "this page is test" + id
 
 	hyoge:()->
@@ -97,7 +97,7 @@ $(document).ready ()->
 	})
 	$('#dialog').hide()
 
-	window.App = new Router({root:'/hage/'})
+	window.App = new Router({root:'/'})
 	
 	#チェンジイベント
 	window.App.addEventListener( KazitoriEvent.CHANGE, (event)->
@@ -124,6 +124,10 @@ $(document).ready ()->
 		console.log "not found"
 		)
 
+	window.App.addEventListener(KazitoriEvent.EXECUTED, (event)->
+		console.log event, "executed"
+		)
+
 	$('.test').on "click", clickHandler
 
 	$('.prev').on "click", prevHandler
@@ -148,7 +152,7 @@ clickHandler =(event)->
 	event.preventDefault()
 	target = $(event.currentTarget)
 	url = target.attr('href')
-	window.App.change(url,{replace:true})
+	window.App.change(url)
 
 prevHandler =(event)->
 	event.preventDefault()
