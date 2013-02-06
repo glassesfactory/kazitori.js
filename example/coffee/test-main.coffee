@@ -140,6 +140,8 @@ $(document).ready ()->
 			window.App.change('admin')
 		else
 			alert('バルス')
+
+	# Kai.init({'css':'hoge'})
 	console.log Kai.GET_CSS_PATH(Kai.RELATIVE)
 
 clickHandler =(event)->
