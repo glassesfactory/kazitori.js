@@ -1,4 +1,4 @@
-# pushState をいい感じに捌けるルーターライブラリ  
+# pushState をいい感じに捌けるルーターライブラリ
 # pushState を使ったコンテンツで必要なことはひと通り出来るはず。
 #
 #----------------------------------------------
@@ -35,8 +35,8 @@ splatParam = /\*\w+/g
 #--------------------------------------------
 
 ###URL 変数に対して指定できる型###
-# **Default:**  
-# int : Number としてキャストされます  
+# **Default:**
+# int : Number としてキャストされます
 # string : String としてキャストされます
 #
 
@@ -239,7 +239,7 @@ class Kazitori
     if options.internal and options.internal is true
       @._dispatcher.dispatchEvent( new KazitoriEvent(KazitoriEvent.INTERNAL_CHANGE, next, prev))
     @loadURL(frag, options)
-    return 
+    return
 
   #中断する
   #メソッド名 intercept のほうがいいかな
@@ -261,10 +261,10 @@ class Kazitori
 
     target = if isBefore then @.beforeHandlers else @.handlers
     target.unshift new Rule(rule, (fragment)->
-        args = @_extractParams(fragment)
-        args = @_getCastedParams(args)
-        callback && callback.apply(@.router, args)
-      ,@)
+      args = @_extractParams(fragment)
+      args = @_getCastedParams(args)
+      callback && callback.apply(@.router, args)
+    ,@)
     return @
 
   #URL を読み込む
@@ -310,7 +310,7 @@ class Kazitori
   executeHandlers:()=>
     #毎回 match チェックしてるので使いまわしたいのでリファクタ
     matched = @._matchCheck(@.fragment, @.handlers)
-    if matched.length < 1 
+    if matched.length < 1
       if @.notFound isnt null
         #a- 2回呼ばれるので loadURL じゃなくて @.notFound.callback のほうがいいな
         @loadURL(@.notFound)
@@ -371,7 +371,7 @@ class Kazitori
   # befores から指定された事前に処理したいメソッドをバインド
   _bindBefores:()->
     if not @.befores?
-      return 
+      return
     befores = @_keys(@.befores)
     for key in befores
       @registerHandler(key, @.befores[key], true)
@@ -379,11 +379,11 @@ class Kazitori
     if @.beforeAnytime
       callback = @_bindFunctions(@.beforeAnytime)
       @.beforeAnytimeHandler = {
-          callback:@_binder (fragment)->
-            args = [fragment]
-            callback && callback.apply(@, args)
-          ,@
-        }
+        callback:@_binder (fragment)->
+          args = [fragment]
+          callback && callback.apply(@, args)
+        ,@
+      }
     return
 
 
@@ -743,7 +743,7 @@ class Deffered extends EventDispatcher
       if @queue.length < 1
         @queue = []
         @.dispatchEvent(new KazitoriEvent(KazitoriEvent.TASK_QUEUE_COMPLETE))
-    catch error     
+    catch error
       @reject(error)
 
   reject:(error)->
