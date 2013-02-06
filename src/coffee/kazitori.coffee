@@ -36,10 +36,10 @@ splatParam = /\*\w+/g
 
 ###URL 変数に対して指定できる型###
 # **Default:**
-# int : Number としてキャストされます
-# string : String としてキャストされます
 #
-
+# * int : Number としてキャストされます
+# * string : String としてキャストされます
+#
 
 VARIABLE_TYPES = [
   {
