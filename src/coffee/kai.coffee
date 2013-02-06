@@ -4,6 +4,7 @@ Kazitori Path Helper
 
 do(window)->
   Kai =()->
+    throw new Error('インスタンス化できません')
 
   Kai.host = ''
 
@@ -148,7 +149,7 @@ do(window)->
         targetAsset = Kai.DATA_DIR
       else
         throw new Error('asset type fail')
-    if targetDev?
+    if targetDev? and targetDev isnt ''
       result = if Kai.deviceIsParent then [Kai.ASSET_DIR, targetDev, targetAsset] else [Kai.ASSET_DIR, targetAsset, targetDev]
     else
       result = [Kai.ASSET_DIR, targetAsset]

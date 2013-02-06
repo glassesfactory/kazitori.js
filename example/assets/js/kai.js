@@ -5,7 +5,9 @@ Kazitori Path Helper
 
 (function(window) {
   var Kai, _GET_PATH;
-  Kai = function() {};
+  Kai = function() {
+    throw new Error('インスタンス化できません');
+  };
   Kai.host = '';
   Kai.ASSET_DIR = 'assets';
   Kai.CSS_DIR = 'css';
@@ -123,7 +125,7 @@ Kazitori Path Helper
       default:
         throw new Error('asset type fail');
     }
-    if (targetDev != null) {
+    if ((targetDev != null) && targetDev !== '') {
       result = Kai.deviceIsParent ? [Kai.ASSET_DIR, targetDev, targetAsset] : [Kai.ASSET_DIR, targetAsset, targetDev];
     } else {
       result = [Kai.ASSET_DIR, targetAsset];
