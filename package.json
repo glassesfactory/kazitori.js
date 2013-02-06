@@ -17,7 +17,7 @@
     "node": ">= 0.8.0"
   },
   "scripts": {
-    "test": "grunt jasmine"
+    "test": "grunt ci"
   },
   "bugs": {
     "url": "https://github.com/glassesfactory/kazitori.js/issues"

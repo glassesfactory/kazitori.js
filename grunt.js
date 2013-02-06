@@ -10,16 +10,16 @@ module.exports = function(grunt) {
       }
     },
     coffeelint: {
-      files: ['src/coffee/*.coffee']
+      product: ['src/coffee/*.coffee']
     },
     coffee:{
-      app:{
+      product:{
         src:'src/coffee/*.coffee', dest:'src/js/'
       },
       example:{
         src:'example/coffee/*.coffee', dest:'example/assets/js/'
       },
-      tests:{
+      test:{
         src:'test/spec/*.coffee', dest:'test/spec/'
       }
     },
@@ -42,12 +42,16 @@ module.exports = function(grunt) {
     },
     watch: {
       product: {
-        files: ['src/coffee/*.coffee','example/coffee/*.coffee'],
-        tasks: 'coffee min jasmine'
+        files: ['src/coffee/*.coffee'],
+        tasks: 'coffeelint:product coffee:product min jasmine'
+      },
+      example: {
+        files: ['example/coffee/*.coffee'],
+        tasks: 'coffee:example'
       },
       test: {
         files: ['test/spec/*.coffee'],
-        tasks: 'coffee jasmine'
+        tasks: 'coffee:test jasmine'
       }
     },
     docco: {
@@ -97,6 +101,8 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-docco');
 
   // Default task.
-  grunt.registerTask('default', 'coffeelint coffee jasmine');
+  grunt.registerTask('default', 'coffeelint coffee min docco jasmine');
+
+  grunt.registerTask('ci', 'coffeelint coffee jasmine');
 
 };
