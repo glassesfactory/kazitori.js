@@ -52,6 +52,8 @@ Kazitori = (function() {
 
   Kazitori.prototype.afterhandlers = [];
 
+  Kazitori.prototype.replaceHandlers = [];
+
   Kazitori.prototype.rootFile = ['index.html', 'index.htm', 'index.php', 'unko.html'];
 
   Kazitori.prototype.root = null;
@@ -309,7 +311,7 @@ Kazitori = (function() {
   Kazitori.prototype.beforeComplete = function(event) {
     this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, this.beforeComplete);
     this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_FAILED, this.beforeFailed);
-    this._beforeDeffer.queue = [];
+    this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.BEFORE_EXECUTED, this.fragment, this.lastFragment));
     this.executeHandlers();
   };
 
@@ -336,6 +338,7 @@ Kazitori = (function() {
       }, 0);
       this._isFirstRequest = false;
     }
+    this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.EXECUTED, this.fragment, this.lastFragment));
     return matched;
   };
 
@@ -892,6 +895,10 @@ KazitoriEvent.TASK_QUEUE_COMPLETE = 'task_queue_complete';
 KazitoriEvent.TASK_QUEUE_FAILED = 'task_queue_failed';
 
 KazitoriEvent.CHANGE = 'change';
+
+KazitoriEvent.EXECUTED = 'executed';
+
+KazitoriEvent.BEFORE_EXECUTED = 'before_executed';
 
 KazitoriEvent.INTERNAL_CHANGE = 'internal_change';
 

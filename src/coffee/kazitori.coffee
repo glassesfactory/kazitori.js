@@ -62,6 +62,8 @@ class Kazitori
   handlers:[]
   beforeHandlers:[]
   afterhandlers:[]
+  #anytime replace
+  replaceHandlers:[]
   rootFile: ['index.html', 'index.htm', 'index.php', 'unko.html']
   root:null
   notFound:null
@@ -301,7 +303,7 @@ class Kazitori
     @._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, @beforeComplete)
     @._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_FAILED, @beforeFailed)
     
-    @._beforeDeffer.queue = []
+    @._dispatcher.dispatchEvent( new KazitoriEvent(KazitoriEvent.BEFORE_EXECUTED, @.fragment, @.lastFragment))
 
     @executeHandlers()
     return
@@ -327,6 +329,7 @@ class Kazitori
         @._dispatcher.dispatchEvent( new KazitoriEvent(KazitoriEvent.FIRST_REQUEST, @.fragment, null))
       ,0
       @._isFirstRequest = false
+    @._dispatcher.dispatchEvent( new KazitoriEvent(KazitoriEvent.EXECUTED, @.fragment, @.lastFragment))
     return matched
 
   
@@ -779,6 +782,12 @@ KazitoriEvent.TASK_QUEUE_FAILED = 'task_queue_failed'
 
 #URL が変わった時
 KazitoriEvent.CHANGE = 'change'
+
+#URL に登録されたメソッドがちゃんと実行された
+KazitoriEvent.EXECUTED = 'executed'
+
+#ビフォアー処理が完了した
+KazitoriEvent.BEFORE_EXECUTED = 'before_executed'
 
 #ユーザーアクション以外で URL の変更があった
 KazitoriEvent.INTERNAL_CHANGE = 'internal_change'
