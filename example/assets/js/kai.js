@@ -124,7 +124,7 @@ Kazitori Path Helper
         targetAsset = Kai.DATA_DIR;
         break;
       default:
-        throw new Error('asset typei fail');
+        throw new Error('asset type fail');
     }
     if (targetDev != null) {
       result = Kai.deviceIsParent ? [Kai.ASSET_DIR, targetDev, targetAsset] : [Kai.ASSET_DIR, targetAsset, targetDev];
