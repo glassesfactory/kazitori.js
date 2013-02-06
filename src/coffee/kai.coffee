@@ -146,7 +146,7 @@ do(window)->
         targetDev = Kai.TABLET_DIR
       when Kai.SP_DIR
         targetDev = Kai.SP_DIR
-      else 
+      else
         targetDev = ''
 
     switch asset
