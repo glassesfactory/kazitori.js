@@ -302,9 +302,7 @@ describe "Kazitori", ->
 
     it 'befores should be before called', ->
       spyOn(controller, 'beforeShow')
-      console.log "eeee"
       router.change('/posts/1')
-      console.log "?"
       expect(controller.beforeShow).toHaveBeenCalled()
 
     it 'should call controller method directly', ->
