@@ -333,13 +333,13 @@ Kazitori = (function() {
         handler.callback(this.fragment);
       }
     }
+    this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.EXECUTED, this.fragment, this.lastFragment));
     if (this._isFirstRequest) {
       setTimeout(function() {
         return _this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.FIRST_REQUEST, _this.fragment, null));
       }, 0);
       this._isFirstRequest = false;
     }
-    this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.EXECUTED, this.fragment, this.lastFragment));
     return matched;
   };
 

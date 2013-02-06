@@ -322,14 +322,15 @@ class Kazitori
     else
       for handler in matched
         handler.callback(@.fragment)
-
+        
+    @._dispatcher.dispatchEvent( new KazitoriEvent(KazitoriEvent.EXECUTED, @.fragment, @.lastFragment))
     if @._isFirstRequest
       #間に合わないので遅延させて発行
       setTimeout ()=>
         @._dispatcher.dispatchEvent( new KazitoriEvent(KazitoriEvent.FIRST_REQUEST, @.fragment, null))
       ,0
       @._isFirstRequest = false
-    @._dispatcher.dispatchEvent( new KazitoriEvent(KazitoriEvent.EXECUTED, @.fragment, @.lastFragment))
+    
     return matched
 
   
