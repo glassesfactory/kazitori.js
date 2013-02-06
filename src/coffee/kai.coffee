@@ -145,7 +145,7 @@ do(window)->
       when Kai.DATA_DIR
         targetAsset = Kai.DATA_DIR
       else
-        throw new Error('asset typei fail')
+        throw new Error('asset type fail')
     if targetDev?
       result = if Kai.deviceIsParent then [Kai.ASSET_DIR, targetDev, targetAsset] else [Kai.ASSET_DIR, targetAsset, targetDev]
     else
