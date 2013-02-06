@@ -70,7 +70,7 @@ do(window)->
   #
   Kai.GET_SCRIPT_PATH =(rule, device)->
     func if rule is Kai.RELATIVE then Kai.GET_RELATIVE_PATH else Kai.GET_ROOT_PATH
-    return func .apply(Kai, [Kai.CSS_DIR, device])
+    return func.apply(Kai, [Kai.CSS_DIR, device])
 
 
   ###Kai.GET_IMAGE_PATH###
@@ -83,7 +83,7 @@ do(window)->
   #
   Kai.GET_IMAGE_PATH=(rule, device)->
     func if rule is Kai.RELATIVE then Kai.GET_RELATIVE_PATH else Kai.GET_ROOT_PATH
-    return func .apply(Kai, [Kai.IMAGE_DIR, device])
+    return func.apply(Kai, [Kai.IMAGE_DIR, device])
 
   ###Kai.GET_RELATIVE_PATH###
   ##相対パスで取得
