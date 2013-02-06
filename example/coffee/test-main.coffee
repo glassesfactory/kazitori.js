@@ -58,7 +58,7 @@ class Router extends Kazitori
 	firend:(username, postid, firend, queries)->
 		console.log "friend"
 		console.log queries
-		console.log Oar.GET_CSS_PATH(Oar.RELATIVE)
+		console.log Kai.GET_CSS_PATH(Kai.RELATIVE)
 		$('.currentPage').empty().append username, postid, firend
 
 	###
@@ -140,7 +140,7 @@ $(document).ready ()->
 			window.App.change('admin')
 		else
 			alert('バルス')
-	console.log Oar.GET_CSS_PATH(Oar.RELATIVE)
+	console.log Kai.GET_CSS_PATH(Kai.RELATIVE)
 
 clickHandler =(event)->
 	event.preventDefault()

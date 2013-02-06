@@ -73,7 +73,7 @@ Router = (function(_super) {
   Router.prototype.firend = function(username, postid, firend, queries) {
     console.log("friend");
     console.log(queries);
-    console.log(Oar.GET_CSS_PATH(Oar.RELATIVE));
+    console.log(Kai.GET_CSS_PATH(Kai.RELATIVE));
     return $('.currentPage').empty().append(username, postid, firend);
   };
 
@@ -158,7 +158,7 @@ $(document).ready(function() {
       return alert('バルス');
     }
   });
-  return console.log(Oar.GET_CSS_PATH(Oar.RELATIVE));
+  return console.log(Kai.GET_CSS_PATH(Kai.RELATIVE));
 });
 
 clickHandler = function(event) {
