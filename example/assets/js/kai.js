@@ -11,12 +11,12 @@ Kazitori Path Helper
   Kai.CSS_DIR = 'css';
   Kai.SCRIPT_DIR = 'js';
   Kai.IMAGE_DIR = 'images';
-  Kai.data = 'data';
+  Kai.DATA_DIR = 'data';
   Kai.deviceIsParent = true;
   Kai.strictSlash = false;
-  Kai.pc = 'pc';
-  Kai.sp = 'sp';
-  Kai.tablet = 'tablet';
+  Kai.PC_DIR = 'pc';
+  Kai.SP_DIR = 'sp';
+  Kai.TABLET_DIR = 'tablet';
   Kai.ROOT = 'root';
   Kai.RELATIVE = 'relative';
   /*Kai.init
@@ -29,10 +29,10 @@ Kazitori Path Helper
     Kai.CSS_DIR = options.css != null ? options.css : 'css';
     Kai.SCRIPT_DIR = options.js != null ? options.css : 'js';
     Kai.IMAGE_DIR = options.images != null ? options.images : 'images';
-    Kai.data = options.data != null ? options.data : 'data';
-    Kai.pc = options.pc != null ? options.pc : 'pc';
-    Kai.sp = options.sp != null ? options.sp : 'sp';
-    Kai.tablet = options.tablet ? options.tablet : 'tablet';
+    Kai.DATA_DIR = options.data != null ? options.data : 'data';
+    Kai.PC_DIR = options.pc != null ? options.pc : 'pc';
+    Kai.SP_DIR = options.sp != null ? options.sp : 'sp';
+    Kai.TABLET_DIR = options.tablet ? options.tablet : 'tablet';
     Kai.host = options.host != null ? options.host : loc.host;
     Kai.root = options.root != null ? options.root : '/';
   };
@@ -103,9 +103,6 @@ Kazitori Path Helper
         break;
       case Kai.SP_DIR:
         targetDev = Kai.SP_DIR;
-        break;
-      case COMMON_DIR:
-        targetDev = Kai.COMMON_DIR;
         break;
       default:
         targetDev = '';

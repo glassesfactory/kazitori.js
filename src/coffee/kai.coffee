@@ -15,12 +15,16 @@ do(window)->
 
   Kai.IMAGE_DIR = 'images'
 
-  Kai.data = 'data'
+  Kai.DATA_DIR = 'data'
+
   Kai.deviceIsParent = true
   Kai.strictSlash = false
-  Kai.pc = 'pc'
-  Kai.sp = 'sp'
-  Kai.tablet = 'tablet'
+
+  Kai.PC_DIR = 'pc'
+
+  Kai.SP_DIR = 'sp'
+
+  Kai.TABLET_DIR = 'tablet'
 
   Kai.ROOT = 'root'
 
@@ -34,10 +38,10 @@ do(window)->
     Kai.CSS_DIR = if options.css? then options.css else 'css'
     Kai.SCRIPT_DIR = if options.js? then options.css else 'js'
     Kai.IMAGE_DIR = if options.images? then options.images else 'images'
-    Kai.data = if options.data? then options.data else 'data'
-    Kai.pc = if options.pc? then options.pc else 'pc'
-    Kai.sp = if options.sp? then options.sp else 'sp'
-    Kai.tablet = if options.tablet then options.tablet else 'tablet'
+    Kai.DATA_DIR = if options.data? then options.data else 'data'
+    Kai.PC_DIR = if options.pc? then options.pc else 'pc'
+    Kai.SP_DIR = if options.sp? then options.sp else 'sp'
+    Kai.TABLET_DIR = if options.tablet then options.tablet else 'tablet'
     Kai.host = if options.host? then options.host else loc.host
     Kai.root = if options.root? then options.root else '/'
     return
@@ -130,8 +134,6 @@ do(window)->
         targetDev = Kai.TABLET_DIR
       when Kai.SP_DIR
         targetDev = Kai.SP_DIR
-      when COMMON_DIR
-        targetDev = Kai.COMMON_DIR
       else 
         targetDev = ''
 
