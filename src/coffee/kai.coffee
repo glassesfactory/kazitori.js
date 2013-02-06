@@ -37,7 +37,7 @@ do(window)->
     loc = window.location
     Kai.ASSET_DIR = if options.packageRoot? then options.packageRoot else 'assets'
     Kai.CSS_DIR = if options.css? then options.css else 'css'
-    Kai.SCRIPT_DIR = if options.js? then options.css else 'js'
+    Kai.SCRIPT_DIR = if options.js? then options.js else 'js'
     Kai.IMAGE_DIR = if options.images? then options.images else 'images'
     Kai.DATA_DIR = if options.data? then options.data else 'data'
     Kai.PC_DIR = if options.pc? then options.pc else 'pc'
@@ -69,8 +69,8 @@ do(window)->
   #   デバイスごとに分けるのであればデバイス名
   #
   Kai.GET_SCRIPT_PATH =(rule, device)->
-    func if rule is Kai.RELATIVE then Kai.GET_RELATIVE_PATH else Kai.GET_ROOT_PATH
-    return func.apply(Kai, [Kai.CSS_DIR, device])
+    func = if rule is Kai.RELATIVE then Kai.GET_RELATIVE_PATH else Kai.GET_ROOT_PATH
+    return func.apply(Kai, [Kai.SCRIPT_DIR, device])
 
 
   ###Kai.GET_IMAGE_PATH###
@@ -82,9 +82,20 @@ do(window)->
   #   デバイスごとに分けるのであればデバイス名
   #
   Kai.GET_IMAGE_PATH=(rule, device)->
-    func if rule is Kai.RELATIVE then Kai.GET_RELATIVE_PATH else Kai.GET_ROOT_PATH
+    func = if rule is Kai.RELATIVE then Kai.GET_RELATIVE_PATH else Kai.GET_ROOT_PATH
     return func.apply(Kai, [Kai.IMAGE_DIR, device])
 
+  ###Kai.GET_DATA_PATH###
+  ##データのパスを取得
+  # **args**
+  # * rule : String
+  #   相対か、ルートかを指定
+  # * device : String
+  #   デバイスごとに分けるのであればデバイス名
+  #
+  Kai.GET_DATA_PATH=(rule, device)->
+    func = if rule is Kai.RELATIVE then Kai.GET_RELATIVE_PATH else Kai.GET_ROOT_PATH
+    return func.apply(Kai, [Kai.DATA_DIR, device])
   ###Kai.GET_RELATIVE_PATH###
   ##相対パスで取得
   # **args**
