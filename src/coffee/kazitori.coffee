@@ -333,7 +333,6 @@ class Kazitori
       for handler in matched
         handler.callback(@.fragment)
 
-    @._dispatcher.dispatchEvent( new KazitoriEvent(KazitoriEvent.EXECUTED, @.fragment, @.lastFragment))
     if @._isFirstRequest
       #間に合わないので遅延させて発行
       setTimeout ()=>
@@ -341,6 +340,8 @@ class Kazitori
         @._dispatcher.dispatchEvent( new KazitoriEvent(KazitoriEvent.EXECUTED, @.fragment, null))
       ,0
       @._isFirstRequest = false
+    else
+      @._dispatcher.dispatchEvent( new KazitoriEvent(KazitoriEvent.EXECUTED, @.fragment, @.lastFragment))
     
     return matched
 
@@ -618,6 +619,7 @@ class Rule
   rule:null
   _regexp:null
   callback:null
+  name:""
   router:null
   isVariable:false
   types:[]
@@ -625,6 +627,7 @@ class Rule
     @rule = string
     @callback = callback
     @_regexp = @_ruleToRegExp(string)
+
     #これ…どうなんだろ…
     @router = router
     @types = []

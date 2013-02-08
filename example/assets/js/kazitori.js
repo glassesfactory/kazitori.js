@@ -344,13 +344,14 @@ Kazitori = (function() {
         handler.callback(this.fragment);
       }
     }
-    this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.EXECUTED, this.fragment, this.lastFragment));
     if (this._isFirstRequest) {
       setTimeout(function() {
         _this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.FIRST_REQUEST, _this.fragment, null));
         return _this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.EXECUTED, _this.fragment, null));
       }, 0);
       this._isFirstRequest = false;
+    } else {
+      this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.EXECUTED, this.fragment, this.lastFragment));
     }
     return matched;
   };
@@ -673,6 +674,8 @@ Rule = (function() {
   Rule.prototype._regexp = null;
 
   Rule.prototype.callback = null;
+
+  Rule.prototype.name = "";
 
   Rule.prototype.router = null;
 

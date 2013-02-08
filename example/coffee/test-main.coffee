@@ -11,7 +11,7 @@ class Router extends Kazitori
 		'/<int:id>':['beforeShow']
 	routes :
 		'/':'index'		
-		'/<int:id>':'show'
+		'/<int:id>':test3
 		# '/admin/<int:id>':'show'
 		'/admin':'admin'
 		'/login':'login'
@@ -128,6 +128,7 @@ $(document).ready ()->
 		console.log event, "executed"
 		)
 
+	console.log window.App.handlers
 	$('.test').on "click", clickHandler
 
 	$('.prev').on "click", prevHandler
