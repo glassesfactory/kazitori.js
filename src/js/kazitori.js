@@ -251,16 +251,14 @@ Kazitori = (function() {
   };
 
   Kazitori.prototype.replace = function(fragment, options) {
-    var prev;
-    if (!Kazitori.started) {
-      return false;
-    }
-    prev = this.fragment;
     if (!options) {
       options = {
-        'trigger': options
+        replace: true
       };
+    } else if (!options.replace || options.replace === false) {
+      options.replace = true;
     }
+    this.change(framgent, options);
   };
 
   Kazitori.prototype.reject = function() {

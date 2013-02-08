@@ -244,13 +244,11 @@ class Kazitori
 
   #pushState ではなく replaceState で処理する
   replace:(fragment, options)->
-    if not Kazitori.started
-      return false
-    prev = @.fragment
     if not options
-      options = {'trigger':options }
-
-
+      options = {replace:true}
+    else if not options.replace or options.replace is false
+      options.replace = true
+    @change(framgent, options)
     return
 
   #中断する
