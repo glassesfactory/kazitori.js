@@ -328,13 +328,15 @@ Kazitori = (function() {
   };
 
   Kazitori.prototype.executeHandlers = function() {
-    var handler, matched, _i, _len,
+    var handler, isMatched, matched, _i, _len,
       _this = this;
     matched = this._matchCheck(this.fragment, this.handlers);
+    isMatched = true;
     if (matched.length < 1) {
       if (this.notFound !== null) {
         this.loadURL(this.notFound);
       }
+      isMatched = false;
       this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.NOT_FOUND));
     } else if (matched.length > 1) {
       console.log("too many matched...");
@@ -347,11 +349,15 @@ Kazitori = (function() {
     if (this._isFirstRequest) {
       setTimeout(function() {
         _this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.FIRST_REQUEST, _this.fragment, null));
-        return _this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.EXECUTED, _this.fragment, null));
+        if (isMatched) {
+          return _this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.EXECUTED, _this.fragment, null));
+        }
       }, 0);
       this._isFirstRequest = false;
     } else {
-      this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.EXECUTED, this.fragment, this.lastFragment));
+      if (isMatched) {
+        this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.EXECUTED, this.fragment, this.lastFragment));
+      }
     }
     return matched;
   };

@@ -322,11 +322,14 @@ class Kazitori
   executeHandlers:()=>
     #毎回 match チェックしてるので使いまわしたいのでリファクタ
     matched = @._matchCheck(@.fragment, @.handlers)
+    isMatched = true
     if matched.length < 1
       if @.notFound isnt null
         #a- 2回呼ばれるので loadURL じゃなくて @.notFound.callback のほうがいいな
         @loadURL(@.notFound)
+      isMatched = false
       @._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.NOT_FOUND))
+
     else if matched.length > 1
       console.log "too many matched..."
     else
@@ -337,11 +340,13 @@ class Kazitori
       #間に合わないので遅延させて発行
       setTimeout ()=>
         @._dispatcher.dispatchEvent( new KazitoriEvent(KazitoriEvent.FIRST_REQUEST, @.fragment, null))
-        @._dispatcher.dispatchEvent( new KazitoriEvent(KazitoriEvent.EXECUTED, @.fragment, null))
+        if isMatched
+          @._dispatcher.dispatchEvent( new KazitoriEvent(KazitoriEvent.EXECUTED, @.fragment, null))
       ,0
       @._isFirstRequest = false
     else
-      @._dispatcher.dispatchEvent( new KazitoriEvent(KazitoriEvent.EXECUTED, @.fragment, @.lastFragment))
+      if isMatched
+        @._dispatcher.dispatchEvent( new KazitoriEvent(KazitoriEvent.EXECUTED, @.fragment, @.lastFragment))
     
     return matched
 
