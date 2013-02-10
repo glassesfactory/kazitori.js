@@ -11,7 +11,7 @@ class Router extends Kazitori
 		'/<int:id>':['beforeShow']
 	routes :
 		'/':'index'		
-		'/<int:id>':test3
+		'/<int:id>':'show'
 		# '/admin/<int:id>':'show'
 		'/admin':'admin'
 		'/login':'login'
@@ -97,7 +97,7 @@ $(document).ready ()->
 	})
 	$('#dialog').hide()
 
-	window.App = new Router({root:'/'})
+	window.App = new Router({root:'/unko/'})
 	
 	#チェンジイベント
 	window.App.addEventListener( KazitoriEvent.CHANGE, (event)->

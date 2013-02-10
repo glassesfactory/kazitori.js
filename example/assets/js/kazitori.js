@@ -53,7 +53,7 @@ Kazitori = (function() {
 
   Kazitori.prototype.afterhandlers = [];
 
-  Kazitori.prototype.rootFile = ['index.html', 'index.htm', 'index.php', 'unko.html'];
+  Kazitori.prototype.rootFiles = ['index.html', 'index.htm', 'index.php', 'unko.html'];
 
   Kazitori.prototype.root = null;
 
@@ -475,16 +475,18 @@ Kazitori = (function() {
   };
 
   Kazitori.prototype.getFragment = function(fragment) {
-    var frag, index, matched, root, _i, _len, _ref;
+    var index, matched, root, _i, _len, _ref;
     if (!(fragment != null)) {
       if (this._hasPushState || !this._wantChangeHash) {
         fragment = this.location.pathname;
         matched = false;
-        frag = fragment.replace('/', '');
-        _ref = this.rootFile;
+        if (fragment.match(/^\//)) {
+          fragment = fragment.substr(1);
+        }
+        _ref = this.rootFiles;
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
           index = _ref[_i];
-          if (index === frag) {
+          if (index === fragment || this.root + index) {
             matched = true;
           }
         }
@@ -493,6 +495,7 @@ Kazitori = (function() {
         }
         fragment = fragment + this.location.search;
         root = this.root.replace(trailingSlash, '');
+        console.log(root, "root");
         if (!fragment.indexOf(root)) {
           fragment = fragment.substr(root.length);
         }

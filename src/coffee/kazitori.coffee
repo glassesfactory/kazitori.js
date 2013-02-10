@@ -62,7 +62,7 @@ class Kazitori
   handlers:[]
   beforeHandlers:[]
   afterhandlers:[]
-  rootFile: ['index.html', 'index.htm', 'index.php', 'unko.html']
+  rootFiles: ['index.html', 'index.htm', 'index.php', 'unko.html']
   root:null
   notFound:null
   beforeAnytimeHandler:null
@@ -132,6 +132,7 @@ class Kazitori
     @._hasPushState = !!(@.history and @.history.pushState)
     @._wantChangeHash = @.options.hashChange isnt false
     fragment = @.fragment = @getFragment()
+
     atRoot = @.location.pathname.replace(/[^\/]$/, '$&/') is @.root
 
     if @isOldIE and @._wantChangeHash
@@ -460,14 +461,17 @@ class Kazitori
       if @._hasPushState or !@._wantChangeHash
         fragment = @.location.pathname
         matched = false
-        frag = fragment.replace('/', '')
-        for index in @.rootFile
-          if index is frag
+        if fragment.match(/^\//)
+          fragment = fragment.substr(1)
+        
+        for index in @.rootFiles
+          if index is fragment or @.root + index
             matched = true
         if matched
           fragment = @.root
         fragment = fragment + @.location.search
         root = @.root.replace(trailingSlash, '')
+        console.log root, "root"
         if not fragment.indexOf(root)
           fragment = fragment.substr(root.length)
       else
