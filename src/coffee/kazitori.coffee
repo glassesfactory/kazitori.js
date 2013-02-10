@@ -461,17 +461,20 @@ class Kazitori
       if @._hasPushState or !@._wantChangeHash
         fragment = @.location.pathname
         matched = false
-        if fragment.match(/^\//)
-          fragment = fragment.substr(1)
-        
+        frag = fragment
+        if frag.match(/^\//)
+          frag = frag.substr(1)
+        root = @.root
+        if root.match(/^\//)
+          root = root.substr(1)
         for index in @.rootFiles
-          if index is fragment or @.root + index
+          if index is frag or root + index is frag
             matched = true
+
         if matched
           fragment = @.root
         fragment = fragment + @.location.search
         root = @.root.replace(trailingSlash, '')
-        console.log root, "root"
         if not fragment.indexOf(root)
           fragment = fragment.substr(root.length)
       else

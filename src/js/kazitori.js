@@ -52,7 +52,7 @@ Kazitori = (function() {
 
   Kazitori.prototype.afterhandlers = [];
 
-  Kazitori.prototype.rootFile = ['index.html', 'index.htm', 'index.php', 'unko.html'];
+  Kazitori.prototype.rootFiles = ['index.html', 'index.htm', 'index.php', 'unko.html'];
 
   Kazitori.prototype.root = null;
 
@@ -479,11 +479,18 @@ Kazitori = (function() {
       if (this._hasPushState || !this._wantChangeHash) {
         fragment = this.location.pathname;
         matched = false;
-        frag = fragment.replace('/', '');
-        _ref = this.rootFile;
+        frag = fragment;
+        if (frag.match(/^\//)) {
+          frag = frag.substr(1);
+        }
+        root = this.root;
+        if (root.match(/^\//)) {
+          root = root.substr(1);
+        }
+        _ref = this.rootFiles;
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
           index = _ref[_i];
-          if (index === frag) {
+          if (index === frag || root + index === frag) {
             matched = true;
           }
         }
