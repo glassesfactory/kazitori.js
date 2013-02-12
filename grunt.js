@@ -101,12 +101,8 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-docco');
 
   // Default task.
-<<<<<<< HEAD
-  grunt.registerTask('default', 'coffeelint coffee jasmine docco');
-=======
   grunt.registerTask('default', 'coffeelint coffee min docco jasmine');
 
   grunt.registerTask('ci', 'coffeelint coffee jasmine');
->>>>>>> refs/heads/development
 
 };
