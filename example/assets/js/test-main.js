@@ -71,6 +71,7 @@ Router = (function(_super) {
   Router.prototype.firend = function(username, postid, firend, queries) {
     console.log("friend");
     console.log(queries);
+    console.log(Kai.GET_CSS_PATH(Kai.RELATIVE));
     return $('.currentPage').empty().append(username, postid, firend);
   };
 
@@ -119,7 +120,7 @@ $(document).ready(function() {
   });
   $('#dialog').hide();
   window.App = new Router({
-    root: '/'
+    root: '/unko/'
   });
   window.App.addEventListener(KazitoriEvent.CHANGE, function(event) {
     return console.log(event, "change");
@@ -139,10 +140,14 @@ $(document).ready(function() {
   window.App.addEventListener(KazitoriEvent.NOT_FOUND, function(event) {
     return console.log("not found");
   });
+  window.App.addEventListener(KazitoriEvent.EXECUTED, function(event) {
+    return console.log(event, "executed");
+  });
+  console.log(window.App.handlers);
   $('.test').on("click", clickHandler);
   $('.prev').on("click", prevHandler);
   $('.next').on("click", nextHandler);
-  return $('form').on('submit', function(event) {
+  $('form').on('submit', function(event) {
     var pw, userID;
     event.preventDefault();
     userID = $('input[name=user]').val();
@@ -155,6 +160,7 @@ $(document).ready(function() {
       return alert('バルス');
     }
   });
+  return console.log(Kai.GET_CSS_PATH(Kai.RELATIVE));
 });
 
 clickHandler = function(event) {
@@ -162,9 +168,7 @@ clickHandler = function(event) {
   event.preventDefault();
   target = $(event.currentTarget);
   url = target.attr('href');
-  return window.App.change(url, {
-    replace: true
-  });
+  return window.App.change(url);
 };
 
 prevHandler = function(event) {

@@ -10,39 +10,57 @@ module.exports = function(grunt) {
       }
     },
     coffeelint: {
-      files: ['src/coffee/*.coffee']
+      product: ['src/coffee/*.coffee']
     },
     coffee:{
-      app:{
+      product:{
         src:'src/coffee/*.coffee', dest:'src/js/'
       },
       example:{
         src:'example/coffee/*.coffee', dest:'example/assets/js/'
       },
-      tests:{
+      test:{
         src:'test/spec/*.coffee', dest:'test/spec/'
       }
     },
     min: {
-      dist: {
+      kazitori: {
         src:['src/js/kazitori.js'],
         dest:'src/js/kazitori.min.js'
+      },
+      kai: {
+        src:['src/js/kai.js'],
+        dest:'src/js/kai.min.js'
       }
     },
     reload: {
-        port: 35729,
-        proxy: {
-            host: 'localhost'
-        },
-        liveReload: {}
+      port: 35729,
+      proxy: {
+          host: 'localhost'
+      },
+      liveReload: {}
     },
     watch: {
-      files: ['src/coffee/*.coffee','example/coffee/*.coffee','test/spec/*.coffee'],
-      tasks: 'coffee min jasmine reload'
+      product: {
+        files: ['src/coffee/*.coffee'],
+        tasks: 'coffeelint:product coffee:product min jasmine'
+      },
+      example: {
+        files: ['example/coffee/*.coffee'],
+        tasks: 'coffee:example'
+      },
+      test: {
+        files: ['test/spec/*.coffee'],
+        tasks: 'coffee:test jasmine'
+      }
     },
     docco: {
-      debug: {
+      kazitori: {
         src: ['src/coffee/kazitori.coffee'],
+        dest: 'docs/'
+      },
+      kai: {
+        src: ['src/coffee/kai.coffee'],
         dest: 'docs/'
       }
     },
@@ -83,6 +101,12 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-docco');
 
   // Default task.
+<<<<<<< HEAD
   grunt.registerTask('default', 'coffeelint coffee jasmine docco');
+=======
+  grunt.registerTask('default', 'coffeelint coffee min docco jasmine');
+
+  grunt.registerTask('ci', 'coffeelint coffee jasmine');
+>>>>>>> refs/heads/development
 
 };

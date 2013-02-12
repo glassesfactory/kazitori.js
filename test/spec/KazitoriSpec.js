@@ -284,9 +284,7 @@ describe("Kazitori", function() {
     });
     it('befores should be before called', function() {
       spyOn(controller, 'beforeShow');
-      console.log("eeee");
       router.change('/posts/1');
-      console.log("?");
       return expect(controller.beforeShow).toHaveBeenCalled();
     });
     it('should call controller method directly', function() {

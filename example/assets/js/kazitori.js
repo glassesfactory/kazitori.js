@@ -41,7 +41,7 @@ VARIABLE_TYPES = [
 
 Kazitori = (function() {
 
-  Kazitori.prototype.VERSION = "0.2";
+  Kazitori.prototype.VERSION = "0.2.1";
 
   Kazitori.prototype.history = null;
 
@@ -52,6 +52,8 @@ Kazitori = (function() {
   Kazitori.prototype.beforeHandlers = [];
 
   Kazitori.prototype.afterhandlers = [];
+
+  Kazitori.prototype.rootFiles = ['index.html', 'index.htm', 'index.php', 'unko.html'];
 
   Kazitori.prototype.root = null;
 
@@ -249,6 +251,17 @@ Kazitori = (function() {
     this.loadURL(frag, options);
   };
 
+  Kazitori.prototype.replace = function(fragment, options) {
+    if (!options) {
+      options = {
+        replace: true
+      };
+    } else if (!options.replace || options.replace === false) {
+      options.replace = true;
+    }
+    this.change(framgent, options);
+  };
+
   Kazitori.prototype.reject = function() {
     this.dispatchEvent(new KazitoriEvent(KazitoriEvent.REJECT, this.fragment));
     this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, this.beforeComplete);
@@ -308,18 +321,20 @@ Kazitori = (function() {
   Kazitori.prototype.beforeComplete = function(event) {
     this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, this.beforeComplete);
     this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_FAILED, this.beforeFailed);
-    this._beforeDeffer.queue = [];
+    this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.BEFORE_EXECUTED, this.fragment, this.lastFragment));
     this.executeHandlers();
   };
 
   Kazitori.prototype.executeHandlers = function() {
-    var handler, matched, _i, _len,
+    var handler, isMatched, matched, _i, _len,
       _this = this;
     matched = this._matchCheck(this.fragment, this.handlers);
+    isMatched = true;
     if (matched.length < 1) {
       if (this.notFound !== null) {
         this.loadURL(this.notFound);
       }
+      isMatched = false;
       this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.NOT_FOUND));
     } else if (matched.length > 1) {
       console.log("too many matched...");
@@ -331,9 +346,16 @@ Kazitori = (function() {
     }
     if (this._isFirstRequest) {
       setTimeout(function() {
-        return _this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.FIRST_REQUEST, _this.fragment, null));
+        _this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.FIRST_REQUEST, _this.fragment, null));
+        if (isMatched) {
+          return _this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.EXECUTED, _this.fragment, null));
+        }
       }, 0);
       this._isFirstRequest = false;
+    } else {
+      if (isMatched) {
+        this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.EXECUTED, this.fragment, this.lastFragment));
+      }
     }
     return matched;
   };
@@ -453,10 +475,29 @@ Kazitori = (function() {
   };
 
   Kazitori.prototype.getFragment = function(fragment) {
-    var root;
+    var frag, index, matched, root, _i, _len, _ref;
     if (!(fragment != null)) {
       if (this._hasPushState || !this._wantChangeHash) {
         fragment = this.location.pathname;
+        matched = false;
+        frag = fragment;
+        if (frag.match(/^\//)) {
+          frag = frag.substr(1);
+        }
+        root = this.root;
+        if (root.match(/^\//)) {
+          root = root.substr(1);
+        }
+        _ref = this.rootFiles;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          index = _ref[_i];
+          if (index === frag || root + index === frag) {
+            matched = true;
+          }
+        }
+        if (matched) {
+          fragment = this.root;
+        }
         fragment = fragment + this.location.search;
         root = this.root.replace(trailingSlash, '');
         if (!fragment.indexOf(root)) {
@@ -644,6 +685,8 @@ Rule = (function() {
   Rule.prototype._regexp = null;
 
   Rule.prototype.callback = null;
+
+  Rule.prototype.name = "";
 
   Rule.prototype.router = null;
 
@@ -879,6 +922,10 @@ KazitoriEvent.TASK_QUEUE_COMPLETE = 'task_queue_complete';
 KazitoriEvent.TASK_QUEUE_FAILED = 'task_queue_failed';
 
 KazitoriEvent.CHANGE = 'change';
+
+KazitoriEvent.EXECUTED = 'executed';
+
+KazitoriEvent.BEFORE_EXECUTED = 'before_executed';
 
 KazitoriEvent.INTERNAL_CHANGE = 'internal_change';
 

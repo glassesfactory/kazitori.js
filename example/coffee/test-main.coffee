@@ -29,6 +29,7 @@ class Router extends Kazitori
 
 	show:(id)->
 		console.log "showwww", id
+		# console.log Kai.GET_CSS_PATH(Kai.RELATIVE)
 		$('.currentPage').empty().append "this page is test" + id
 
 	hyoge:()->
@@ -57,6 +58,7 @@ class Router extends Kazitori
 	firend:(username, postid, firend, queries)->
 		console.log "friend"
 		console.log queries
+		console.log Kai.GET_CSS_PATH(Kai.RELATIVE)
 		$('.currentPage').empty().append username, postid, firend
 
 	###
@@ -95,7 +97,7 @@ $(document).ready ()->
 	})
 	$('#dialog').hide()
 
-	window.App = new Router({root:'/'})
+	window.App = new Router({root:'/unko/'})
 	
 	#チェンジイベント
 	window.App.addEventListener( KazitoriEvent.CHANGE, (event)->
@@ -122,6 +124,11 @@ $(document).ready ()->
 		console.log "not found"
 		)
 
+	window.App.addEventListener(KazitoriEvent.EXECUTED, (event)->
+		console.log event, "executed"
+		)
+
+	console.log window.App.handlers
 	$('.test').on "click", clickHandler
 
 	$('.prev').on "click", prevHandler
@@ -139,11 +146,14 @@ $(document).ready ()->
 		else
 			alert('バルス')
 
+	# Kai.init({'css':'hoge'})
+	console.log Kai.GET_CSS_PATH(Kai.RELATIVE)
+
 clickHandler =(event)->
 	event.preventDefault()
 	target = $(event.currentTarget)
 	url = target.attr('href')
-	window.App.change(url,{replace:true})
+	window.App.change(url)
 
 prevHandler =(event)->
 	event.preventDefault()

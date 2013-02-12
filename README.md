@@ -110,6 +110,14 @@ LICENSE
 Change Log
 --------------
 
+**2013 02 12 ver 0.2.1**
+
+* URL の履歴を pushState ではなく replaceState で処理する replace メソッドを追加しました。
+* `index.html` や `index.htm` など指定したファイルを root として扱う rootFiles というプロパティを追加しました。
+* routes で登録したメソッドが実行されたことを通知する `EXECUTED` イベントを追加しました。
+* その他細かいバグやイベント発行タイミングの不具合などを改善しました。
+
+
 **2013 02 04 ver 0.2**
 
 * URL variable の型指定に対応しました。
