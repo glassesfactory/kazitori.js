@@ -56,7 +56,7 @@ VARIABLE_TYPES = [
 
 ## Kazitori クラス
 class Kazitori
-  VERSION:"0.2"
+  VERSION:"0.2.1"
   history:null
   location:null
   handlers:[]
