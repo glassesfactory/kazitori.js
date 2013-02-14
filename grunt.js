@@ -4,7 +4,7 @@ module.exports = function(grunt) {
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
     coffeelintOptions: {
-      "max_line_length" : {
+      max_line_length: {
         "value": 120,
         "level" : "warn"
       }
@@ -12,25 +12,28 @@ module.exports = function(grunt) {
     coffeelint: {
       product: ['src/coffee/*.coffee']
     },
-    coffee:{
-      product:{
-        src:'src/coffee/*.coffee', dest:'src/js/'
+    coffee: {
+      product: {
+        src: 'src/coffee/*.coffee',
+        dest: 'src/js/'
       },
-      example:{
-        src:'example/coffee/*.coffee', dest:'example/assets/js/'
+      example: {
+        src: 'example/coffee/*.coffee',
+        dest: 'example/assets/js/'
       },
-      test:{
-        src:'test/spec/*.coffee', dest:'test/spec/'
+      test: {
+        src: 'test/spec/*.coffee',
+        dest: 'test/spec/'
       }
     },
     min: {
       kazitori: {
-        src:['src/js/kazitori.js'],
-        dest:'src/js/kazitori.min.js'
+        src: ['src/js/kazitori.js'],
+        dest: 'src/js/kazitori.min.js'
       },
       kai: {
-        src:['src/js/kai.js'],
-        dest:'src/js/kai.min.js'
+        src: ['src/js/kai.js'],
+        dest: 'src/js/kai.min.js'
       }
     },
     reload: {
@@ -64,9 +67,9 @@ module.exports = function(grunt) {
         dest: 'docs/'
       }
     },
-    jasmine : {
-      src : 'test/src/*.js',
-      specs : 'test/spec/*.js'
+    jasmine: {
+      src: 'test/src/*.js',
+      specs: 'test/spec/*.js'
     },
     jshint: {
       options: {
