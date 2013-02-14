@@ -4,6 +4,6 @@
   "version": "0.2.1",
   "description": "pushState library.",
   "keywords": ["route", "router", "routes", "pushState"],
-  "scripts": ["src/kazitori.js"],
+  "scripts": ["src/js/kazitori.js"],
   "license": "MIT"
 }
