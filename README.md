@@ -1,6 +1,8 @@
 kazitori.js
 ===============
 
+[![Build Status](https://travis-ci.org/glassesfactory/kazitori.js.png?branch=master)](https://travis-ci.org/glassesfactory/kazitori.js)
+
 kazitori.js は pushState を良い感じにさばいてくれるライブラリです。  
 依存している外部ライブラリなどは存在しないので  
 様々なコンテンツに組み合わせることができます。  
@@ -139,3 +141,13 @@ Change Log
 
 * バージョン名をつけました。今回から 0.1.2 です。
 * routes で登録した handler が処理される前に、事前処理を行う before 機能を実装しました。
+
+
+Authors
+-------------------
+* [@__hage__](https://twitter.com/__hage__)
+
+Thanks for assistance and contributions:
+
+* [@matsumos](https://twitter.com/matsumos)
+* [@alumican_net](https://twitter.com/alumican_net)
