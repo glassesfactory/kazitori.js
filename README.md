@@ -19,6 +19,22 @@ Ajax 通信と pushState が分離しています。
 また、多くの Web フレームワークを参考にしていることで
 pushState を活用するルーティングを明示的に示すことができます。
 
+インストール
+------------
+
+`$ git clone https://github.com/glassesfactory/kazitori.js.git`
+
+or 
+
+`$ npm install kazitori.js`
+
+or 
+
+$ bower install kazitori.js`
+
+または Kazitori.js を[直接ダウンロード](https://raw.github.com/glassesfactory/kazitori.js/master/src/js/kazitori.js)して下さい。
+
+
 
 使い方
 ----------
