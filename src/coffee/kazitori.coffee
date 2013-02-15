@@ -81,6 +81,7 @@ class Kazitori
   isBeforeForce:false
 
   isNotFoundForce:false
+  _notFoudn:null
 
   breaker:{}
 
@@ -96,6 +97,8 @@ class Kazitori
 
 
 
+
+
   constructor:(options)->
     @.options = options || (options = {})
 
@@ -105,7 +108,9 @@ class Kazitori
     @.root = if options.root then options.root else '/'
 
     #見つからなかった時強制的に root を表示する
-    @.notFound = if options.notFound then options.notFound else @.root
+    # @.notFound = if options.notFound then options.notFound else @.root
+    if @.notFound is null
+      @.notFound = if options.notFound then options.notFound else @.root
 
     win = window
     if typeof win != 'undefined'
@@ -116,6 +121,7 @@ class Kazitori
     @_dispatcher = new EventDispatcher()
     @_bindBefores()
     @_bindRules()
+    @_bindNotFound()
 
     if not @.options.isAutoStart? or @.options.isAutoStart != false
       @start()
@@ -222,7 +228,9 @@ class Kazitori
     matched = @_matchCheck(@.fragment, @.handlers)
     if matched is false and @.isNotFoundForce is false
       if @.notFound isnt null
-        @change(@.notFound)
+        @._notFound.callback(@.fragment)
+        url = @.root + @._notFound.rule.replace(routeStripper, '')
+        @.history[ if options.replace then 'replaceState' else 'pushState' ]({}, document.title, url)
       @._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.NOT_FOUND))
       return
     if @._hasPushState
@@ -322,10 +330,9 @@ class Kazitori
     #毎回 match チェックしてるので使いまわしたいのでリファクタ
     matched = @._matchCheck(@.fragment, @.handlers)
     isMatched = true
-    if matched.length < 1
+    if matched is false or matched.length < 1
       if @.notFound isnt null
-        #a- 2回呼ばれるので loadURL じゃなくて @.notFound.callback のほうがいいな
-        @loadURL(@.notFound)
+        @._notFound.callback(@.fragment)
       isMatched = false
       @._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.NOT_FOUND))
 
@@ -405,6 +412,34 @@ class Kazitori
         ,@
       }
     return
+
+  # notFound で指定されたメソッドをバインド
+  _bindNotFound:()->
+    if not @.notFound?
+      return
+    if typeof @.notFound is "string"
+      for rule in @.handlers
+        if rule.rule is '/' + @.notFound.replace(@.root, '')
+          @._notFound = rule
+          return
+    else
+      notFoundFragment = @_keys(@.notFound)[0]
+
+    notFoundFuncName = @.notFound[notFoundFragment]
+    
+    if typeof notFoundFuncName is "function"
+      callback = notFoundFuncName
+    else
+      callback = @[notFoundFuncName]
+
+    @._notFound = new Rule(notFoundFragment, (fragment)->
+      args = @_extractParams(fragment)
+      args = @_getCastedParams(args)
+      callback && callback.apply(@.router, args)
+    ,@)
+    return
+
+
 
 
   _updateHash:(location, fragment, replace)->
@@ -489,15 +524,6 @@ class Kazitori
       return match[1]
     else
       return ''
-
-  # _extractParams:(fragment)->
-  #   param = @_regexp.exec(fragment)
-  #   if param?
-  #     console.log "?"
-  #     console.log param
-  #     return param.slice(1)
-  #   else
-  #     return null
 
   #===============================================
   #
@@ -687,6 +713,8 @@ class Rule
   #パラメーターを指定された型でキャスト
   _getCastedParams:(params)->
     i = 0
+    if not params
+      return params
     len = params.length
     castedParams = []
     while i < len

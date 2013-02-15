@@ -19,7 +19,8 @@ class Router extends Kazitori
 		# '/<string:user>/<int:post>':'post'
 		'/<string:user>/<int:post>/<friend>':'firend'
 		# '/hyoge':'hyoge'
-		
+	# notFound:
+		# '/404':'notfound'
 
 	index:()->
 		console.log "index"
@@ -60,6 +61,9 @@ class Router extends Kazitori
 		console.log queries
 		console.log Kai.GET_CSS_PATH(Kai.RELATIVE)
 		$('.currentPage').empty().append username, postid, firend
+
+	notfound:()->
+		console.log "nullpo"
 
 	###
 		some before functions
@@ -127,8 +131,7 @@ $(document).ready ()->
 	window.App.addEventListener(KazitoriEvent.EXECUTED, (event)->
 		console.log event, "executed"
 		)
-
-	console.log window.App.handlers
+	
 	$('.test').on "click", clickHandler
 
 	$('.prev').on "click", prevHandler

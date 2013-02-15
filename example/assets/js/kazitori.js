@@ -77,6 +77,8 @@ Kazitori = (function() {
 
   Kazitori.prototype.isNotFoundForce = false;
 
+  Kazitori.prototype._notFoudn = null;
+
   Kazitori.prototype.breaker = {};
 
   Kazitori.prototype._dispatcher = null;
@@ -106,7 +108,9 @@ Kazitori = (function() {
       this.routes = options.routes;
     }
     this.root = options.root ? options.root : '/';
-    this.notFound = options.notFound ? options.notFound : this.root;
+    if (this.notFound === null) {
+      this.notFound = options.notFound ? options.notFound : this.root;
+    }
     win = window;
     if (typeof win !== 'undefined') {
       this.location = win.location;
@@ -117,6 +121,7 @@ Kazitori = (function() {
     this._dispatcher = new EventDispatcher();
     this._bindBefores();
     this._bindRules();
+    this._bindNotFound();
     if (!(this.options.isAutoStart != null) || this.options.isAutoStart !== false) {
       this.start();
     }
@@ -226,7 +231,9 @@ Kazitori = (function() {
     matched = this._matchCheck(this.fragment, this.handlers);
     if (matched === false && this.isNotFoundForce === false) {
       if (this.notFound !== null) {
-        this.change(this.notFound);
+        this._notFound.callback(this.fragment);
+        url = this.root + this._notFound.rule.replace(routeStripper, '');
+        this.history[options.replace ? 'replaceState' : 'pushState']({}, document.title, url);
       }
       this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.NOT_FOUND));
       return;
@@ -330,9 +337,9 @@ Kazitori = (function() {
       _this = this;
     matched = this._matchCheck(this.fragment, this.handlers);
     isMatched = true;
-    if (matched.length < 1) {
+    if (matched === false || matched.length < 1) {
       if (this.notFound !== null) {
-        this.loadURL(this.notFound);
+        this._notFound.callback(this.fragment);
       }
       isMatched = false;
       this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.NOT_FOUND));
@@ -424,6 +431,37 @@ Kazitori = (function() {
         }, this)
       };
     }
+  };
+
+  Kazitori.prototype._bindNotFound = function() {
+    var callback, notFoundFragment, notFoundFuncName, rule, _i, _len, _ref;
+    if (!(this.notFound != null)) {
+      return;
+    }
+    if (typeof this.notFound === "string") {
+      _ref = this.handlers;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        rule = _ref[_i];
+        if (rule.rule === '/' + this.notFound.replace(this.root, '')) {
+          this._notFound = rule;
+          return;
+        }
+      }
+    } else {
+      notFoundFragment = this._keys(this.notFound)[0];
+    }
+    notFoundFuncName = this.notFound[notFoundFragment];
+    if (typeof notFoundFuncName === "function") {
+      callback = notFoundFuncName;
+    } else {
+      callback = this[notFoundFuncName];
+    }
+    this._notFound = new Rule(notFoundFragment, function(fragment) {
+      var args;
+      args = this._extractParams(fragment);
+      args = this._getCastedParams(args);
+      return callback && callback.apply(this.router, args);
+    }, this);
   };
 
   Kazitori.prototype._updateHash = function(location, fragment, replace) {
@@ -754,6 +792,9 @@ Rule = (function() {
   Rule.prototype._getCastedParams = function(params) {
     var castedParams, i, len, type, _i, _len;
     i = 0;
+    if (!params) {
+      return params;
+    }
     len = params.length;
     castedParams = [];
     while (i < len) {
