@@ -314,7 +314,7 @@ class Kazitori
       @executeHandlers()
     return
 
-
+  #指定した URL に対応した handler が設定されているかどうかチェック
   match:(fragment)->
     matched = @._matchCheck(fragment, @.handlers)
     return matched.length > 0
