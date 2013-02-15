@@ -324,6 +324,12 @@ Kazitori = (function() {
     }
   };
 
+  Kazitori.prototype.match = function(fragment) {
+    var matched;
+    matched = this._matchCheck(fragment, this.handlers);
+    return matched.length > 0;
+  };
+
   Kazitori.prototype.beforeComplete = function(event) {
     this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, this.beforeComplete);
     this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_FAILED, this.beforeFailed);

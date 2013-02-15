@@ -314,6 +314,12 @@ class Kazitori
       @executeHandlers()
     return
 
+
+  match:(fragment)->
+    matched = @._matchCheck(fragment, @.handlers)
+    return matched.length > 0
+
+
     
   #before で登録した処理が無難に終わった
   beforeComplete:(event)=>

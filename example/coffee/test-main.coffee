@@ -131,6 +131,9 @@ $(document).ready ()->
 	window.App.addEventListener(KazitoriEvent.EXECUTED, (event)->
 		console.log event, "executed"
 		)
+
+	console.log "matche check....", window.App.match('/')
+	console.log "matche check....", window.App.match('/webebebeaaa')
 	
 	$('.test').on "click", clickHandler
 
