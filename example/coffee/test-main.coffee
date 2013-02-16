@@ -57,9 +57,10 @@ class Router extends Kazitori
 		console.log username, postid
 
 	firend:(username, postid, firend, queries)->
-		console.log "friend"
-		console.log queries
-		console.log Kai.GET_CSS_PATH(Kai.RELATIVE)
+		# console.log "friend"
+		# console.log queries
+		# console.log Kai.GET_CSS_PATH(Kai.RELATIVE)
+		console.log @.params
 		$('.currentPage').empty().append username, postid, firend
 
 	notfound:()->
@@ -134,6 +135,7 @@ $(document).ready ()->
 
 	console.log "matche check....", window.App.match('/')
 	console.log "matche check....", window.App.match('/webebebeaaa')
+	console.log window.App.params
 	
 	$('.test').on "click", clickHandler
 

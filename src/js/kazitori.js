@@ -62,6 +62,11 @@ Kazitori = (function() {
 
   Kazitori.prototype.direct = null;
 
+  Kazitori.prototype._params = {
+    params: [],
+    'fragment': ''
+  };
+
   /*beforeFailedHandler
   */
 
@@ -107,6 +112,11 @@ Kazitori = (function() {
       this.routes = options.routes;
     }
     this.root = options.root ? options.root : '/';
+    this._params = {
+      params: [],
+      queries: {},
+      fragment: null
+    };
     if (this.notFound === null) {
       this.notFound = options.notFound ? options.notFound : this.root;
     }
@@ -121,6 +131,22 @@ Kazitori = (function() {
     this._bindBefores();
     this._bindRules();
     this._bindNotFound();
+    try {
+      Object.defineProperty(this, 'params', {
+        enumerable: true,
+        get: function() {
+          return this._params.params;
+        }
+      });
+      Object.defineProperty(this, 'queries', {
+        enumerable: true,
+        get: function() {
+          return this._params.queries;
+        }
+      });
+    } catch (e) {
+      throw new Error(e);
+    }
     if (!(this.options.isAutoStart != null) || this.options.isAutoStart !== false) {
       this.start();
     }
@@ -275,6 +301,18 @@ Kazitori = (function() {
     this._beforeDeffer = null;
   };
 
+  Kazitori.prototype.resume = function() {
+    if (this._beforeDeffer != null) {
+      this._beforeDeffer.resume();
+    }
+  };
+
+  Kazitori.prototype.restat = function() {
+    if (this._beforeDeffer != null) {
+      this._beforeDeffer.restart();
+    }
+  };
+
   Kazitori.prototype.registerHandler = function(rule, name, isBefore, callback) {
     var target;
     if (!callback) {
@@ -289,8 +327,7 @@ Kazitori = (function() {
     target = isBefore ? this.beforeHandlers : this.handlers;
     target.unshift(new Rule(rule, function(fragment) {
       var args;
-      args = this._extractParams(fragment);
-      args = this._getCastedParams(args);
+      args = this.router.extractParams(this, fragment);
       return callback && callback.apply(this.router, args);
     }, this));
     return this;
@@ -463,8 +500,7 @@ Kazitori = (function() {
     }
     this._notFound = new Rule(notFoundFragment, function(fragment) {
       var args;
-      args = this._extractParams(fragment);
-      args = this._getCastedParams(args);
+      args = this.router.extractParams(this, fragment);
       return callback && callback.apply(this.router, args);
     }, this);
   };
@@ -488,7 +524,7 @@ Kazitori = (function() {
         matched.push(handler);
       } else if (handler.test(fragment)) {
         if (handler.isVariable && handler.types.length > 0) {
-          args = handler._extractParams(fragment);
+          args = this.extractParams(handler, fragment);
           argsMatch = [];
           len = args.length;
           i = 0;
@@ -561,6 +597,79 @@ Kazitori = (function() {
     } else {
       return '';
     }
+  };
+
+  Kazitori.prototype.extractParams = function(rule, fragment) {
+    var k, kv, last, newParam, newQueries, obj, param, q, queries, query, queryParams, v, _i, _len;
+    if (this._params.params.length > 0 && this._params.fragment === fragment) {
+      return this._params.params;
+    }
+    param = rule._regexp.exec(fragment);
+    this._params.fragment = fragment;
+    if (param != null) {
+      newParam = param.slice(1);
+      last = param[param.length - 1];
+      if (last.indexOf('?') > -1) {
+        newQueries = [];
+        queries = last.split('?')[1];
+        queryParams = queries.split('&');
+        for (_i = 0, _len = queryParams.length; _i < _len; _i++) {
+          query = queryParams[_i];
+          kv = query.split('=');
+          k = kv[0];
+          v = kv[1] ? kv[1] : "";
+          if (v.indexOf('|') > -1) {
+            v = v.split("|");
+          }
+          obj = {};
+          obj[k] = v;
+          newQueries.push(obj);
+        }
+        newParam.pop();
+        newParam.push(last.split('?')[0]);
+        q = {
+          "queries": newQueries
+        };
+        this._params.params = this._getCastedParams(rule, newParam.slice(0));
+        newParam.push(q);
+        this._params.queries = q;
+      } else {
+        this._params.params = this._getCastedParams(rule, newParam);
+      }
+      return newParam;
+    } else {
+      this._params.params = [];
+      return null;
+    }
+  };
+
+  Kazitori.prototype._getCastedParams = function(rule, params) {
+    var castedParams, i, len, type, _i, _len;
+    i = 0;
+    if (!params) {
+      return params;
+    }
+    if (rule.types.length < 1) {
+      return params;
+    }
+    len = params.length;
+    castedParams = [];
+    while (i < len) {
+      if (rule.types[i] === null) {
+        castedParams.push(params[i]);
+      } else if (typeof params[i] === "object") {
+        castedParams.push(params[i]);
+      } else {
+        for (_i = 0, _len = VARIABLE_TYPES.length; _i < _len; _i++) {
+          type = VARIABLE_TYPES[_i];
+          if (rule.types[i] === type.name) {
+            castedParams.push(type.cast(params[i]));
+          }
+        }
+      }
+      i++;
+    }
+    return castedParams;
   };
 
   Kazitori.prototype.addEventListener = function(type, listener) {
@@ -760,66 +869,6 @@ Rule = (function() {
     return this._regexp.test(fragment);
   };
 
-  Rule.prototype._extractParams = function(fragment) {
-    var k, kv, last, newParam, newQueries, obj, param, queries, query, queryParams, v, _i, _len;
-    param = this._regexp.exec(fragment);
-    if (param != null) {
-      newParam = param.slice(1);
-      last = param[param.length - 1];
-      if (last.indexOf('?') > -1) {
-        newQueries = [];
-        queries = last.split('?')[1];
-        queryParams = queries.split('&');
-        for (_i = 0, _len = queryParams.length; _i < _len; _i++) {
-          query = queryParams[_i];
-          kv = query.split('=');
-          k = kv[0];
-          v = kv[1] ? kv[1] : "";
-          if (v.indexOf('|') > -1) {
-            v = v.split("|");
-          }
-          obj = {};
-          obj[k] = v;
-          newQueries.push(obj);
-        }
-        newParam.pop();
-        newParam.push(last.split('?')[0]);
-        newParam.push({
-          "queries": newQueries
-        });
-      }
-      return newParam;
-    } else {
-      return null;
-    }
-  };
-
-  Rule.prototype._getCastedParams = function(params) {
-    var castedParams, i, len, type, _i, _len;
-    i = 0;
-    if (!params) {
-      return params;
-    }
-    len = params.length;
-    castedParams = [];
-    while (i < len) {
-      if (this.types[i] === null) {
-        castedParams.push(params[i]);
-      } else if (typeof params[i] === "object") {
-        castedParams.push(params[i]);
-      } else {
-        for (_i = 0, _len = VARIABLE_TYPES.length; _i < _len; _i++) {
-          type = VARIABLE_TYPES[_i];
-          if (this.types[i] === type.name) {
-            castedParams.push(type.cast(params[i]));
-          }
-        }
-      }
-      i++;
-    }
-    return castedParams;
-  };
-
   Rule.prototype._ruleToRegExp = function(rule) {
     var newRule;
     newRule = rule.replace(escapeRegExp, '\\$&');
@@ -898,8 +947,11 @@ Deffered = (function(_super) {
 
   Deffered.prototype.queue = [];
 
+  Deffered.prototype.isResume = false;
+
   function Deffered() {
     this.queue = [];
+    this.isResume = false;
   }
 
   Deffered.prototype.deffered = function(func) {
@@ -909,6 +961,9 @@ Deffered = (function(_super) {
 
   Deffered.prototype.execute = function() {
     var task;
+    if (this.isResume) {
+      return;
+    }
     try {
       task = this.queue.shift();
       if (task) {
@@ -931,6 +986,15 @@ Deffered = (function(_super) {
       index: this.index,
       message: message
     });
+  };
+
+  Deffered.prototype.resume = function() {
+    this.isResume = true;
+  };
+
+  Deffered.prototype.restart = function() {
+    this.isResume = false;
+    this.execute();
   };
 
   return Deffered;

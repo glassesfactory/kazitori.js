@@ -67,6 +67,10 @@ class Kazitori
   notFound:null
   beforeAnytimeHandler:null
   direct:null
+  #URL パラメーター
+  _params:
+    params:[]
+    'fragment':''
   ###beforeFailedHandler ###
   # before 処理が失敗した時に実行されます。
   # デフォルトでは空の function になっています。
@@ -107,6 +111,12 @@ class Kazitori
     
     @.root = if options.root then options.root else '/'
 
+    @._params = {
+      params:[]
+      queries:{}
+      fragment:null
+    }
+
     #見つからなかった時強制的に root を表示する
     # @.notFound = if options.notFound then options.notFound else @.root
     if @.notFound is null
@@ -122,6 +132,22 @@ class Kazitori
     @_bindBefores()
     @_bindRules()
     @_bindNotFound()
+
+    try
+      Object.defineProperty(@, 'params', {
+        enumerable : true
+        get:()->
+          return @._params.params
+        })
+      Object.defineProperty(@, 'queries', {
+        enumerable : true
+        get:()->
+          return @._params.queries
+        })
+    catch e
+      throw new Error(e)
+      #IEだと defineProperty がアレらしいので
+      #@.__defineGetter__ したほうがいいかなー
 
     if not @.options.isAutoStart? or @.options.isAutoStart != false
       @start()
@@ -268,6 +294,20 @@ class Kazitori
     @._beforeDeffer.removeEventListener KazitoriEvent.TASK_QUEUE_FAILED, @beforeFailed
     @._beforeDeffer = null
     return
+
+  #処理を一時停止する
+  resume:()->
+    if @._beforeDeffer?
+      @._beforeDeffer.resume()
+    #event dispatch するかねぇ
+    return
+
+  #処理を再開する
+  restat:()->
+    if @._beforeDeffer?
+      @._beforeDeffer.restart()
+    #event dispatch するかねぇ
+    return
     
   registerHandler:(rule, name, isBefore, callback )->
     if not callback
@@ -280,8 +320,7 @@ class Kazitori
 
     target = if isBefore then @.beforeHandlers else @.handlers
     target.unshift new Rule(rule, (fragment)->
-      args = @_extractParams(fragment)
-      args = @_getCastedParams(args)
+      args = @.router.extractParams(@, fragment)
       callback && callback.apply(@.router, args)
     ,@)
     return @
@@ -439,8 +478,7 @@ class Kazitori
       callback = @[notFoundFuncName]
 
     @._notFound = new Rule(notFoundFragment, (fragment)->
-      args = @_extractParams(fragment)
-      args = @_getCastedParams(args)
+      args = @.router.extractParams(@, fragment)
       callback && callback.apply(@.router, args)
     ,@)
     return
@@ -469,7 +507,8 @@ class Kazitori
       else if handler.test(fragment)
         if handler.isVariable and handler.types.length > 0
           #型チェック用
-          args = handler._extractParams(fragment)
+          # args = handler._extractParams(fragment)
+          args = @.extractParams(handler, fragment)
           argsMatch = []
           len = args.length
           i = 0
@@ -530,6 +569,63 @@ class Kazitori
       return match[1]
     else
       return ''
+
+
+  #URL パラメータを分解
+  extractParams:(rule, fragment)->
+    if @._params.params.length > 0 and @._params.fragment is fragment
+      return @._params.params
+    param = rule._regexp.exec(fragment)
+    @._params.fragment = fragment
+    if param?
+      newParam = param.slice(1)
+      last = param[param.length - 1]
+      if last.indexOf('?') > -1
+        newQueries = []
+        queries = last.split('?')[1]
+        queryParams = queries.split('&')
+        for query in queryParams
+          kv = query.split('=')
+          k = kv[0]
+          v = if kv[1] then kv[1] else ""
+          if v.indexOf('|') > -1
+            v = v.split("|")
+          obj = {}
+          obj[k] = v
+          newQueries.push obj
+        newParam.pop()
+        newParam.push last.split('?')[0]
+        q = {"queries":newQueries}
+        @._params.params = @_getCastedParams(rule, newParam.slice(0))
+        newParam.push q
+        @._params.queries = q
+      else
+        @._params.params = @_getCastedParams(rule, newParam)
+      return newParam
+    else
+      @._params.params = []
+      return null
+
+  #パラメーターを指定された型でキャスト
+  _getCastedParams:(rule, params)->
+    i = 0
+    if not params
+      return params
+    if rule.types.length < 1
+      return params
+    len = params.length
+    castedParams = []
+    while i < len
+      if rule.types[i] is null
+        castedParams.push params[i]
+      else if typeof params[i] is "object"
+        castedParams.push params[i]
+      else
+        for type in VARIABLE_TYPES
+          if rule.types[i] is type.name
+            castedParams.push type.cast(params[i])
+      i++
+    return castedParams
 
   #===============================================
   #
@@ -690,51 +786,6 @@ class Rule
   test:(fragment)->
     return @_regexp.test(fragment)
 
-  #URL パラメータを分解
-  _extractParams:(fragment)->
-    param = @_regexp.exec(fragment)
-    if param?
-      newParam = param.slice(1)
-      last = param[param.length - 1]
-      if last.indexOf('?') > -1
-        newQueries = []
-        queries = last.split('?')[1]
-        queryParams = queries.split('&')
-        for query in queryParams
-          kv = query.split('=')
-          k = kv[0]
-          v = if kv[1] then kv[1] else ""
-          if v.indexOf('|') > -1
-            v = v.split("|")
-          obj = {}
-          obj[k] = v
-          newQueries.push obj
-        newParam.pop()
-        newParam.push last.split('?')[0]
-        newParam.push {"queries":newQueries}
-      return newParam
-    else
-      return null
-
-  #パラメーターを指定された型でキャスト
-  _getCastedParams:(params)->
-    i = 0
-    if not params
-      return params
-    len = params.length
-    castedParams = []
-    while i < len
-      if @types[i] is null
-        castedParams.push params[i]
-      else if typeof params[i] is "object"
-        castedParams.push params[i]
-      else
-        for type in VARIABLE_TYPES
-          if @types[i] is type.name
-            castedParams.push type.cast(params[i])
-      i++
-    return castedParams
-
   _ruleToRegExp:(rule)->
     newRule = rule.replace(escapeRegExp, '\\$&')
     newRule = newRule.replace(optionalParam, '(?:$1)?')
@@ -789,15 +840,19 @@ class EventDispatcher
 # before を確実に処理するための簡易的な Deffered クラス
 class Deffered extends EventDispatcher
   queue : []
+  isResume : false
 
   constructor:()->
     @queue = []
+    @isResume = false
   
   deffered:(func)->
     @queue.push func
     return @
 
   execute:()->
+    if @isResume
+      return
     try
       task = @queue.shift()
       if task
@@ -808,9 +863,21 @@ class Deffered extends EventDispatcher
     catch error
       @reject(error)
 
+  #defferd を中断する
   reject:(error)->
     message = if not error then "user reject" else error
     @dispatchEvent({type:KazitoriEvent.TASK_QUEUE_FAILED, index:@index, message:message })
+
+  #deffered を一時停止する
+  resume:()->
+    @isResume = true
+    return
+
+  #deffered を再開する
+  restart:()->
+    @isResume = false
+    @execute()
+    return
 
 
 

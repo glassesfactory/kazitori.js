@@ -69,9 +69,7 @@ Router = (function(_super) {
   };
 
   Router.prototype.firend = function(username, postid, firend, queries) {
-    console.log("friend");
-    console.log(queries);
-    console.log(Kai.GET_CSS_PATH(Kai.RELATIVE));
+    console.log(this.params);
     return $('.currentPage').empty().append(username, postid, firend);
   };
 
@@ -149,6 +147,7 @@ $(document).ready(function() {
   });
   console.log("matche check....", window.App.match('/'));
   console.log("matche check....", window.App.match('/webebebeaaa'));
+  console.log(window.App.params);
   $('.test').on("click", clickHandler);
   $('.prev').on("click", prevHandler);
   $('.next').on("click", nextHandler);
