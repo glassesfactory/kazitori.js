@@ -98,6 +98,13 @@ Kazitori = (function() {
 
   Kazitori.prototype._isFirstRequest = true;
 
+  Kazitori.prototype.iuResume = false;
+
+  Kazitori.prototype._processStep = {
+    'status': 'null',
+    'args': []
+  };
+
   function Kazitori(options) {
     this.observeURLHandler = __bind(this.observeURLHandler, this);
 
@@ -108,6 +115,8 @@ Kazitori = (function() {
     this.beforeComplete = __bind(this.beforeComplete, this);
 
     var docMode, win;
+    this._processStep.status = 'constructor';
+    this._processStep.args = [options];
     this.options = options || (options = {});
     if (options.routes) {
       this.routes = options.routes;
@@ -156,6 +165,8 @@ Kazitori = (function() {
 
   Kazitori.prototype.start = function(options) {
     var atRoot, fragment, frame, override, win;
+    this._processStep.status = 'start';
+    this._processStep.args = [options];
     if (Kazitori.started) {
       throw new Error('mou hazim matteru');
     }
@@ -239,6 +250,8 @@ Kazitori = (function() {
     if (!Kazitori.started) {
       return false;
     }
+    this._processStep.status = 'change';
+    this._processStep.args = [fragment, options];
     prev = this.fragment;
     if (!options) {
       options = {
@@ -285,6 +298,8 @@ Kazitori = (function() {
   };
 
   Kazitori.prototype.replace = function(fragment, options) {
+    this._processStep.status = 'replace';
+    this._processStep.args = [fragment, options];
     if (!options) {
       options = {
         replace: true
@@ -306,12 +321,17 @@ Kazitori = (function() {
     if (this._beforeDeffer != null) {
       this._beforeDeffer.resume();
     }
+    this.isResume = true;
+    this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.RESUME, this.fragment, this.lastFragment));
   };
 
-  Kazitori.prototype.restat = function() {
+  Kazitori.prototype.restart = function() {
     if (this._beforeDeffer != null) {
       this._beforeDeffer.restart();
     }
+    this.isResume = false;
+    this[this._processStep.status](this._processStep.args);
+    this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.RESTART, this.fragment, this.lastFragment));
   };
 
   Kazitori.prototype.registerHandler = function(rule, name, isBefore, callback) {
@@ -337,6 +357,11 @@ Kazitori = (function() {
   Kazitori.prototype.loadURL = function(fragmentOverride, options) {
     var fragment, handler, matched, _i, _len,
       _this = this;
+    this._processStep.status = 'loadURL';
+    this._processStep.args = [fragmentOverride, options];
+    if (this.isResume) {
+      return;
+    }
     fragment = this.fragment = this.getFragment(fragmentOverride);
     if (this.beforeAnytimeHandler || this.beforeHandlers.length > 0) {
       this._beforeDeffer = new Deffered();
@@ -378,6 +403,11 @@ Kazitori = (function() {
   Kazitori.prototype.executeHandlers = function() {
     var handler, isMatched, matched, _i, _len,
       _this = this;
+    this._processStep.status = 'executeHandlers';
+    this._processStep.args = [];
+    if (this.isResume) {
+      return;
+    }
     matched = this._matchCheck(this.fragment, this.handlers);
     isMatched = true;
     if (matched === false || matched.length < 1) {
@@ -872,10 +902,7 @@ Rule = (function() {
 
   Rule.prototype._ruleToRegExp = function(rule) {
     var newRule;
-    newRule = rule.replace(escapeRegExp, '\\$&');
-    newRule = newRule.replace(optionalParam, '(?:$1)?');
-    newRule = newRule.replace(namedParam, '([^\/]+)');
-    newRule = newRule.replace(splatParam, '(.*?)');
+    newRule = rule.replace(escapeRegExp, '\\$&').replace(optionalParam, '(?:$1)?').replace(namedParam, '([^\/]+)').replace(splatParam, '(.*?)');
     return new RegExp('^' + newRule + '$');
   };
 
@@ -1053,6 +1080,10 @@ KazitoriEvent.NOT_FOUND = 'not_found';
 KazitoriEvent.START = 'start';
 
 KazitoriEvent.STOP = 'stop';
+
+KazitoriEvent.RESUME = 'resume';
+
+KazitoriEvent.RESTART = 'restart';
 
 KazitoriEvent.FIRST_REQUEST = 'first_request';
 

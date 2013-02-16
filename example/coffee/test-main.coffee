@@ -7,7 +7,7 @@ class Router extends Kazitori
 	befores:
 		
 		# 'admin' :['ninshou']
-		# '/<string:user>/<int:post>/<friend>':['beforeMinchi']
+		'/<string:user>/<int:post>/<friend>':['beforeMinchi']
 		'/<int:id>':['beforeShow']
 	routes :
 		'/':'index'		
@@ -60,7 +60,7 @@ class Router extends Kazitori
 		# console.log "friend"
 		# console.log queries
 		# console.log Kai.GET_CSS_PATH(Kai.RELATIVE)
-		console.log @.params
+		console.log @.params, "hironori"
 		$('.currentPage').empty().append username, postid, firend
 
 	notfound:()->
@@ -78,6 +78,11 @@ class Router extends Kazitori
 
 	beforeMinchi:()->
 		console.log "before minchi"
+		@resume()
+		setTimeout ()=>
+			console.log "restart?", @
+			@restart()
+		, 2000
 
 	ninshou:()->
 		isLogined = Boolean(getCookie(COOKIE_KEY))

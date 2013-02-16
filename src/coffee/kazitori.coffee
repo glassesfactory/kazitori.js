@@ -98,12 +98,19 @@ class Kazitori
 
   _isFirstRequest:true
 
+  iuResume:false
+  _processStep:
+    'status':'null'
+    'args':[]
+
 
 
 
 
 
   constructor:(options)->
+    @._processStep.status = 'constructor'
+    @._processStep.args = [options]
     @.options = options || (options = {})
 
     if options.routes
@@ -156,6 +163,8 @@ class Kazitori
 
   #開始する
   start:(options)->
+    @._processStep.status = 'start'
+    @._processStep.args = [options]
     if Kazitori.started
       throw new Error('mou hazim matteru')
     Kazitori.started = true
@@ -236,6 +245,8 @@ class Kazitori
   change:(fragment, options)->
     if not Kazitori.started
       return false
+    @._processStep.status = 'change'
+    @._processStep.args = [fragment, options]
     prev = @.fragment
     if not options
       options = {'trigger':options}
@@ -279,6 +290,8 @@ class Kazitori
 
   #pushState ではなく replaceState で処理する
   replace:(fragment, options)->
+    @._processStep.status = 'replace'
+    @._processStep.args = [fragment, options]
     if not options
       options = {replace:true}
     else if not options.replace or options.replace is false
@@ -299,14 +312,17 @@ class Kazitori
   resume:()->
     if @._beforeDeffer?
       @._beforeDeffer.resume()
-    #event dispatch するかねぇ
+    @.isResume = true
+    @._dispatcher.dispatchEvent( new KazitoriEvent(KazitoriEvent.RESUME, @.fragment, @.lastFragment))
     return
 
   #処理を再開する
-  restat:()->
+  restart:()->
     if @._beforeDeffer?
       @._beforeDeffer.restart()
-    #event dispatch するかねぇ
+    @.isResume = false
+    @[@._processStep.status](@._processStep.args)
+    @._dispatcher.dispatchEvent( new KazitoriEvent(KazitoriEvent.RESTART, @.fragment, @.lastFragment))
     return
     
   registerHandler:(rule, name, isBefore, callback )->
@@ -327,6 +343,11 @@ class Kazitori
 
   #URL を読み込む
   loadURL:(fragmentOverride, options)->
+    @._processStep.status = 'loadURL'
+    @._processStep.args = [fragmentOverride, options]
+
+    if @.isResume
+      return
     fragment = @.fragment = @getFragment(fragmentOverride)
     
     if @.beforeAnytimeHandler or @.beforeHandlers.length > 0
@@ -372,6 +393,10 @@ class Kazitori
   
   #routes で登録されたメソッドを実行
   executeHandlers:()=>
+    @._processStep.status = 'executeHandlers'
+    @._processStep.args = []
+    if @.isResume
+      return
     #毎回 match チェックしてるので使いまわしたいのでリファクタ
     matched = @._matchCheck(@.fragment, @.handlers)
     isMatched = true
@@ -482,9 +507,6 @@ class Kazitori
       callback && callback.apply(@.router, args)
     ,@)
     return
-
-
-
 
   _updateHash:(location, fragment, replace)->
     if replace
@@ -787,14 +809,8 @@ class Rule
     return @_regexp.test(fragment)
 
   _ruleToRegExp:(rule)->
-    newRule = rule.replace(escapeRegExp, '\\$&')
-    newRule = newRule.replace(optionalParam, '(?:$1)?')
-    newRule = newRule.replace(namedParam, '([^\/]+)')
-    newRule = newRule.replace(splatParam, '(.*?)')
+    newRule = rule.replace(escapeRegExp, '\\$&').replace(optionalParam, '(?:$1)?').replace(namedParam, '([^\/]+)').replace(splatParam, '(.*?)')
     return new RegExp('^' + newRule + '$')
-
-
-
 
 class EventDispatcher
   listeners:{}
@@ -938,6 +954,12 @@ KazitoriEvent.START = 'start'
 
 #ストップ
 KazitoriEvent.STOP = 'stop'
+
+#一時停止
+KazitoriEvent.RESUME = 'resume'
+
+#再開
+KazitoriEvent.RESTART = 'restart'
 
 #一番最初のアクセスがあった
 KazitoriEvent.FIRST_REQUEST = 'first_request'
