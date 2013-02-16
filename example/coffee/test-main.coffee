@@ -107,7 +107,7 @@ $(document).ready ()->
 	})
 	$('#dialog').hide()
 
-	window.App = new Router({root:'/unko/'})
+	window.App = new Router({root:'/unko/', isTemae:true})
 	
 	#チェンジイベント
 	window.App.addEventListener( KazitoriEvent.CHANGE, (event)->

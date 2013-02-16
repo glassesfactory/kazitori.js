@@ -83,6 +83,9 @@ class Kazitori
 
   ###isBeforeForce###
   isBeforeForce:false
+  #befores の処理を URL 変更前にするかどうか
+  isTemae:false
+  _changeOptions:null
 
   isNotFoundForce:false
   _notFoudn:null
@@ -98,15 +101,13 @@ class Kazitori
 
   _isFirstRequest:true
 
+
+
+  #一時停止しているかどうか
   iuResume:false
   _processStep:
     'status':'null'
     'args':[]
-
-
-
-
-
 
   constructor:(options)->
     @._processStep.status = 'constructor'
@@ -117,6 +118,7 @@ class Kazitori
       @.routes = options.routes
     
     @.root = if options.root then options.root else '/'
+    @.isTemae = if options.isTemae then options.isTemae else false
 
     @._params = {
       params:[]
@@ -250,6 +252,7 @@ class Kazitori
     prev = @.fragment
     if not options
       options = {'trigger':options}
+    @._changeOptions = options
 
     #TODO : @ に突っ込んじゃうとこのあと全部 BeforeForce されてまう
     @.isBeforeForce = options.isBeforeForce isnt false
@@ -261,7 +264,7 @@ class Kazitori
     next = @.fragment
     
     url = @.root + frag.replace(routeStripper, '')
-    
+
     matched = @_matchCheck(@.fragment, @.handlers)
     if matched is false and @.isNotFoundForce is false
       if @.notFound isnt null
@@ -270,22 +273,11 @@ class Kazitori
         @.history[ if options.replace then 'replaceState' else 'pushState' ]({}, document.title, url)
       @._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.NOT_FOUND))
       return
-    if @._hasPushState
-      @.history[ if options.replace then 'replaceState' else 'pushState' ]({}, document.title, url)
-    else if @._wantChangeHash
-      @_updateHash(@.location, frag, options.replace)
-      if @.iframe and (frag isnt @getFragment(@getHash(@.iframe)))
-        if !options.replace
-          @.iframe.document.open().close()
-        @_updateHash(@.iframe.location, frag, options.replace)
-    else
-      return @.location.assign(url)
 
-    #イベントディスパッチ
-    @dispatchEvent(new KazitoriEvent(KazitoriEvent.CHANGE, next, prev))
-    if options.internal and options.internal is true
-      @._dispatcher.dispatchEvent( new KazitoriEvent(KazitoriEvent.INTERNAL_CHANGE, next, prev))
-    @loadURL(frag, options)
+    if @.isTemae and (@.beforeAnytimeHandler or @.beforeHandlers.length > 0)
+      @_executeBefores(frag)
+    else
+      @_urlChange(frag, options)
     return
 
   #pushState ではなく replaceState で処理する
@@ -298,6 +290,33 @@ class Kazitori
       options.replace = true
     @change(framgent, options)
     return
+
+  _urlChange:(fragment, options)->
+    @._processStep.status = '_urlChange'
+    @._processStep.args = [fragment, options]
+
+    if @.isResume
+      return
+    if not options
+      options = @._changeOptions
+    url = @.root + @.fragment.replace(routeStripper, '')
+    if @._hasPushState
+      @.history[ if options.replace then 'replaceState' else 'pushState' ]({}, document.title, url)
+    else if @._wantChangeHash
+      @_updateHash(@.location, frag, options.replace)
+      if @.iframe and (frag isnt @getFragment(@getHash(@.iframe)))
+        if !options.replace
+          @.iframe.document.open().close()
+        @_updateHash(@.iframe.location, frag, options.replace)
+    else
+      return @.location.assign(url)
+
+    #イベントディスパッチ
+    @dispatchEvent(new KazitoriEvent(KazitoriEvent.CHANGE, @.fragment, @.lastFragment))
+    if options.internal and options.internal is true
+      @._dispatcher.dispatchEvent( new KazitoriEvent(KazitoriEvent.INTERNAL_CHANGE, @.fragment, @.lastFragment))
+    @loadURL(@.fragment, options)
+
 
   #中断する
   #メソッド名 intercept のほうがいいかな
@@ -349,27 +368,8 @@ class Kazitori
     if @.isResume
       return
     fragment = @.fragment = @getFragment(fragmentOverride)
-    
-    if @.beforeAnytimeHandler or @.beforeHandlers.length > 0
-      @._beforeDeffer = new Deffered()
-      if @.beforeAnytimeHandler?
-        @._beforeDeffer.deffered((d)=>
-          @.beforeAnytimeHandler.callback(fragment)
-          d.execute(d)
-          return
-        )
-      
-      matched = @._matchCheck(fragment, @.beforeHandlers)
-      for handler in matched
-        @._beforeDeffer.deffered((d)->
-          handler.callback(fragment)
-          d.execute(d)
-          return
-          )
-
-      @._beforeDeffer.addEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, @beforeComplete)
-      @._beforeDeffer.addEventListener(KazitoriEvent.TASK_QUEUE_FAILED, @beforeFailed)
-      @._beforeDeffer.execute(@._beforeDeffer)
+    if @.isTemae is false and (@.beforeAnytimeHandler or @.beforeHandlers.length > 0)
+      @_executeBefores(fragment)
     else
       @executeHandlers()
     return
@@ -387,9 +387,36 @@ class Kazitori
     @._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_FAILED, @beforeFailed)
     
     @._dispatcher.dispatchEvent( new KazitoriEvent(KazitoriEvent.BEFORE_EXECUTED, @.fragment, @.lastFragment))
-
-    @executeHandlers()
+    #ここではんだんするしかないかなー
+    if @.isTemae
+      console.log @._changeOptions
+      @_urlChange(@.fragment, @._changeOptions)
+    else
+      @executeHandlers()
     return
+
+  #登録されたbefores を実行
+  _executeBefores:(fragment)=>
+    @._processStep.status = '_executeBefores'
+    @._processStep.args = [fragment]
+    @._beforeDeffer = new Deffered()
+    if @.beforeAnytimeHandler?
+      @._beforeDeffer.deffered((d)=>
+        @.beforeAnytimeHandler.callback(fragment)
+        d.execute(d)
+        return
+      )
+    
+    matched = @._matchCheck(fragment, @.beforeHandlers)
+    for handler in matched
+      @._beforeDeffer.deffered((d)->
+        handler.callback(fragment)
+        d.execute(d)
+        return
+        )
+    @._beforeDeffer.addEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, @beforeComplete)
+    @._beforeDeffer.addEventListener(KazitoriEvent.TASK_QUEUE_FAILED, @beforeFailed)
+    @._beforeDeffer.execute(@._beforeDeffer)
   
   #routes で登録されたメソッドを実行
   executeHandlers:()=>

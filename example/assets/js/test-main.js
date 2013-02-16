@@ -130,7 +130,8 @@ $(document).ready(function() {
   });
   $('#dialog').hide();
   window.App = new Router({
-    root: '/unko/'
+    root: '/unko/',
+    isTemae: true
   });
   window.App.addEventListener(KazitoriEvent.CHANGE, function(event) {
     return console.log(event, "change");
