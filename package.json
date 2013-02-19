@@ -29,12 +29,14 @@
     }
   ],
   "devDependencies": {
-    "grunt-coffee": "latest",
-    "grunt-coffeelint": "latest",
-    "grunt-jasmine-runner": "latest",
-    "grunt-reload": "latest",
-    "grunt-docco": "0.1.x",
-    "grunt": "0.3.17"
+    "grunt": "~0.4.0",
+    "grunt-contrib-coffee": "latest",
+    "grunt-contrib-uglify": "latest",
+    "grunt-contrib-watch": "latest",
+    "grunt-contrib-jasmine": "latest",
+    "grunt-contrib-livereload": "latest",
+    "grunt-contrib-connect": "latest",
+    "grunt-notify": "latest"
   },
   "keywords": [
     "router",
