@@ -141,6 +141,7 @@ $(document).ready ()->
 	console.log "matche check....", window.App.match('/')
 	console.log "matche check....", window.App.match('/webebebeaaa')
 	console.log window.App.params
+
 	
 	$('.test').on "click", clickHandler
 
