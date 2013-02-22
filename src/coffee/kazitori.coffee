@@ -376,7 +376,7 @@ class Kazitori
 
   #指定した URL に対応した handler が設定されているかどうかチェック
   match:(fragment)->
-    matched = @._matchCheck(fragment, @.handlers)
+    matched = @._matchCheck(fragment, @.handlers, true)
     return matched.length > 0
 
 
@@ -548,7 +548,7 @@ class Kazitori
   # ここでここまでのチェックを実際に行うなら
   # loadURL, executeHandler 内で同じチェックは行う必要がないはずなので
   # それぞれのメソッドが簡潔になるようにリファクタする必要がある
-  _matchCheck:(fragment, handlers)->
+  _matchCheck:(fragment, handlers, test=false)->
     matched = []
     for handler in handlers
       if handler.rule is fragment
@@ -557,7 +557,7 @@ class Kazitori
         if handler.isVariable and handler.types.length > 0
           #型チェック用
           # args = handler._extractParams(fragment)
-          args = @.extractParams(handler, fragment)
+          args = @.extractParams(handler, fragment, test)
           argsMatch = []
           len = args.length
           i = 0
@@ -621,7 +621,7 @@ class Kazitori
 
 
   #URL パラメータを分解
-  extractParams:(rule, fragment)->
+  extractParams:(rule, fragment, test=false)->
     if @._params.params.length > 0 and @._params.fragment is fragment
       return @._params.params
     param = rule._regexp.exec(fragment)
@@ -645,11 +645,13 @@ class Kazitori
         newParam.pop()
         newParam.push last.split('?')[0]
         q = {"queries":newQueries}
-        @._params.params = @_getCastedParams(rule, newParam.slice(0))
         newParam.push q
-        @._params.queries = q
+        if not test
+          @._params.params = @_getCastedParams(rule, newParam.slice(0))
+          @._params.queries = q
       else
-        @._params.params = @_getCastedParams(rule, newParam)
+        if not test
+          @._params.params = @_getCastedParams(rule, newParam)
       return newParam
     else
       @._params.params = []
@@ -660,6 +662,7 @@ class Kazitori
     i = 0
     if not params
       return params
+
     if rule.types.length < 1
       return params
     len = params.length

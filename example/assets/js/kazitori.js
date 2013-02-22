@@ -397,7 +397,7 @@ Kazitori = (function() {
 
   Kazitori.prototype.match = function(fragment) {
     var matched;
-    matched = this._matchCheck(fragment, this.handlers);
+    matched = this._matchCheck(fragment, this.handlers, true);
     return matched.length > 0;
   };
 
@@ -584,8 +584,11 @@ Kazitori = (function() {
     }
   };
 
-  Kazitori.prototype._matchCheck = function(fragment, handlers) {
+  Kazitori.prototype._matchCheck = function(fragment, handlers, test) {
     var a, args, argsMatch, handler, i, len, matched, t, _i, _len, _ref;
+    if (test == null) {
+      test = false;
+    }
     matched = [];
     for (_i = 0, _len = handlers.length; _i < _len; _i++) {
       handler = handlers[_i];
@@ -593,7 +596,7 @@ Kazitori = (function() {
         matched.push(handler);
       } else if (handler.test(fragment)) {
         if (handler.isVariable && handler.types.length > 0) {
-          args = this.extractParams(handler, fragment);
+          args = this.extractParams(handler, fragment, test);
           argsMatch = [];
           len = args.length;
           i = 0;
@@ -668,8 +671,11 @@ Kazitori = (function() {
     }
   };
 
-  Kazitori.prototype.extractParams = function(rule, fragment) {
+  Kazitori.prototype.extractParams = function(rule, fragment, test) {
     var k, kv, last, newParam, newQueries, obj, param, q, queries, query, queryParams, v, _i, _len;
+    if (test == null) {
+      test = false;
+    }
     if (this._params.params.length > 0 && this._params.fragment === fragment) {
       return this._params.params;
     }
@@ -699,11 +705,15 @@ Kazitori = (function() {
         q = {
           "queries": newQueries
         };
-        this._params.params = this._getCastedParams(rule, newParam.slice(0));
         newParam.push(q);
-        this._params.queries = q;
+        if (!test) {
+          this._params.params = this._getCastedParams(rule, newParam.slice(0));
+          this._params.queries = q;
+        }
       } else {
-        this._params.params = this._getCastedParams(rule, newParam);
+        if (!test) {
+          this._params.params = this._getCastedParams(rule, newParam);
+        }
       }
       return newParam;
     } else {
