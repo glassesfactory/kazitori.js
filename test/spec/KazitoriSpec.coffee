@@ -360,6 +360,23 @@ describe "Kazitori", ->
       matcher = router.match('/users/blaf/posts/blafblaf')
       expect(matcher).toBeFalsy()
 
+    it 'should params [349857] when change(/posts/349857)', ->
+      router.change('/posts/349857')
+      expect(router.params[0]).toBe(349857)
+
+    it 'should params [893473,219834] when change(/posts/349857)', ->
+      router.change('/users/893473/posts/219834')
+      expect(router.params[0]).toBe(893473)
+      expect(router.params[1]).toBe(219834)
+
+    it 'should queries {hoge:"hogeee"} when change(/?hoge=hogeee)', ->
+      router.change('/?hoge=hogeee')
+      expect(router.queries.hoge).toBe("hogeee")
+
+    it 'should queries {hoge:"hogeee"} when change(/posts/123?hoge=hogeee)', ->
+      router.change('/posts/123?hoge=hogeee')
+      expect(router.queries.hoge).toBe("hogeee")
+
   describe "exception", ->
     it "should throw error when Kazitori started and router.start called", ->
       expect(Kazitori.started).toBeTruthy()

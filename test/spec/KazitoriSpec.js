@@ -344,10 +344,27 @@ describe("Kazitori", function() {
       matcher = router.match('/users/blaf/posts/874324');
       return expect(matcher).toBeFalsy();
     });
-    return it('should not match route /users/blaf/posts/blafblaf', function() {
+    it('should not match route /users/blaf/posts/blafblaf', function() {
       var matcher;
       matcher = router.match('/users/blaf/posts/blafblaf');
       return expect(matcher).toBeFalsy();
+    });
+    it('should params [349857] when change(/posts/349857)', function() {
+      router.change('/posts/349857');
+      return expect(router.params[0]).toBe(349857);
+    });
+    it('should params [893473,219834] when change(/posts/349857)', function() {
+      router.change('/users/893473/posts/219834');
+      expect(router.params[0]).toBe(893473);
+      return expect(router.params[1]).toBe(219834);
+    });
+    it('should queries {hoge:"hogeee"} when change(/?hoge=hogeee)', function() {
+      router.change('/?hoge=hogeee');
+      return expect(router.queries.hoge).toBe("hogeee");
+    });
+    return it('should queries {hoge:"hogeee"} when change(/posts/123?hoge=hogeee)', function() {
+      router.change('/posts/123?hoge=hogeee');
+      return expect(router.queries.hoge).toBe("hogeee");
     });
   });
   return describe("exception", function() {
