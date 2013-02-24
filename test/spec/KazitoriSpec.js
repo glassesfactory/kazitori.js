@@ -106,6 +106,14 @@ describe("Kazitori", function() {
       }
     });
   });
+  describe("method", function() {
+    return it("should work suspend and resume", function() {
+      router.suspend();
+      expect(Kazitori.started).toBeFalsy();
+      router.resume();
+      return expect(Kazitori.started).toBeTruthy();
+    });
+  });
   describe("event", function() {
     var nextHandler, notFoundHandler, prevHandler, rejectHandler, startHandler, stopHandler;
     it("should remove listener without listener added", function() {

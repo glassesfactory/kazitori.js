@@ -90,6 +90,13 @@ describe "Kazitori", ->
       else if msie <= 9
         expect(router.isOldIE).toBeTruthy()
 
+  describe "method", ->
+    it "should work suspend and resume", ->
+      router.suspend()
+      expect(Kazitori.started).toBeFalsy()
+      router.resume()
+      expect(Kazitori.started).toBeTruthy()
+
   describe "event", ->
 
     it "should remove listener without listener added", ->
