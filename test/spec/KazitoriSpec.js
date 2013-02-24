@@ -87,7 +87,7 @@ describe("Kazitori", function() {
       expect(Kazitori.started).toBeFalsy();
       return router.start();
     });
-    xit("test getHash", function() {
+    it("test getHash", function() {
       location.replace("" + location.origin + "/#posts");
       return expect(router.getHash()).toEqual('posts');
     });
@@ -204,7 +204,7 @@ describe("Kazitori", function() {
       return expect(listener.onUserChange).not.toHaveBeenCalled();
     });
     rejectHandler = jasmine.createSpy('REJECT Event');
-    xit("should dispatch REJECT event when kazitori rejected", function() {
+    it("should dispatch REJECT event when kazitori rejected", function() {
       router.addEventListener(KazitoriEvent.REJECT, rejectHandler);
       router.reject();
       expect(rejectHandler).toHaveBeenCalled();

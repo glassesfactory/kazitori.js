@@ -73,7 +73,7 @@ describe "Kazitori", ->
       expect(Kazitori.started).toBeFalsy()
       router.start()
 
-    xit "test getHash", ->
+    it "test getHash", ->
       location.replace("#{location.origin}/#posts")
       expect(router.getHash()).toEqual 'posts'
 
@@ -215,7 +215,7 @@ describe "Kazitori", ->
 
     rejectHandler = jasmine.createSpy('REJECT Event')
 
-    xit "should dispatch REJECT event when kazitori rejected", ->
+    it "should dispatch REJECT event when kazitori rejected", ->
       router.addEventListener KazitoriEvent.REJECT, rejectHandler
       router.reject()
       expect(rejectHandler).toHaveBeenCalled()
