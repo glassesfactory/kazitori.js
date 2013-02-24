@@ -332,6 +332,34 @@ describe "Kazitori", ->
       router.change('/blahblahblah')
       expect(window.location.pathname).toBe('/')
 
+    it 'should match route /', ->
+      matcher = router.match('/')
+      expect(matcher).toBeTruthy()
+
+    it 'should match route /posts', ->
+      matcher = router.match('/posts')
+      expect(matcher).toBeTruthy()
+
+    it 'should match route /posts/2221', ->
+      matcher = router.match('/posts/2221')
+      expect(matcher).toBeTruthy()
+
+    it 'should match route /users/24233/posts/874324', ->
+      matcher = router.match('/users/24233/posts/874324')
+      expect(matcher).toBeTruthy()
+
+    it 'should not match route /posts/blaf', ->
+      matcher = router.match('/posts/blaf')
+      expect(matcher).toBeFalsy()
+
+    it 'should not match route /users/blaf/posts/874324', ->
+      matcher = router.match('/users/blaf/posts/874324')
+      expect(matcher).toBeFalsy()
+
+    it 'should not match route /users/blaf/posts/blafblaf', ->
+      matcher = router.match('/users/blaf/posts/blafblaf')
+      expect(matcher).toBeFalsy()
+
   describe "exception", ->
     it "should throw error when Kazitori started and router.start called", ->
       expect(Kazitori.started).toBeTruthy()

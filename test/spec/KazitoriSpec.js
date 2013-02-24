@@ -309,10 +309,45 @@ describe("Kazitori", function() {
       router.change('/posts/1');
       return expect(controller.beforeAny).toHaveBeenCalled();
     });
-    return it('should navigate to root when router.change undefined path', function() {
+    it('should navigate to root when router.change undefined path', function() {
       spyOn(controller, 'beforeShow');
       router.change('/blahblahblah');
       return expect(window.location.pathname).toBe('/');
+    });
+    it('should match route /', function() {
+      var matcher;
+      matcher = router.match('/');
+      return expect(matcher).toBeTruthy();
+    });
+    it('should match route /posts', function() {
+      var matcher;
+      matcher = router.match('/posts');
+      return expect(matcher).toBeTruthy();
+    });
+    it('should match route /posts/2221', function() {
+      var matcher;
+      matcher = router.match('/posts/2221');
+      return expect(matcher).toBeTruthy();
+    });
+    it('should match route /users/24233/posts/874324', function() {
+      var matcher;
+      matcher = router.match('/users/24233/posts/874324');
+      return expect(matcher).toBeTruthy();
+    });
+    it('should not match route /posts/blaf', function() {
+      var matcher;
+      matcher = router.match('/posts/blaf');
+      return expect(matcher).toBeFalsy();
+    });
+    it('should not match route /users/blaf/posts/874324', function() {
+      var matcher;
+      matcher = router.match('/users/blaf/posts/874324');
+      return expect(matcher).toBeFalsy();
+    });
+    return it('should not match route /users/blaf/posts/blafblaf', function() {
+      var matcher;
+      matcher = router.match('/users/blaf/posts/blafblaf');
+      return expect(matcher).toBeFalsy();
     });
   });
   return describe("exception", function() {
