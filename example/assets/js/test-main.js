@@ -93,13 +93,10 @@ Router = (function(_super) {
   };
 
   Router.prototype.beforeMinchi = function() {
-    var _this = this;
     console.log("before minchi");
+    this.suspend();
     this.resume();
-    return setTimeout(function() {
-      console.log("restart?", _this);
-      return _this.restart();
-    }, 2000);
+    return console.log("in example", Kazitori.started);
   };
 
   Router.prototype.ninshou = function() {
@@ -129,8 +126,7 @@ $(document).ready(function() {
   });
   $('#dialog').hide();
   window.App = new Router({
-    root: '/unko/',
-    isTemae: true
+    root: '/'
   });
   window.App.addEventListener(KazitoriEvent.CHANGE, function(event) {
     return console.log(event, "change");
