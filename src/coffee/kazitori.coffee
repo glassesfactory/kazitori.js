@@ -265,7 +265,7 @@ class Kazitori
     #memo : jasmine だけなんかおかしい
     #frag が undefined になってしまう
     # console.debug frag
-    url = @.root + frag.replace(routeStripper, '')
+    url = @.root + @_replace.apply(frag,[routeStripper, ''])
 
     matched = @_matchCheck(@.fragment, @.handlers)
     if matched is false and @.isNotFoundForce is false
@@ -554,7 +554,10 @@ class Kazitori
   # それぞれのメソッドが簡潔になるようにリファクタする必要がある
   _matchCheck:(fragment, handlers, test=false)->
     matched = []
-    hasQuery = fragment.match(/(\?[\w\d=|]+)/g)
+    tmpFrag = fragment
+    if tmpFrag isnt undefined and tmpFrag isnt 'undefined'
+      
+      hasQuery = @_match.apply(tmpFrag, [/(\?[\w\d=|]+)/g])
     if hasQuery
       fragment = fragment.split('?')[0]
     for handler in handlers
@@ -730,6 +733,9 @@ class Kazitori
   #==============================================
 
   _slice: Array.prototype.slice
+
+  _replace:String.prototype.replace
+  _match:String.prototype.match
 
   _keys: Object.keys || (obj)->
     if obj is not Object(obj)

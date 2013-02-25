@@ -78,11 +78,15 @@ class Router extends Kazitori
 
 	beforeMinchi:()->
 		console.log "before minchi"
+		@suspend()
 		@resume()
-		setTimeout ()=>
-			console.log "restart?", @
-			@restart()
-		, 2000
+		console.log "in example", Kazitori.started
+
+		# setTimeout ()=>
+			# console.log "restart?", @
+			# @resume()
+			# console.log "in example resumed", Kazitori.started
+		# , 2000
 
 	ninshou:()->
 		isLogined = Boolean(getCookie(COOKIE_KEY))
@@ -107,7 +111,7 @@ $(document).ready ()->
 	})
 	$('#dialog').hide()
 
-	window.App = new Router({root:'/unko/', isTemae:true})
+	window.App = new Router({root:'/'})
 	
 	#チェンジイベント
 	window.App.addEventListener( KazitoriEvent.CHANGE, (event)->
