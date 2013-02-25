@@ -104,7 +104,7 @@ class Kazitori
 
 
   #一時停止しているかどうか
-  iuResume:false
+  isSuspend:false
   _processStep:
     'status':'null'
     'args':[]
@@ -249,7 +249,6 @@ class Kazitori
       return false
     @._processStep.status = 'change'
     @._processStep.args = [fragment, options]
-    prev = @.fragment
     if not options
       options = {'trigger':options}
     @._changeOptions = options
@@ -262,7 +261,10 @@ class Kazitori
     @.lastFragment = @.fragment
     @.fragment = frag
     next = @.fragment
-    
+
+    #memo : jasmine だけなんかおかしい
+    #frag が undefined になってしまう
+    # console.debug frag
     url = @.root + frag.replace(routeStripper, '')
 
     matched = @_matchCheck(@.fragment, @.handlers)
@@ -295,7 +297,7 @@ class Kazitori
     @._processStep.status = '_urlChange'
     @._processStep.args = [fragment, options]
 
-    if @.isResume
+    if @.isSuspend
       return
     if not options
       options = @._changeOptions
@@ -328,20 +330,22 @@ class Kazitori
     return
 
   #処理を一時停止する
-  resume:()->
+  suspend:()->
     if @._beforeDeffer?
-      @._beforeDeffer.resume()
-    @.isResume = true
-    @._dispatcher.dispatchEvent( new KazitoriEvent(KazitoriEvent.RESUME, @.fragment, @.lastFragment))
+      @._beforeDeffer.suspend()
+    Kazitori.started = false
+    @.isSuspend = true
+    @._dispatcher.dispatchEvent( new KazitoriEvent(KazitoriEvent.SUSPEND, @.fragment, @.lastFragment))
     return
 
   #処理を再開する
-  restart:()->
+  resume:()->
     if @._beforeDeffer?
-      @._beforeDeffer.restart()
-    @.isResume = false
+      @._beforeDeffer.resume()
+    Kazitori.started = true
+    @.isSuspend = false
     @[@._processStep.status](@._processStep.args)
-    @._dispatcher.dispatchEvent( new KazitoriEvent(KazitoriEvent.RESTART, @.fragment, @.lastFragment))
+    @._dispatcher.dispatchEvent( new KazitoriEvent(KazitoriEvent.RESUME, @.fragment, @.lastFragment))
     return
     
   registerHandler:(rule, name, isBefore, callback )->
@@ -365,7 +369,7 @@ class Kazitori
     @._processStep.status = 'loadURL'
     @._processStep.args = [fragmentOverride, options]
 
-    if @.isResume
+    if @.isSuspend
       return
     fragment = @.fragment = @getFragment(fragmentOverride)
     if @.isTemae is false and (@.beforeAnytimeHandler or @.beforeHandlers.length > 0)
@@ -422,7 +426,7 @@ class Kazitori
   executeHandlers:()=>
     @._processStep.status = 'executeHandlers'
     @._processStep.args = []
-    if @.isResume
+    if @.isSuspend
       return
     #毎回 match チェックしてるので使いまわしたいのでリファクタ
     matched = @._matchCheck(@.fragment, @.handlers)
@@ -550,6 +554,9 @@ class Kazitori
   # それぞれのメソッドが簡潔になるようにリファクタする必要がある
   _matchCheck:(fragment, handlers, test=false)->
     matched = []
+    hasQuery = fragment.match(/(\?[\w\d=|]+)/g)
+    if hasQuery
+      fragment = fragment.split('?')[0]
     for handler in handlers
       if handler.rule is fragment
         matched.push handler
@@ -561,15 +568,20 @@ class Kazitori
           argsMatch = []
           len = args.length
           i = 0
-
           while i < len
             a = args[i]
             t = handler.types[i]
             if typeof a isnt "object"
-              if t is null or @_typeCheck(a,t) is true
+              if t is null
                 argsMatch.push true
-            i++
-          if not false in argsMatch
+              else
+                argsMatch.push @_typeCheck(a,t)
+            i++          
+          argsMatched = true
+          for match in argsMatch
+            if not match
+              argsMatched = false
+          if argsMatched
             matched.push handler
         else
           matched.push handler
@@ -586,7 +598,7 @@ class Kazitori
 
   # URL ルート以下を取得
   getFragment:(fragment)->
-    if not fragment?
+    if not fragment? or fragment == undefined
       if @._hasPushState or !@._wantChangeHash
         fragment = @.location.pathname
         matched = false
@@ -625,12 +637,14 @@ class Kazitori
     if @._params.params.length > 0 and @._params.fragment is fragment
       return @._params.params
     param = rule._regexp.exec(fragment)
+    if param is null and fragment.indexOf('?') > -1
+      param = [0,'?' + fragment.split('?')[1]]
     @._params.fragment = fragment
     if param?
       newParam = param.slice(1)
       last = param[param.length - 1]
       if last.indexOf('?') > -1
-        newQueries = []
+        newQueries = {}
         queries = last.split('?')[1]
         queryParams = queries.split('&')
         for query in queryParams
@@ -639,16 +653,17 @@ class Kazitori
           v = if kv[1] then kv[1] else ""
           if v.indexOf('|') > -1
             v = v.split("|")
-          obj = {}
-          obj[k] = v
-          newQueries.push obj
+          # obj = {}
+          # obj[k] = v
+          newQueries[k] = v
         newParam.pop()
         newParam.push last.split('?')[0]
         q = {"queries":newQueries}
         newParam.push q
+
         if not test
           @._params.params = @_getCastedParams(rule, newParam.slice(0))
-          @._params.queries = q
+          @._params.queries = newQueries
       else
         if not test
           @._params.params = @_getCastedParams(rule, newParam)
@@ -886,18 +901,18 @@ class EventDispatcher
 # before を確実に処理するための簡易的な Deffered クラス
 class Deffered extends EventDispatcher
   queue : []
-  isResume : false
+  isSuspend : false
 
   constructor:()->
     @queue = []
-    @isResume = false
+    @isSuspend = false
   
   deffered:(func)->
     @queue.push func
     return @
 
   execute:()->
-    if @isResume
+    if @isSuspend
       return
     try
       task = @queue.shift()
@@ -913,15 +928,16 @@ class Deffered extends EventDispatcher
   reject:(error)->
     message = if not error then "user reject" else error
     @dispatchEvent({type:KazitoriEvent.TASK_QUEUE_FAILED, index:@index, message:message })
+    @isSuspend = false
 
   #deffered を一時停止する
-  resume:()->
-    @isResume = true
+  suspend:()->
+    @isSuspend = true
     return
 
   #deffered を再開する
-  restart:()->
-    @isResume = false
+  resume:()->
+    @isSuspend = false
     @execute()
     return
 
@@ -986,10 +1002,10 @@ KazitoriEvent.START = 'start'
 KazitoriEvent.STOP = 'stop'
 
 #一時停止
-KazitoriEvent.RESUME = 'resume'
+KazitoriEvent.SUSPEND = 'SUSPEND'
 
 #再開
-KazitoriEvent.RESTART = 'restart'
+KazitoriEvent.RESUME = 'resume'
 
 #一番最初のアクセスがあった
 KazitoriEvent.FIRST_REQUEST = 'first_request'
