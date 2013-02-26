@@ -9,6 +9,7 @@ kazitori.js は pushState を良い感じにさばいてくれるライブラリ
 
 サンプル
 [http://pstest.hageee.net](http://pstest.hageee.net)
+[http://webgl.hageee.net](http://webgl.hageee.net)
 
 [Backbone.js](http://backbonejs.org) の  
 `Backbone.Router` と `Backbone.History` にインスパイアされつつ、
