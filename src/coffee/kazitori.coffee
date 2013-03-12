@@ -156,7 +156,8 @@ class Kazitori
           return @._params.queries
         })
     catch e
-      throw new Error(e)
+      #throw new Error(e)
+      # console.log e
       #IEだと defineProperty がアレらしいので
       #@.__defineGetter__ したほうがいいかなー
 
@@ -886,7 +887,7 @@ class EventDispatcher
     if @listeners[ type ] is undefined
       @listeners[ type ] =[]
 
-    if @listeners[type].indexOf listener is -1
+    if @_inArray(listener, @listeners[type]) < 0
       @listeners[type].push listener
     return
 
@@ -918,6 +919,16 @@ class EventDispatcher
       for handler in ary
         handler.call(@, event)
     return
+
+  _inArray: ( elem, array )->
+    i = 0
+    len = array.length
+    while i < len
+      if array[ i ] is elem
+        return i
+      i++
+    return -1
+  
 
 ## Deffered
 # **internal**
