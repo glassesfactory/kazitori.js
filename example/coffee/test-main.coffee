@@ -29,7 +29,6 @@ class Router extends Kazitori
 		$('.currentPage').empty().append "this page is index"
 
 	show:(id)->
-		console.log "showwww", id
 		# console.log Kai.GET_CSS_PATH(Kai.RELATIVE)
 		$('.currentPage').empty().append "this page is test" + id
 

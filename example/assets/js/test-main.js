@@ -38,7 +38,6 @@ Router = (function(_super) {
   };
 
   Router.prototype.show = function(id) {
-    console.log("showwww", id);
     return $('.currentPage').empty().append("this page is test" + id);
   };
 

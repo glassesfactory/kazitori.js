@@ -67,6 +67,7 @@ class Kazitori
   notFound:null
   beforeAnytimeHandler:null
   direct:null
+  isIE:false
   #URL パラメーター
   _params:
     params:[]
@@ -136,7 +137,8 @@ class Kazitori
       @.location = win.location
       @.history = win.history
     docMode = document.docmentMode
-    @isOldIE = (win.navigator.userAgent.toLowerCase().indexOf('msie') != -1) and (!docMode||docMode < 7)
+    @isIE = win.navigator.userAgent.toLowerCase().indexOf('msie') != -1
+    @isOldIE = @isIE and (!docMode||docMode < 7)
     @_dispatcher = new EventDispatcher()
     @_bindBefores()
     @_bindRules()
@@ -177,6 +179,10 @@ class Kazitori
     fragment = @.fragment = @getFragment()
 
     atRoot = @.location.pathname.replace(/[^\/]$/, '$&/') is @.root
+
+    if @isIE and not atRoot
+      ieFrag = @.location.pathname.replace(@.root, '')
+      @_updateHashIE(ieFrag)
 
     if @isOldIE and @._wantChangeHash
       frame = document.createElement("iframe")
@@ -305,11 +311,11 @@ class Kazitori
     if @._hasPushState
       @.history[ if options.replace then 'replaceState' else 'pushState' ]({}, document.title, url)
     else if @._wantChangeHash
-      @_updateHash(@.location, frag, options.replace)
-      if @.iframe and (frag isnt @getFragment(@getHash(@.iframe)))
+      @_updateHash(@.location, fragment, options.replace)
+      if @.iframe and (fragment isnt @getFragment(@getHash(@.iframe)))
         if !options.replace
           @.iframe.document.open().close()
-        @_updateHash(@.iframe.location, frag, options.replace)
+        @_updateHash(@.iframe.location, fragment, options.replace)
     else
       return @.location.assign(url)
 
@@ -393,7 +399,6 @@ class Kazitori
     @._dispatcher.dispatchEvent( new KazitoriEvent(KazitoriEvent.BEFORE_EXECUTED, @.fragment, @.lastFragment))
     #ここではんだんするしかないかなー
     if @.isTemae
-      console.log @._changeOptions
       @_urlChange(@.fragment, @._changeOptions)
     else
       @executeHandlers()
@@ -432,6 +437,8 @@ class Kazitori
     matched = @._matchCheck(@.fragment, @.handlers)
     isMatched = true
     if matched is false or matched.length < 1
+      alert "dont match"
+      alert @.fragment
       if @.notFound isnt null
         @._notFound.callback(@.fragment)
       isMatched = false
@@ -547,6 +554,11 @@ class Kazitori
       location.hash = "#" + fragment
     return
 
+  #zantei
+  _updateHashIE:(fragment, replace)->
+    location.replace @.root + '#/' + fragment
+
+
   #マッチする URL があるかどうか
   # memo : 20130130
   # ここでここまでのチェックを実際に行うなら
@@ -619,10 +631,15 @@ class Kazitori
           fragment = @.root
         fragment = fragment + @.location.search
         root = @.root.replace(trailingSlash, '')
-        if not fragment.indexOf(root)
+        
+        if fragment.indexOf(root) > -1
           fragment = fragment.substr(root.length)
       else
         fragment = @getHash()
+    else
+      root = @.root.replace(trailingSlash, '')
+      if fragment.indexOf(root) > -1
+        fragment = fragment.substr(root.length)
     return fragment
 
 
