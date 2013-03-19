@@ -12,6 +12,7 @@ class Router extends Kazitori
 	routes :
 		'/':'index'		
 		'/<int:id>':'show'
+		'/<string:id>':'show'
 		# '/admin/<int:id>':'show'
 		'/admin':'admin'
 		'/login':'login'
@@ -94,7 +95,6 @@ class Router extends Kazitori
 		else
 			# @change('login')
 			@reject()
-			
 
 		# @change(@poolFragment)
 
@@ -110,7 +110,7 @@ $(document).ready ()->
 	})
 	$('#dialog').hide()
 
-	window.App = new Router({root:'/'})
+	window.App = new Router({root:'/brand/'})
 	
 	#チェンジイベント
 	window.App.addEventListener( KazitoriEvent.CHANGE, (event)->
@@ -170,6 +170,7 @@ clickHandler =(event)->
 	event.preventDefault()
 	target = $(event.currentTarget)
 	url = target.attr('href')
+	console.log url
 	window.App.change(url)
 
 prevHandler =(event)->

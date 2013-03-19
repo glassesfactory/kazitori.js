@@ -24,6 +24,7 @@ Router = (function(_super) {
   Router.prototype.routes = {
     '/': 'index',
     '/<int:id>': 'show',
+    '/<string:id>': 'show',
     '/admin': 'admin',
     '/login': 'login',
     '/logout': 'logout',
@@ -125,7 +126,7 @@ $(document).ready(function() {
   });
   $('#dialog').hide();
   window.App = new Router({
-    root: '/'
+    root: '/brand/'
   });
   window.App.addEventListener(KazitoriEvent.CHANGE, function(event) {
     return console.log(event, "change");
@@ -175,6 +176,7 @@ clickHandler = function(event) {
   event.preventDefault();
   target = $(event.currentTarget);
   url = target.attr('href');
+  console.log(url);
   return window.App.change(url);
 };
 

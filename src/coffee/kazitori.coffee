@@ -26,8 +26,8 @@ delegater = (target, func)->
 trailingSlash = /\/$/
 routeStripper = /^[#\/]|\s+$/g
 escapeRegExp = /[\-{}\[\]+?.,\\\^$|#\s]/g
-namedParam = /<(\w+|[A-Za-z_]+:\w+)>/g
-genericParam = /([A-Za-z_]+):(\w+)/
+namedParam = /<(\w+|[A-Za-z_-]+:\w+)>/g
+genericParam = /([A-Za-z_-]+):(\w+)/
 
 optionalParam = /\((.*?)\)/g
 splatParam = /\*\w+/g
@@ -438,8 +438,6 @@ class Kazitori
     matched = @._matchCheck(@.fragment, @.handlers)
     isMatched = true
     if matched is false or matched.length < 1
-      alert "dont match"
-      alert @.fragment
       if @.notFound isnt null
         @._notFound.callback(@.fragment)
       isMatched = false
@@ -639,7 +637,8 @@ class Kazitori
         fragment = @getHash()
     else
       root = @.root.replace(trailingSlash, '')
-      if fragment.indexOf(root) > -1
+      
+      if fragment.indexOf(@.root) > -1 and fragment.indexOf(root) > -1
         fragment = fragment.substr(root.length)
     return fragment
 

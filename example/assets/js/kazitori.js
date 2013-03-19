@@ -17,9 +17,9 @@ routeStripper = /^[#\/]|\s+$/g;
 
 escapeRegExp = /[\-{}\[\]+?.,\\\^$|#\s]/g;
 
-namedParam = /<(\w+|[A-Za-z_]+:\w+)>/g;
+namedParam = /<(\w+|[A-Za-z_-]+:\w+)>/g;
 
-genericParam = /([A-Za-z_]+):(\w+)/;
+genericParam = /([A-Za-z_-]+):(\w+)/;
 
 optionalParam = /\((.*?)\)/g;
 
@@ -165,7 +165,7 @@ Kazitori = (function() {
         }
       });
     } catch (e) {
-      throw new Error(e);
+
     }
     if (!(this.options.isAutoStart != null) || this.options.isAutoStart !== false) {
       this.start();
@@ -456,8 +456,6 @@ Kazitori = (function() {
     matched = this._matchCheck(this.fragment, this.handlers);
     isMatched = true;
     if (matched === false || matched.length < 1) {
-      alert("dont match");
-      alert(this.fragment);
       if (this.notFound !== null) {
         this._notFound.callback(this.fragment);
       }
@@ -688,7 +686,7 @@ Kazitori = (function() {
       }
     } else {
       root = this.root.replace(trailingSlash, '');
-      if (fragment.indexOf(root) > -1) {
+      if (fragment.indexOf(this.root) > -1 && fragment.indexOf(root) > -1) {
         fragment = fragment.substr(root.length);
       }
     }
@@ -1007,7 +1005,7 @@ EventDispatcher = (function() {
     if (this.listeners[type] === void 0) {
       this.listeners[type] = [];
     }
-    if (this.listeners[type].indexOf(listener === -1)) {
+    if (this._inArray(listener, this.listeners[type]) < 0) {
       this.listeners[type].push(listener);
     }
   };
@@ -1050,6 +1048,19 @@ EventDispatcher = (function() {
         handler.call(this, event);
       }
     }
+  };
+
+  EventDispatcher.prototype._inArray = function(elem, array) {
+    var i, len;
+    i = 0;
+    len = array.length;
+    while (i < len) {
+      if (array[i] === elem) {
+        return i;
+      }
+      i++;
+    }
+    return -1;
   };
 
   return EventDispatcher;
