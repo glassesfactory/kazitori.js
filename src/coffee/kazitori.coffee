@@ -297,7 +297,7 @@ class Kazitori
       options = {replace:true}
     else if not options.replace or options.replace is false
       options.replace = true
-    @change(framgent, options)
+    @change(fragment, options)
     return
 
   _urlChange:(fragment, options)->
