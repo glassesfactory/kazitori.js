@@ -1,102 +1,102 @@
 test3 = ()->
-	console.log "/?"
+  console.log "/?"
 
 isLoaded = false
 class Router extends Kazitori
-	# beforeAnytime:['checkMaterial']
-	befores:
-		
-		# 'admin' :['ninshou']
-		'/<string:user>/<int:post>/<friend>':['beforeMinchi']
-		'/<int:id>':['beforeShow']
-	routes :
-		'/':'index'		
-		'/<int:id>':'show'
-		'/<string:id>':'show'
-		# '/admin/<int:id>':'show'
-		'/admin':'admin'
-		'/login':'login'
-		'/logout':'logout'
-		# '/<string:user>/<int:post>':'post'
-		'/<string:user>/<int:post>/<friend>':'firend'
-		# '/hyoge':'hyoge'
-	# notFound:
-		# '/404':'notfound'
+  # beforeAnytime:['checkMaterial']
+  befores:
+    
+    # 'admin' :['ninshou']
+    '/<string:user>/<int:post>/<friend>':['beforeMinchi']
+    '/<int:id>':['beforeShow']
+  routes :
+    '/':'index'   
+    '/<int:id>':'show'
+    '/<string:id>':'show'
+    # '/admin/<int:id>':'show'
+    '/admin':'admin'
+    '/login':'login'
+    '/logout':'logout'
+    # '/<string:user>/<int:post>':'post'
+    '/<string:user>/<int:post>/<friend>':'firend'
+    # '/hyoge':'hyoge'
+  # notFound:
+    # '/404':'notfound'
 
-	index:()->
-		console.log "index"
-		$('#dialog').hide()
-		$('#adminContainer').empty()
-		$('.currentPage').empty().append "this page is index"
+  index:()->
+    console.log "index"
+    $('#dialog').hide()
+    $('#adminContainer').empty()
+    $('.currentPage').empty().append "this page is index"
 
-	show:(id)->
-		# console.log Kai.GET_CSS_PATH(Kai.RELATIVE)
-		$('.currentPage').empty().append "this page is test" + id
+  show:(id)->
+    # console.log Kai.GET_CSS_PATH(Kai.RELATIVE)
+    $('.currentPage').empty().append "this page is test" + id
 
-	hyoge:()->
-		console.log "oppai"
-		$('.currentPage').empty().append "(´･ω｀･)ｴｯ?"
+  hyoge:()->
+    console.log "oppai"
+    $('.currentPage').empty().append "(´･ω｀･)ｴｯ?"
 
-	admin:()->
-		console.log "admin"
-		$('.currentPage').empty().append "this is admin page"
-		$('#adminContainer').empty().append('<a href="/admin/1" class="test">1</a><a href="/admin/2" class="test">2</a><a href="/admin/3" class="test">3</a>')
+  admin:()->
+    console.log "admin"
+    $('.currentPage').empty().append "this is admin page"
+    $('#adminContainer').empty().append('<a href="/admin/1" class="test">1</a><a href="/admin/2" class="test">2</a><a href="/admin/3" class="test">3</a>')
 
-	login:()->
-		$('#dialog').show()
+  login:()->
+    $('#dialog').show()
 
-	logout:()->
-		setCookie(COOKIE_KEY, '')
-		window.App.change('')
-		console.log "logout"
-		$('#adminContainer').empty()
-		return
+  logout:()->
+    setCookie(COOKIE_KEY, '')
+    window.App.change('')
+    console.log "logout"
+    $('#adminContainer').empty()
+    return
 
-	post:(username, postid)->
-		$('.currentPage').empty().append username, postid
-		console.log username, postid
+  post:(username, postid)->
+    $('.currentPage').empty().append username, postid
+    console.log username, postid
 
-	firend:(username, postid, firend, queries)->
-		# console.log "friend"
-		# console.log queries
-		# console.log Kai.GET_CSS_PATH(Kai.RELATIVE)
-		console.log @.params, "hironori"
-		$('.currentPage').empty().append username, postid, firend
+  firend:(username, postid, firend, queries)->
+    # console.log "friend"
+    # console.log queries
+    # console.log Kai.GET_CSS_PATH(Kai.RELATIVE)
+    console.log @.params, "hironori"
+    $('.currentPage').empty().append username, postid, firend
 
-	notfound:()->
-		console.log "nullpo"
+  notfound:()->
+    console.log "nullpo"
 
-	###
-		some before functions
-	###
-	test:(hiroshi)->
-		console.log "before 1", hiroshi
+  ###
+    some before functions
+  ###
+  test:(hiroshi)->
+    console.log "before 1", hiroshi
 
-	beforeShow:(id)->
-		console.log "before"
-		console.log id
+  beforeShow:(id)->
+    console.log "before"
+    console.log id
 
-	beforeMinchi:()->
-		console.log "before minchi"
-		@suspend()
-		@resume()
-		console.log "in example", Kazitori.started
+  beforeMinchi:()->
+    console.log "before minchi"
+    @suspend()
+    @resume()
+    console.log "in example", Kazitori.started
 
-		# setTimeout ()=>
-			# console.log "restart?", @
-			# @resume()
-			# console.log "in example resumed", Kazitori.started
-		# , 2000
+    # setTimeout ()=>
+      # console.log "restart?", @
+      # @resume()
+      # console.log "in example resumed", Kazitori.started
+    # , 2000
 
-	ninshou:()->
-		isLogined = Boolean(getCookie(COOKIE_KEY))
-		if isLogined is true
-			return
-		else
-			# @change('login')
-			@reject()
+  ninshou:()->
+    isLogined = Boolean(getCookie(COOKIE_KEY))
+    if isLogined is true
+      return
+    else
+      # @change('login')
+      @reject()
 
-		# @change(@poolFragment)
+    # @change(@poolFragment)
 
 
 COOKIE_KEY = 'kazitoriExpCookie'
@@ -104,100 +104,100 @@ USER = "hage"
 PASS = "hikaru"
 
 $(document).ready ()->
-	$('#dialog').css({
-		top : window.innerHeight / 2 - 90
-		left : window.innerWidth / 2 - 150
-	})
-	$('#dialog').hide()
+  $('#dialog').css({
+    top : window.innerHeight / 2 - 90
+    left : window.innerWidth / 2 - 150
+  })
+  $('#dialog').hide()
 
-	window.App = new Router({root:'/brand/'})
-	
-	#チェンジイベント
-	window.App.addEventListener( KazitoriEvent.CHANGE, (event)->
-		console.log event, "change"
-		)
+  window.App = new Router({root:'/brand/'})
+  
+  #チェンジイベント
+  window.App.addEventListener( KazitoriEvent.CHANGE, (event)->
+    console.log event, "change"
+    )
 
-	window.App.addEventListener( KazitoriEvent.FIRST_REQUEST, (event)->
-		console.log event, "firstrequest"
-		)
-	
-	window.App.addEventListener( KazitoriEvent.PREV, (event)->
-		console.log event, "prev"
-		)
-	window.App.addEventListener( KazitoriEvent.NEXT, (event)->
-		console.log event, "next"
-		)
-	#リジェクトイベント
-	window.App.addEventListener(KazitoriEvent.REJECT, (event)->
-		console.log event
-		)
+  window.App.addEventListener( KazitoriEvent.FIRST_REQUEST, (event)->
+    console.log event, "firstrequest"
+    )
+  
+  window.App.addEventListener( KazitoriEvent.PREV, (event)->
+    console.log event, "prev"
+    )
+  window.App.addEventListener( KazitoriEvent.NEXT, (event)->
+    console.log event, "next"
+    )
+  #リジェクトイベント
+  window.App.addEventListener(KazitoriEvent.REJECT, (event)->
+    console.log event
+    )
 
-	#not foudn
-	window.App.addEventListener(KazitoriEvent.NOT_FOUND, (event)->
-		console.log "not found"
-		)
+  #not foudn
+  window.App.addEventListener(KazitoriEvent.NOT_FOUND, (event)->
+    console.log "not found"
+    )
 
-	window.App.addEventListener(KazitoriEvent.EXECUTED, (event)->
-		console.log event, "executed"
-		)
+  window.App.addEventListener(KazitoriEvent.EXECUTED, (event)->
+    console.log event, "executed"
+    )
 
-	console.log "matche check....", window.App.match('/')
-	console.log "matche check....", window.App.match('/webebebeaaa')
-	console.log window.App.params
+  console.log "matche check....", window.App.match('/')
+  console.log "matche check....", window.App.match('/webebebeaaa')
+  console.log window.App.params
 
-	
-	$('.test').on "click", clickHandler
+  
+  $('.test').on "click", clickHandler
 
-	$('.prev').on "click", prevHandler
+  $('.prev').on "click", prevHandler
 
-	$('.next').on "click", nextHandler
-	
-	$('form').on 'submit', (event)->
-		event.preventDefault()
-		userID = $('input[name=user]').val()
-		pw = $('input[name=pw]').val()
-		if userID is USER and pw is PASS
-			setCookie(COOKIE_KEY, true)
-			$('#dialog').hide()
-			window.App.change('admin')
-		else
-			alert('バルス')
+  $('.next').on "click", nextHandler
+  
+  $('form').on 'submit', (event)->
+    event.preventDefault()
+    userID = $('input[name=user]').val()
+    pw = $('input[name=pw]').val()
+    if userID is USER and pw is PASS
+      setCookie(COOKIE_KEY, true)
+      $('#dialog').hide()
+      window.App.change('admin')
+    else
+      alert('バルス')
 
-	# Kai.init({'css':'hoge'})
-	console.log Kai.GET_CSS_PATH(Kai.RELATIVE)
+  # Kai.init({'css':'hoge'})
+  console.log Kai.GET_CSS_PATH(Kai.RELATIVE)
 
 clickHandler =(event)->
-	event.preventDefault()
-	target = $(event.currentTarget)
-	url = target.attr('href')
-	console.log url
-	window.App.change(url)
+  event.preventDefault()
+  target = $(event.currentTarget)
+  url = target.attr('href')
+  console.log url
+  window.App.change(url)
 
 prevHandler =(event)->
-	event.preventDefault()
-	window.App.omokazi()
+  event.preventDefault()
+  window.App.omokazi()
 
 nextHandler =(event)->
-	event.preventDefault()
-	window.App.torikazi()
+  event.preventDefault()
+  window.App.torikazi()
 
 getCookie =(key)->
-	cookies = document.cookie.split(";")
-	for cookie in cookies
-		items = cookie.split('=')
-		if items.shift() is key
-			return items.join('=')
-	return null
+  cookies = document.cookie.split(";")
+  for cookie in cookies
+    items = cookie.split('=')
+    if items.shift() is key
+      return items.join('=')
+  return null
 
 
 ## TODO あとで secure とか expire のオプションに対応させようね
 setCookie =(key, value, opt)->
-	if not value?
-		return
-	expire = new Date()
-	expire.setTime(expire.getTime()+60*60*24*1000)
-	exipre = expire.toGMTString()
-	document.cookie = key + '=' + escape(value) + ';expires=' + expire
+  if not value?
+    return
+  expire = new Date()
+  expire.setTime(expire.getTime()+60*60*24*1000)
+  exipre = expire.toGMTString()
+  document.cookie = key + '=' + escape(value) + ';expires=' + expire
 
 test2 =()->
-	console.log "before 2"
+  console.log "before 2"

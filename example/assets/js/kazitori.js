@@ -308,7 +308,7 @@ Kazitori = (function() {
     } else if (!options.replace || options.replace === false) {
       options.replace = true;
     }
-    this.change(framgent, options);
+    this.change(fragment, options);
   };
 
   Kazitori.prototype._urlChange = function(fragment, options) {
