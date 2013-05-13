@@ -359,6 +359,11 @@ class Kazitori
     if not callback
       if isBefore
         callback = @_bindFunctions(name)
+      else if name isinstanceof Kazitori
+        console.log "nest"
+        #@.handlers.concat name.handlers
+        #@.beforeHandlers.concat name.beforeHandlers
+        #return @
       else if typeof name is "function"
         callback = name
       else
@@ -370,6 +375,15 @@ class Kazitori
       callback && callback.apply(@.router, args)
     ,@)
     return @
+
+  #ルールを後から追加する
+  # add:(rule)->
+    # return @
+
+  #ルールを削除する
+  # remove:(rule)->
+    # return @
+
 
   #URL を読み込む
   loadURL:(fragmentOverride, options)->
@@ -499,7 +513,7 @@ class Kazitori
       return
     routes = @_keys(@.routes)
     for rule in routes
-      @registerHandler(rule, @.routes[rule],false)
+      @registerHandler(rule, @.routes[rule], false)
     return
 
   # befores から指定された事前に処理したいメソッドをバインド
