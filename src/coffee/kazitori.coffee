@@ -390,6 +390,8 @@ class Kazitori
     return @
 
   _bindChild:(rule, child)->
+    child.reject()
+    child.stop()
     childHandlers = child.handlers.concat()
     for childRule in childHandlers
       childRule.update(rule)
@@ -440,12 +442,12 @@ class Kazitori
       return
 
     if child instanceof Kazitori
-      #@_unbindChild(child)
+      @_unbindChild(child, childRoot)
     else
       if name.hasOwnProperty('__super__')
         try
           child = new name({'isAutoStart':false})
-          # @_unbindChild(rule, child)
+          @_unbindChild(child, childRoot)
           return @
         catch e
           throw new Error("引数の値が不正です。 引数に指定する値は Kazitori を継承している必要があります。")
