@@ -373,7 +373,6 @@ class Kazitori
         if name.hasOwnProperty('__super__')
           try
             child = new name({'isAutoStart':false})
-            console.log "hi"
             @_bindChild(rule, child)
             return @
           catch e
@@ -406,27 +405,77 @@ class Kazitori
 
   #ルールを後から追加する
   appendRouter:(child, childRoot)->
-    if not child instanceof Kazitori
-      #throw new Error("引数が不正です")
-      return false
+    if not child instanceof Kazitori or typeof child not "function"
+      # throw new Error("引数が不正です")
+      #console.warn
+      # return false
+      return
+
+    if child instanceof Kazitori
+      rule = @_getChildRule(child, childRoot)
+      @_bindChild(rule, child)
+      return @
+    else
+      if name.hasOwnProperty('__super__')
+        try
+          child = new name({'isAutoStart':false})
+          rule = @_getChildRule(child, childRoot)
+          @_bindChild(rule, child)
+          return @
+        catch e
+          throw new Error("引数の値が不正です。 引数に指定する値は Kazitori を継承している必要があります。") 
     return @
 
+  _getChildRule:(child, childRoot)->
+    rule = child.root
+    if childRoot
+      rule = childRoot
+    if rule is @.root
+      throw new Error("かぶってる")
+    return rule
+
   #ルールを削除する
-  removeRouter:(child)->
-    if not child instanceof Kazitori
-      # throw new Error("引数が不正です")
-      return false
-    #if if rule isinstanceof String
-      #まま
-    # else if rule is inspired Kazitori
-      #まとめて削除
-    #else if rule is Rule
-      #単品
-    # else
-      #エラーにしないで return false とかのほうがいいかな
-      #console.error('TypeError.')
-      #throw new Error('rule じゃない')
-    # return @
+  removeRouter:(child, childRoot)->
+    if not child instanceof Kazitori or typeof child not "function"
+      return
+
+    if child instanceof Kazitori
+      #@_unbindChild(child)
+    else
+      if name.hasOwnProperty('__super__')
+        try
+          child = new name({'isAutoStart':false})
+          # @_unbindChild(rule, child)
+          return @
+        catch e
+          throw new Error("引数の値が不正です。 引数に指定する値は Kazitori を継承している必要があります。")
+
+  _unbindChild:(child, childRoot)->
+    rule = @_getChildRule(child, childRoot)
+    dels = []
+    i = 0
+    len = @.handlers.length
+    while i < len
+      ruleObj = @.handlers[i]
+      #あー match とかじゃないとだめだな
+      if ruleObj.rule.indexOf rule isnt -1
+        dels.push i
+      i++
+    for i in dels
+      @.handlers.splice(i, 1)
+
+    dels = []
+    i = 0
+    len = @.beforeHandlers.length
+    while i < len
+      beforeRule = @.beforeHandlers[i]
+      if beforeRule.rule.indexOf rule isnt -1
+        dels.push i
+      i++
+    for i in dels
+      @.beforeHandlers.splice(i, 1)
+
+
 
 
   #URL を読み込む

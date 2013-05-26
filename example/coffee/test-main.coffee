@@ -2,32 +2,67 @@ test3 = ()->
   console.log "/?"
 
 isLoaded = false
+
+class FooRouter extends Kazitori
+  befores:
+    '/': ['beforeFooMinchi']
+  routes:
+    '/': 'index'
+    '/<int:id>': 'show'
+
+  index:()->
+    console.log 'Foo!'
+    $('.currentPage').empty().append "this page is Foo!"
+
+  show:(id)->
+    console.log 'Show Foo!'
+    $('.currentPage').empty().append "this page is Foo " + id
+
+  bar:()->
+    console.log "hoover-ooover"
+    $('.currentPage').empty().append "this page is ふーばーおーばー"
+
+  beforeFooMinchi:()->
+    console.log "before foo"
+
+  beforeFoobar:()->
+    console.log "コレクション コレクション"
+
+class BarRouter extends FooRouter
+  routes:
+    '/': 'index'
+  index:()->
+    console.log "extends extends bar"
+
 class Router extends Kazitori
   # beforeAnytime:['checkMaterial']
-  befores:
+  # beforeAnytime: ["anytime"]
+  # befores:
     
-    # 'admin' :['ninshou']
-    '/<string:user>/<int:post>/<friend>':['beforeMinchi']
-    '/<int:id>':['beforeShow']
+  #   # 'admin' :['ninshou']
+  #   '/<string:user>/<int:post>/<friend>':['beforeMinchi']
+  #   '/<int:id>':['beforeShow']
   routes :
     '/':'index'   
-    '/<int:id>':'show'
-    '/<string:id>':'show'
-    # '/admin/<int:id>':'show'
-    '/admin':'admin'
-    '/login':'login'
-    '/logout':'logout'
-    # '/<string:user>/<int:post>':'post'
-    '/<string:user>/<int:post>/<friend>':'firend'
+    '/foo': FooRouter
+    # '/bar': BarRouter
+    # '/<int:id>':'show'
+    # '/<string:id>':'show'
+    # # '/admin/<int:id>':'show'
+    # '/admin':'admin'
+    # '/login':'login'
+    # '/logout':'logout'
+    # # '/<string:user>/<int:post>':'post'
+    # '/<string:user>/<int:post>/<friend>':'firend'
     # '/hyoge':'hyoge'
   # notFound:
     # '/404':'notfound'
 
   index:()->
     console.log "index"
-    $('#dialog').hide()
-    $('#adminContainer').empty()
-    $('.currentPage').empty().append "this page is index"
+    # $('#dialog').hide()
+    # $('#adminContainer').empty()
+    # $('.currentPage').empty().append "this page is index"
 
   show:(id)->
     # console.log Kai.GET_CSS_PATH(Kai.RELATIVE)
@@ -69,6 +104,9 @@ class Router extends Kazitori
   ###
     some before functions
   ###
+  anytime:()->
+    console.log "any!?"
+
   test:(hiroshi)->
     console.log "before 1", hiroshi
 
@@ -98,7 +136,6 @@ class Router extends Kazitori
 
     # @change(@poolFragment)
 
-
 COOKIE_KEY = 'kazitoriExpCookie'
 USER = "hage"
 PASS = "hikaru"
@@ -111,39 +148,39 @@ $(document).ready ()->
   $('#dialog').hide()
 
   window.App = new Router({root:'/brand/'})
+  console.log window.App.handlers
+  # #チェンジイベント
+  # window.App.addEventListener( KazitoriEvent.CHANGE, (event)->
+  #   console.log event, "change"
+  #   )
+
+  # window.App.addEventListener( KazitoriEvent.FIRST_REQUEST, (event)->
+  #   console.log event, "firstrequest"
+  #   )
   
-  #チェンジイベント
-  window.App.addEventListener( KazitoriEvent.CHANGE, (event)->
-    console.log event, "change"
-    )
+  # window.App.addEventListener( KazitoriEvent.PREV, (event)->
+  #   console.log event, "prev"
+  #   )
+  # window.App.addEventListener( KazitoriEvent.NEXT, (event)->
+  #   console.log event, "next"
+  #   )
+  # #リジェクトイベント
+  # window.App.addEventListener(KazitoriEvent.REJECT, (event)->
+  #   console.log event
+  #   )
 
-  window.App.addEventListener( KazitoriEvent.FIRST_REQUEST, (event)->
-    console.log event, "firstrequest"
-    )
-  
-  window.App.addEventListener( KazitoriEvent.PREV, (event)->
-    console.log event, "prev"
-    )
-  window.App.addEventListener( KazitoriEvent.NEXT, (event)->
-    console.log event, "next"
-    )
-  #リジェクトイベント
-  window.App.addEventListener(KazitoriEvent.REJECT, (event)->
-    console.log event
-    )
+  # #not foudn
+  # window.App.addEventListener(KazitoriEvent.NOT_FOUND, (event)->
+  #   console.log "not found"
+  #   )
 
-  #not foudn
-  window.App.addEventListener(KazitoriEvent.NOT_FOUND, (event)->
-    console.log "not found"
-    )
+  # window.App.addEventListener(KazitoriEvent.EXECUTED, (event)->
+  #   console.log event, "executed"
+  #   )
 
-  window.App.addEventListener(KazitoriEvent.EXECUTED, (event)->
-    console.log event, "executed"
-    )
-
-  console.log "matche check....", window.App.match('/')
-  console.log "matche check....", window.App.match('/webebebeaaa')
-  console.log window.App.params
+  # console.log "matche check....", window.App.match('/')
+  # console.log "matche check....", window.App.match('/webebebeaaa')
+  # console.log window.App.params
 
   
   $('.test').on "click", clickHandler
@@ -164,7 +201,7 @@ $(document).ready ()->
       alert('バルス')
 
   # Kai.init({'css':'hoge'})
-  console.log Kai.GET_CSS_PATH(Kai.RELATIVE)
+  # console.log Kai.GET_CSS_PATH(Kai.RELATIVE)
 
 clickHandler =(event)->
   event.preventDefault()
