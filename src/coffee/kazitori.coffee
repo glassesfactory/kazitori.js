@@ -142,6 +142,8 @@ class Kazitori
     @isIE = win.navigator.userAgent.toLowerCase().indexOf('msie') != -1
     @isOldIE = @isIE and (!docMode||docMode < 7)
     @_dispatcher = new EventDispatcher()
+    @.handlers = []
+    @.beforeHandlers = []
     @_bindBefores()
     @_bindRules()
     @_bindNotFound()
@@ -362,7 +364,6 @@ class Kazitori
       if isBefore
         callback = @_bindFunctions(name)
       else if name instanceof Kazitori
-        console.log "nest"
         @_bindChild(rule, name)
         return @
       else if typeof name is "function"
@@ -372,6 +373,7 @@ class Kazitori
         if name.hasOwnProperty('__super__')
           try
             child = new name({'isAutoStart':false})
+            console.log "hi"
             @_bindChild(rule, child)
             return @
           catch e
@@ -382,7 +384,6 @@ class Kazitori
         callback = @[name]
 
     target = if isBefore then @.beforeHandlers else @.handlers
-    console.log "before rule instance::", rule
     target.unshift new Rule(rule, (fragment)->
       args = @.router.extractParams(@, fragment)
       callback && callback.apply(@.router, args)
@@ -390,9 +391,17 @@ class Kazitori
     return @
 
   _bindChild:(rule, child)->
-    for childRule in child.handlers
+    childHandlers = child.handlers.concat()
+    for childRule in childHandlers
       childRule.update(rule)
-    @.handlers = child.handlers.concat @.handlers
+    #うーん
+    # @._groups.push new InternalGroup(rule, child.handlers)
+    @.handlers = childHandlers.concat @.handlers
+
+    childBefores = child.beforeHandlers.concat()
+    for childBefore in childBefores
+      childBefore.update(rule)
+    @.beforeHandlers = childBefores.concat @.beforeHandlers
 
 
   #ルールを後から追加する
@@ -585,7 +594,6 @@ class Kazitori
       callback = notFoundFuncName
     else
       callback = @[notFoundFuncName]
-    console.log notFoundFragment, @.notFound
     @._notFound = new Rule(notFoundFragment, (fragment)->
       args = @.router.extractParams(@, fragment)
       callback && callback.apply(@.router, args)
@@ -902,17 +910,6 @@ class Rule
     @callback = callback
     @router = router
     @update(rule)
-    # @rule = string
-    # @_regexp = @_ruleToRegExp(string)
-    # @types = []
-
-    # re = new RegExp(namedParam)
-    # matched = string.match(re)
-    # if matched isnt null
-    #   @isVariable = true
-    #   for m in matched
-    #     t = m.match(genericParam)||null
-    #     @types.push if t isnt null then t[1] else null
 
   #マッチするかどうかテスト
   # **args**
@@ -929,7 +926,6 @@ class Rule
   update:(path)=>
     @.rule = path + @.rule
     @._regexp = @_ruleToRegExp(@.rule)
-
     re = new RegExp(namedParam)
     matched = path.match(re)
     if matched isnt null
