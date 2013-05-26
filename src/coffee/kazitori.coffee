@@ -56,7 +56,7 @@ VARIABLE_TYPES = [
 
 ## Kazitori クラス
 class Kazitori
-  VERSION:"0.2.3"
+  VERSION:"0.9.9"
   history:null
   location:null
   handlers:[]
@@ -67,6 +67,8 @@ class Kazitori
   notFound:null
   beforeAnytimeHandler:null
   direct:null
+  #ルーターをネストできる最大回数
+  maxDepth: 4
   isIE:false
   #URL パラメーター
   _params:
@@ -359,29 +361,62 @@ class Kazitori
     if not callback
       if isBefore
         callback = @_bindFunctions(name)
-      else if name isinstanceof Kazitori
+      else if name instanceof Kazitori
         console.log "nest"
-        #@.handlers.concat name.handlers
-        #@.beforeHandlers.concat name.beforeHandlers
-        #return @
+        @_bindChild(rule, name)
+        return @
       else if typeof name is "function"
-        callback = name
+        #これ再帰的にチェックするメソッドに落としこもう
+        #__super__ って coffee のクラスだけなきガス
+        #むーん
+        if name.hasOwnProperty('__super__')
+          try
+            child = new name({'isAutoStart':false})
+            @_bindChild(rule, child)
+            return @
+          catch e
+            callback = name
+        else
+          callback = name
       else
         callback = @[name]
 
     target = if isBefore then @.beforeHandlers else @.handlers
+    console.log "before rule instance::", rule
     target.unshift new Rule(rule, (fragment)->
       args = @.router.extractParams(@, fragment)
       callback && callback.apply(@.router, args)
     ,@)
     return @
 
+  _bindChild:(rule, child)->
+    for childRule in child.handlers
+      childRule.update(rule)
+    @.handlers = child.handlers.concat @.handlers
+
+
   #ルールを後から追加する
-  # add:(rule)->
-    # return @
+  appendRouter:(child, childRoot)->
+    if not child instanceof Kazitori
+      #throw new Error("引数が不正です")
+      return false
+    return @
 
   #ルールを削除する
-  # remove:(rule)->
+  removeRouter:(child)->
+    if not child instanceof Kazitori
+      # throw new Error("引数が不正です")
+      return false
+    #if if rule isinstanceof String
+      #まま
+    # else if rule is inspired Kazitori
+      #まとめて削除
+    #else if rule is Rule
+      #単品
+    # else
+      #エラーにしないで return false とかのほうがいいかな
+      #console.error('TypeError.')
+      #throw new Error('rule じゃない')
     # return @
 
 
@@ -478,7 +513,6 @@ class Kazitori
     return matched
 
   
-
   beforeFailed:(event)=>
     @.beforeFailedHandler.apply(@, arguments)
     @._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_FAILED, @beforeFailed)
@@ -518,12 +552,6 @@ class Kazitori
 
   # befores から指定された事前に処理したいメソッドをバインド
   _bindBefores:()->
-    if not @.befores?
-      return
-    befores = @_keys(@.befores)
-    for key in befores
-      @registerHandler(key, @.befores[key], true)
-
     if @.beforeAnytime
       callback = @_bindFunctions(@.beforeAnytime)
       @.beforeAnytimeHandler = {
@@ -532,6 +560,11 @@ class Kazitori
           callback && callback.apply(@, args)
         ,@
       }
+    if not @.befores?
+      return
+    befores = @_keys(@.befores)
+    for key in befores
+      @registerHandler(key, @.befores[key], true)
     return
 
   # notFound で指定されたメソッドをバインド
@@ -552,7 +585,7 @@ class Kazitori
       callback = notFoundFuncName
     else
       callback = @[notFoundFuncName]
-
+    console.log notFoundFragment, @.notFound
     @._notFound = new Rule(notFoundFragment, (fragment)->
       args = @.router.extractParams(@, fragment)
       callback && callback.apply(@.router, args)
@@ -614,8 +647,6 @@ class Kazitori
         else
           matched.push handler
     return if matched.length > 0 then matched else false
-
-
 
 
   #===============================================
@@ -858,29 +889,30 @@ class Kazitori
 # ちょっと大げさな気もするけど外部的には変わらんし
 # 今後を見据えてクラス化しておく
 class Rule
-  rule:null
+  rule:""
   _regexp:null
   callback:null
   name:""
   router:null
   isVariable:false
   types:[]
-  constructor:(string, callback, router)->
-    @rule = string
+  constructor:(rule, callback, router)->
+    if typeof rule isnt "string" and typeof rule isnt "Number"
+      return
     @callback = callback
-    @_regexp = @_ruleToRegExp(string)
-
-    #これ…どうなんだろ…
     @router = router
-    @types = []
+    @update(rule)
+    # @rule = string
+    # @_regexp = @_ruleToRegExp(string)
+    # @types = []
 
-    re = new RegExp(namedParam)
-    matched = string.match(re)
-    if matched isnt null
-      @isVariable = true
-      for m in matched
-        t = m.match(genericParam)||null
-        @types.push if t isnt null then t[1] else null
+    # re = new RegExp(namedParam)
+    # matched = string.match(re)
+    # if matched isnt null
+    #   @isVariable = true
+    #   for m in matched
+    #     t = m.match(genericParam)||null
+    #     @types.push if t isnt null then t[1] else null
 
   #マッチするかどうかテスト
   # **args**
@@ -893,6 +925,28 @@ class Rule
   _ruleToRegExp:(rule)->
     newRule = rule.replace(escapeRegExp, '\\$&').replace(optionalParam, '(?:$1)?').replace(namedParam, '([^\/]+)').replace(splatParam, '(.*?)')
     return new RegExp('^' + newRule + '$')
+
+  update:(path)=>
+    @.rule = path + @.rule
+    @._regexp = @_ruleToRegExp(@.rule)
+
+    re = new RegExp(namedParam)
+    matched = path.match(re)
+    if matched isnt null
+      @isVariable = true
+      for m in matched
+        t = m.match(genericParam)||null
+        @types.push if t isnt null then t[1] else null
+
+
+#うーん…
+class InternalGroup
+  prefix: null #root ? 
+  rules: []
+  constructor:(prefix, rules)->
+    @.prefix = prefix
+    @.rules = rules
+
 
 class EventDispatcher
   listeners:{}
