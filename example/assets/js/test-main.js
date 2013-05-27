@@ -1,4 +1,4 @@
-var COOKIE_KEY, PASS, Router, USER, clickHandler, getCookie, isLoaded, nextHandler, prevHandler, setCookie, test2, test3,
+var BarRouter, COOKIE_KEY, FooRouter, PASS, Router, USER, clickHandler, getCookie, isLoaded, nextHandler, prevHandler, setCookie, test2, test3,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
@@ -8,6 +8,70 @@ test3 = function() {
 
 isLoaded = false;
 
+FooRouter = (function(_super) {
+
+  __extends(FooRouter, _super);
+
+  function FooRouter() {
+    return FooRouter.__super__.constructor.apply(this, arguments);
+  }
+
+  FooRouter.prototype.befores = {
+    '/': ['beforeFooMinchi']
+  };
+
+  FooRouter.prototype.routes = {
+    '/': 'index',
+    '/<int:id>': 'show'
+  };
+
+  FooRouter.prototype.index = function() {
+    console.log('Foo!');
+    return $('.currentPage').empty().append("this page is Foo!");
+  };
+
+  FooRouter.prototype.show = function(id) {
+    console.log('Show Foo!');
+    return $('.currentPage').empty().append("this page is Foo " + id);
+  };
+
+  FooRouter.prototype.bar = function() {
+    console.log("hoover-ooover");
+    return $('.currentPage').empty().append("this page is ふーばーおーばー");
+  };
+
+  FooRouter.prototype.beforeFooMinchi = function() {
+    return console.log("before foo");
+  };
+
+  FooRouter.prototype.beforeFoobar = function() {
+    return console.log("コレクション コレクション");
+  };
+
+  return FooRouter;
+
+})(Kazitori);
+
+BarRouter = (function(_super) {
+
+  __extends(BarRouter, _super);
+
+  function BarRouter() {
+    return BarRouter.__super__.constructor.apply(this, arguments);
+  }
+
+  BarRouter.prototype.routes = {
+    '/': 'index'
+  };
+
+  BarRouter.prototype.index = function() {
+    return console.log("extends extends bar");
+  };
+
+  return BarRouter;
+
+})(FooRouter);
+
 Router = (function(_super) {
 
   __extends(Router, _super);
@@ -16,26 +80,12 @@ Router = (function(_super) {
     return Router.__super__.constructor.apply(this, arguments);
   }
 
-  Router.prototype.befores = {
-    '/<string:user>/<int:post>/<friend>': ['beforeMinchi'],
-    '/<int:id>': ['beforeShow']
-  };
-
   Router.prototype.routes = {
-    '/': 'index',
-    '/<int:id>': 'show',
-    '/<string:id>': 'show',
-    '/admin': 'admin',
-    '/login': 'login',
-    '/logout': 'logout',
-    '/<string:user>/<int:post>/<friend>': 'firend'
+    '/': 'index'
   };
 
   Router.prototype.index = function() {
-    console.log("index");
-    $('#dialog').hide();
-    $('#adminContainer').empty();
-    return $('.currentPage').empty().append("this page is index");
+    return console.log("index");
   };
 
   Router.prototype.show = function(id) {
@@ -79,9 +129,13 @@ Router = (function(_super) {
   };
 
   /*
-  		some before functions
+      some before functions
   */
 
+
+  Router.prototype.anytime = function() {
+    return console.log("any!?");
+  };
 
   Router.prototype.test = function(hiroshi) {
     return console.log("before 1", hiroshi);
@@ -120,6 +174,7 @@ USER = "hage";
 PASS = "hikaru";
 
 $(document).ready(function() {
+  var foo;
   $('#dialog').css({
     top: window.innerHeight / 2 - 90,
     left: window.innerWidth / 2 - 150
@@ -128,34 +183,18 @@ $(document).ready(function() {
   window.App = new Router({
     root: '/brand/'
   });
-  window.App.addEventListener(KazitoriEvent.CHANGE, function(event) {
-    return console.log(event, "change");
+  console.log(window.App.handlers);
+  foo = new FooRouter({
+    'isAutoStart': false
   });
-  window.App.addEventListener(KazitoriEvent.FIRST_REQUEST, function(event) {
-    return console.log(event, "firstrequest");
-  });
-  window.App.addEventListener(KazitoriEvent.PREV, function(event) {
-    return console.log(event, "prev");
-  });
-  window.App.addEventListener(KazitoriEvent.NEXT, function(event) {
-    return console.log(event, "next");
-  });
-  window.App.addEventListener(KazitoriEvent.REJECT, function(event) {
-    return console.log(event);
-  });
-  window.App.addEventListener(KazitoriEvent.NOT_FOUND, function(event) {
-    return console.log("not found");
-  });
-  window.App.addEventListener(KazitoriEvent.EXECUTED, function(event) {
-    return console.log(event, "executed");
-  });
-  console.log("matche check....", window.App.match('/'));
-  console.log("matche check....", window.App.match('/webebebeaaa'));
-  console.log(window.App.params);
+  window.App.appendRouter(foo, '/foo/');
+  console.log(window.App.handlers);
+  window.App.removeRouter(foo, '/foo/');
+  console.log(window.App.handlers);
   $('.test').on("click", clickHandler);
   $('.prev').on("click", prevHandler);
   $('.next').on("click", nextHandler);
-  $('form').on('submit', function(event) {
+  return $('form').on('submit', function(event) {
     var pw, userID;
     event.preventDefault();
     userID = $('input[name=user]').val();
@@ -168,7 +207,6 @@ $(document).ready(function() {
       return alert('バルス');
     }
   });
-  return console.log(Kai.GET_CSS_PATH(Kai.RELATIVE));
 });
 
 clickHandler = function(event) {

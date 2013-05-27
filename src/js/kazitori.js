@@ -1,4 +1,4 @@
-var Deffered, EventDispatcher, Kazitori, KazitoriEvent, Rule, VARIABLE_TYPES, delegater, escapeRegExp, genericParam, namedParam, optionalParam, routeStripper, splatParam, trailingSlash,
+var Deffered, EventDispatcher, InternalGroup, Kazitori, KazitoriEvent, Rule, VARIABLE_TYPES, delegater, escapeRegExp, genericParam, namedParam, optionalParam, routeStripper, splatParam, trailingSlash,
   __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
   __hasProp = {}.hasOwnProperty,
@@ -40,7 +40,7 @@ VARIABLE_TYPES = [
 
 Kazitori = (function() {
 
-  Kazitori.prototype.VERSION = "0.2.3";
+  Kazitori.prototype.VERSION = "0.9.9";
 
   Kazitori.prototype.history = null;
 
@@ -61,6 +61,8 @@ Kazitori = (function() {
   Kazitori.prototype.beforeAnytimeHandler = null;
 
   Kazitori.prototype.direct = null;
+
+  Kazitori.prototype.maxDepth = 4;
 
   Kazitori.prototype.isIE = false;
 
@@ -147,6 +149,8 @@ Kazitori = (function() {
     this.isIE = win.navigator.userAgent.toLowerCase().indexOf('msie') !== -1;
     this.isOldIE = this.isIE && (!docMode || docMode < 7);
     this._dispatcher = new EventDispatcher();
+    this.handlers = [];
+    this.beforeHandlers = [];
     this._bindBefores();
     this._bindRules();
     this._bindNotFound();
@@ -343,9 +347,11 @@ Kazitori = (function() {
 
   Kazitori.prototype.reject = function() {
     this.dispatchEvent(new KazitoriEvent(KazitoriEvent.REJECT, this.fragment));
-    this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, this.beforeComplete);
-    this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_FAILED, this.beforeFailed);
-    this._beforeDeffer = null;
+    if (this._beforeDeffer) {
+      this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, this.beforeComplete);
+      this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_FAILED, this.beforeFailed);
+      this._beforeDeffer = null;
+    }
   };
 
   Kazitori.prototype.suspend = function() {
@@ -368,12 +374,27 @@ Kazitori = (function() {
   };
 
   Kazitori.prototype.registerHandler = function(rule, name, isBefore, callback) {
-    var target;
+    var child, target;
     if (!callback) {
       if (isBefore) {
         callback = this._bindFunctions(name);
+      } else if (name instanceof Kazitori) {
+        this._bindChild(rule, name);
+        return this;
       } else if (typeof name === "function") {
-        callback = name;
+        if (name.hasOwnProperty('__super__')) {
+          try {
+            child = new name({
+              'isAutoStart': false
+            });
+            this._bindChild(rule, child);
+            return this;
+          } catch (e) {
+            callback = name;
+          }
+        } else {
+          callback = name;
+        }
       } else {
         callback = this[name];
       }
@@ -385,6 +406,114 @@ Kazitori = (function() {
       return callback && callback.apply(this.router, args);
     }, this));
     return this;
+  };
+
+  Kazitori.prototype._bindChild = function(rule, child) {
+    var childBefore, childBefores, childHandlers, childRule, _i, _j, _len, _len1;
+    child.reject();
+    child.stop();
+    childHandlers = child.handlers.concat();
+    for (_i = 0, _len = childHandlers.length; _i < _len; _i++) {
+      childRule = childHandlers[_i];
+      childRule.update(rule);
+    }
+    this.handlers = childHandlers.concat(this.handlers);
+    childBefores = child.beforeHandlers.concat();
+    for (_j = 0, _len1 = childBefores.length; _j < _len1; _j++) {
+      childBefore = childBefores[_j];
+      childBefore.update(rule);
+    }
+    return this.beforeHandlers = childBefores.concat(this.beforeHandlers);
+  };
+
+  Kazitori.prototype.appendRouter = function(child, childRoot) {
+    var rule;
+    if (!child instanceof Kazitori && typeof child !== "function") {
+      return;
+    }
+    if (child instanceof Kazitori) {
+      rule = this._getChildRule(child, childRoot);
+      this._bindChild(rule, child);
+      return this;
+    } else {
+      if (name.hasOwnProperty('__super__')) {
+        try {
+          child = new name({
+            'isAutoStart': false
+          });
+          rule = this._getChildRule(child, childRoot);
+          this._bindChild(rule, child);
+          return this;
+        } catch (e) {
+          throw new Error("引数の値が不正です。 引数に指定する値は Kazitori を継承している必要があります。");
+        }
+      }
+    }
+    return this;
+  };
+
+  Kazitori.prototype._getChildRule = function(child, childRoot) {
+    var lne, rule;
+    rule = child.root;
+    if (childRoot) {
+      lne = childRoot.length;
+      if (childRoot.match(trailingSlash)) {
+        childRoot = childRoot.replace(trailingSlash, '');
+      }
+      rule = childRoot;
+    }
+    if (rule === this.root) {
+      throw new Error("かぶってる");
+    }
+    return rule;
+  };
+
+  Kazitori.prototype.removeRouter = function(child, childRoot) {
+    if (!child instanceof Kazitori && typeof child !== "function") {
+      return;
+    }
+    if (child instanceof Kazitori) {
+      return this._unbindChild(child, childRoot);
+    } else {
+      if (name.hasOwnProperty('__super__')) {
+        try {
+          child = new name({
+            'isAutoStart': false
+          });
+          this._unbindChild(child, childRoot);
+          return this;
+        } catch (e) {
+          throw new Error("引数の値が不正です。 引数に指定する値は Kazitori を継承している必要があります。");
+        }
+      }
+    }
+  };
+
+  Kazitori.prototype._unbindChild = function(child, childRoot) {
+    var beforeRule, i, len, newBefores, newHandlers, rule, ruleObj;
+    rule = this._getChildRule(child, childRoot);
+    i = 0;
+    len = this.handlers.length;
+    newHandlers = [];
+    while (i < len) {
+      ruleObj = this.handlers.shift();
+      if ((ruleObj.rule.match(rule)) === null) {
+        newHandlers.unshift(ruleObj);
+      }
+      i++;
+    }
+    this.handlers = newHandlers;
+    i = 0;
+    len = this.beforeHandlers.length;
+    newBefores = [];
+    while (i < len) {
+      beforeRule = this.beforeHandlers.shift();
+      if ((beforeRule.rule.match(rule)) === null) {
+        newBefores.unshift(beforeRule);
+      }
+      i++;
+    }
+    return this.beforeHandlers = newBefores;
   };
 
   Kazitori.prototype.loadURL = function(fragmentOverride, options) {
@@ -530,14 +659,6 @@ Kazitori = (function() {
 
   Kazitori.prototype._bindBefores = function() {
     var befores, callback, key, _i, _len;
-    if (!(this.befores != null)) {
-      return;
-    }
-    befores = this._keys(this.befores);
-    for (_i = 0, _len = befores.length; _i < _len; _i++) {
-      key = befores[_i];
-      this.registerHandler(key, this.befores[key], true);
-    }
     if (this.beforeAnytime) {
       callback = this._bindFunctions(this.beforeAnytime);
       this.beforeAnytimeHandler = {
@@ -547,6 +668,14 @@ Kazitori = (function() {
           return callback && callback.apply(this, args);
         }, this)
       };
+    }
+    if (!(this.befores != null)) {
+      return;
+    }
+    befores = this._keys(this.befores);
+    for (_i = 0, _len = befores.length; _i < _len; _i++) {
+      key = befores[_i];
+      this.registerHandler(key, this.befores[key], true);
     }
   };
 
@@ -947,7 +1076,7 @@ Kazitori = (function() {
 
 Rule = (function() {
 
-  Rule.prototype.rule = null;
+  Rule.prototype.rule = "";
 
   Rule.prototype._regexp = null;
 
@@ -961,23 +1090,14 @@ Rule = (function() {
 
   Rule.prototype.types = [];
 
-  function Rule(string, callback, router) {
-    var m, matched, re, t, _i, _len;
-    this.rule = string;
-    this.callback = callback;
-    this._regexp = this._ruleToRegExp(string);
-    this.router = router;
-    this.types = [];
-    re = new RegExp(namedParam);
-    matched = string.match(re);
-    if (matched !== null) {
-      this.isVariable = true;
-      for (_i = 0, _len = matched.length; _i < _len; _i++) {
-        m = matched[_i];
-        t = m.match(genericParam) || null;
-        this.types.push(t !== null ? t[1] : null);
-      }
+  function Rule(rule, callback, router) {
+    this.update = __bind(this.update, this);
+    if (typeof rule !== "string" && typeof rule !== "Number") {
+      return;
     }
+    this.callback = callback;
+    this.router = router;
+    this.update(rule);
   }
 
   Rule.prototype.test = function(fragment) {
@@ -990,7 +1110,40 @@ Rule = (function() {
     return new RegExp('^' + newRule + '$');
   };
 
+  Rule.prototype.update = function(path) {
+    var m, matched, re, t, _i, _len, _results;
+    this.rule = path + this.rule;
+    this._regexp = this._ruleToRegExp(this.rule);
+    re = new RegExp(namedParam);
+    matched = path.match(re);
+    if (matched !== null) {
+      this.isVariable = true;
+      _results = [];
+      for (_i = 0, _len = matched.length; _i < _len; _i++) {
+        m = matched[_i];
+        t = m.match(genericParam) || null;
+        _results.push(this.types.push(t !== null ? t[1] : null));
+      }
+      return _results;
+    }
+  };
+
   return Rule;
+
+})();
+
+InternalGroup = (function() {
+
+  InternalGroup.prototype.prefix = null;
+
+  InternalGroup.prototype.rules = [];
+
+  function InternalGroup(prefix, rules) {
+    this.prefix = prefix;
+    this.rules = rules;
+  }
+
+  return InternalGroup;
 
 })();
 
