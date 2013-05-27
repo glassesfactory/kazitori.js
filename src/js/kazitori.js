@@ -429,6 +429,7 @@ Kazitori = (function() {
   Kazitori.prototype.appendRouter = function(child, childRoot) {
     var rule;
     if (!child instanceof Kazitori && typeof child !== "function") {
+      throw new Error("引数の値が不正です。 引数として与えられるオブジェクトは Kazitori を継承している必要があります。");
       return;
     }
     if (child instanceof Kazitori) {
@@ -445,7 +446,7 @@ Kazitori = (function() {
           this._bindChild(rule, child);
           return this;
         } catch (e) {
-          throw new Error("引数の値が不正です。 引数に指定する値は Kazitori を継承している必要があります。");
+          throw new Error("引数の値が不正です。 引数として与えられるオブジェクトは Kazitori を継承している必要があります。");
         }
       }
     }
@@ -470,6 +471,7 @@ Kazitori = (function() {
 
   Kazitori.prototype.removeRouter = function(child, childRoot) {
     if (!child instanceof Kazitori && typeof child !== "function") {
+      throw new Error("引数の値が不正です。 引数として与えられるオブジェクトは Kazitori を継承している必要があります。");
       return;
     }
     if (child instanceof Kazitori) {
@@ -483,7 +485,7 @@ Kazitori = (function() {
           this._unbindChild(child, childRoot);
           return this;
         } catch (e) {
-          throw new Error("引数の値が不正です。 引数に指定する値は Kazitori を継承している必要があります。");
+          throw new Error("引数の値が不正です。 引数として与えられるオブジェクトは Kazitori を継承している必要があります。");
         }
       }
     }

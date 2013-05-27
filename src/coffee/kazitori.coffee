@@ -409,9 +409,7 @@ class Kazitori
   #ルールを後から追加する
   appendRouter:(child, childRoot)->
     if not child instanceof Kazitori and typeof child isnt "function"
-      # throw new Error("引数が不正です")
-      #console.warn
-      # return false
+      throw new Error("引数の値が不正です。 引数として与えられるオブジェクトは Kazitori を継承している必要があります。") 
       return
 
     if child instanceof Kazitori
@@ -426,7 +424,7 @@ class Kazitori
           @_bindChild(rule, child)
           return @
         catch e
-          throw new Error("引数の値が不正です。 引数に指定する値は Kazitori を継承している必要があります。") 
+          throw new Error("引数の値が不正です。 引数として与えられるオブジェクトは Kazitori を継承している必要があります。") 
     return @
 
   _getChildRule:(child, childRoot)->
@@ -443,6 +441,7 @@ class Kazitori
   #ルールを削除する
   removeRouter:(child, childRoot)->
     if not child instanceof Kazitori and typeof child isnt "function"
+      throw new Error("引数の値が不正です。 引数として与えられるオブジェクトは Kazitori を継承している必要があります。") 
       return
     if child instanceof Kazitori
       @_unbindChild(child, childRoot)
@@ -453,7 +452,7 @@ class Kazitori
           @_unbindChild(child, childRoot)
           return @
         catch e
-          throw new Error("引数の値が不正です。 引数に指定する値は Kazitori を継承している必要があります。")
+          throw new Error("引数の値が不正です。 引数として与えられるオブジェクトは Kazitori を継承している必要があります。") 
 
   _unbindChild:(child, childRoot)->
     rule = @_getChildRule(child, childRoot)
