@@ -335,9 +335,10 @@ class Kazitori
   #メソッド名 intercept のほうがいいかな
   reject:()->
     @dispatchEvent(new KazitoriEvent(KazitoriEvent.REJECT, @.fragment))
-    @._beforeDeffer.removeEventListener KazitoriEvent.TASK_QUEUE_COMPLETE, @beforeComplete
-    @._beforeDeffer.removeEventListener KazitoriEvent.TASK_QUEUE_FAILED, @beforeFailed
-    @._beforeDeffer = null
+    if @._beforeDeffer
+      @._beforeDeffer.removeEventListener KazitoriEvent.TASK_QUEUE_COMPLETE, @beforeComplete
+      @._beforeDeffer.removeEventListener KazitoriEvent.TASK_QUEUE_FAILED, @beforeFailed
+      @._beforeDeffer = null
     return
 
   #処理を一時停止する
@@ -407,7 +408,7 @@ class Kazitori
 
   #ルールを後から追加する
   appendRouter:(child, childRoot)->
-    if not child instanceof Kazitori or typeof child not "function"
+    if not child instanceof Kazitori and typeof child isnt "function"
       # throw new Error("引数が不正です")
       #console.warn
       # return false
@@ -431,6 +432,9 @@ class Kazitori
   _getChildRule:(child, childRoot)->
     rule = child.root
     if childRoot
+      lne = childRoot.length
+      if childRoot.match(trailingSlash)
+        childRoot = childRoot.replace(trailingSlash, '')
       rule = childRoot
     if rule is @.root
       throw new Error("かぶってる")
@@ -438,9 +442,8 @@ class Kazitori
 
   #ルールを削除する
   removeRouter:(child, childRoot)->
-    if not child instanceof Kazitori or typeof child not "function"
+    if not child instanceof Kazitori and typeof child isnt "function"
       return
-
     if child instanceof Kazitori
       @_unbindChild(child, childRoot)
     else
@@ -454,30 +457,25 @@ class Kazitori
 
   _unbindChild:(child, childRoot)->
     rule = @_getChildRule(child, childRoot)
-    dels = []
     i = 0
     len = @.handlers.length
+    newHandlers = []
     while i < len
-      ruleObj = @.handlers[i]
-      #あー match とかじゃないとだめだな
-      if ruleObj.rule.indexOf rule isnt -1
-        dels.push i
+      ruleObj = @.handlers.shift()
+      if (ruleObj.rule.match rule) is null
+        newHandlers.unshift(ruleObj)
       i++
-    for i in dels
-      @.handlers.splice(i, 1)
+    @.handlers = newHandlers
 
-    dels = []
     i = 0
     len = @.beforeHandlers.length
+    newBefores = []
     while i < len
-      beforeRule = @.beforeHandlers[i]
-      if beforeRule.rule.indexOf rule isnt -1
-        dels.push i
+      beforeRule = @.beforeHandlers.shift()
+      if (beforeRule.rule.match rule) is null
+        newBefores.unshift(beforeRule)
       i++
-    for i in dels
-      @.beforeHandlers.splice(i, 1)
-
-
+    @.beforeHandlers = newBefores
 
 
   #URL を読み込む
