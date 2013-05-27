@@ -43,8 +43,7 @@ class Router extends Kazitori
   #   '/<string:user>/<int:post>/<friend>':['beforeMinchi']
   #   '/<int:id>':['beforeShow']
   routes :
-    '/':'index'   
-    '/foo': FooRouter
+    '/':'index'
     # '/bar': BarRouter
     # '/<int:id>':'show'
     # '/<string:id>':'show'
@@ -148,6 +147,11 @@ $(document).ready ()->
   $('#dialog').hide()
 
   window.App = new Router({root:'/brand/'})
+  console.log window.App.handlers
+  foo = new FooRouter({'isAutoStart':false})
+  window.App.appendRouter foo, '/foo/'
+  console.log window.App.handlers
+  window.App.removeRouter foo, '/foo/'
   console.log window.App.handlers
   # #チェンジイベント
   # window.App.addEventListener( KazitoriEvent.CHANGE, (event)->
