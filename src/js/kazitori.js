@@ -62,8 +62,6 @@ Kazitori = (function() {
 
   Kazitori.prototype.direct = null;
 
-  Kazitori.prototype.maxDepth = 4;
-
   Kazitori.prototype.isIE = false;
 
   Kazitori.prototype._params = {
@@ -219,6 +217,8 @@ Kazitori = (function() {
         override = this.fragment;
       }
       return this.loadURL(override);
+    } else {
+      return this.loadURL(this.fragment);
     }
   };
 
@@ -325,18 +325,20 @@ Kazitori = (function() {
       options = this._changeOptions;
     }
     url = this.root + this.fragment.replace(routeStripper, '');
-    if (this._hasPushState) {
-      this.history[options.replace ? 'replaceState' : 'pushState']({}, document.title, url);
-    } else if (this._wantChangeHash) {
-      this._updateHash(this.location, fragment, options.replace);
-      if (this.iframe && (fragment !== this.getFragment(this.getHash(this.iframe)))) {
-        if (!options.replace) {
-          this.iframe.document.open().close();
+    if (!this.options.silent) {
+      if (this._hasPushState) {
+        this.history[options.replace ? 'replaceState' : 'pushState']({}, document.title, url);
+      } else if (this._wantChangeHash) {
+        this._updateHash(this.location, fragment, options.replace);
+        if (this.iframe && (fragment !== this.getFragment(this.getHash(this.iframe)))) {
+          if (!options.replace) {
+            this.iframe.document.open().close();
+          }
+          this._updateHash(this.iframe.location, fragment, options.replace);
         }
-        this._updateHash(this.iframe.location, fragment, options.replace);
+      } else {
+        return this.location.assign(url);
       }
-    } else {
-      return this.location.assign(url);
     }
     this.dispatchEvent(new KazitoriEvent(KazitoriEvent.CHANGE, this.fragment, this.lastFragment));
     if (options.internal && options.internal === true) {
