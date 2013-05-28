@@ -67,8 +67,6 @@ class Kazitori
   notFound:null
   beforeAnytimeHandler:null
   direct:null
-  #ルーターをネストできる最大回数
-  maxDepth: 4
   isIE:false
   #URL パラメーター
   _params:
@@ -119,7 +117,7 @@ class Kazitori
 
     if options.routes
       @.routes = options.routes
-    
+
     @.root = if options.root then options.root else '/'
     @.isTemae = if options.isTemae then options.isTemae else false
 
@@ -212,6 +210,9 @@ class Kazitori
       else if not atRoot
         override = @.fragment
       return  @loadURL(override)
+    else
+      #んー
+      return @loadURL(@.fragment)
 
 
   #止める
@@ -313,16 +314,17 @@ class Kazitori
     if not options
       options = @._changeOptions
     url = @.root + @.fragment.replace(routeStripper, '')
-    if @._hasPushState
-      @.history[ if options.replace then 'replaceState' else 'pushState' ]({}, document.title, url)
-    else if @._wantChangeHash
-      @_updateHash(@.location, fragment, options.replace)
-      if @.iframe and (fragment isnt @getFragment(@getHash(@.iframe)))
-        if !options.replace
-          @.iframe.document.open().close()
-        @_updateHash(@.iframe.location, fragment, options.replace)
-    else
-      return @.location.assign(url)
+    if not @.options.silent
+      if @._hasPushState
+        @.history[ if options.replace then 'replaceState' else 'pushState' ]({}, document.title, url)
+      else if @._wantChangeHash
+        @_updateHash(@.location, fragment, options.replace)
+        if @.iframe and (fragment isnt @getFragment(@getHash(@.iframe)))
+          if !options.replace
+            @.iframe.document.open().close()
+          @_updateHash(@.iframe.location, fragment, options.replace)
+      else
+        return @.location.assign(url)
 
     #イベントディスパッチ
     @dispatchEvent(new KazitoriEvent(KazitoriEvent.CHANGE, @.fragment, @.lastFragment))
@@ -359,7 +361,7 @@ class Kazitori
     @[@._processStep.status](@._processStep.args)
     @._dispatcher.dispatchEvent( new KazitoriEvent(KazitoriEvent.RESUME, @.fragment, @.lastFragment))
     return
-    
+
   registerHandler:(rule, name, isBefore, callback )->
     if not callback
       if isBefore
@@ -409,7 +411,7 @@ class Kazitori
   #ルールを後から追加する
   appendRouter:(child, childRoot)->
     if not child instanceof Kazitori and typeof child isnt "function"
-      throw new Error("引数の値が不正です。 引数として与えられるオブジェクトは Kazitori を継承している必要があります。") 
+      throw new Error("引数の値が不正です。 引数として与えられるオブジェクトは Kazitori を継承している必要があります。")
       return
 
     if child instanceof Kazitori
@@ -424,7 +426,7 @@ class Kazitori
           @_bindChild(rule, child)
           return @
         catch e
-          throw new Error("引数の値が不正です。 引数として与えられるオブジェクトは Kazitori を継承している必要があります。") 
+          throw new Error("引数の値が不正です。 引数として与えられるオブジェクトは Kazitori を継承している必要があります。")
     return @
 
   _getChildRule:(child, childRoot)->
@@ -441,7 +443,7 @@ class Kazitori
   #ルールを削除する
   removeRouter:(child, childRoot)->
     if not child instanceof Kazitori and typeof child isnt "function"
-      throw new Error("引数の値が不正です。 引数として与えられるオブジェクトは Kazitori を継承している必要があります。") 
+      throw new Error("引数の値が不正です。 引数として与えられるオブジェクトは Kazitori を継承している必要があります。")
       return
     if child instanceof Kazitori
       @_unbindChild(child, childRoot)
@@ -452,7 +454,7 @@ class Kazitori
           @_unbindChild(child, childRoot)
           return @
         catch e
-          throw new Error("引数の値が不正です。 引数として与えられるオブジェクトは Kazitori を継承している必要があります。") 
+          throw new Error("引数の値が不正です。 引数として与えられるオブジェクトは Kazitori を継承している必要があります。")
 
   _unbindChild:(child, childRoot)->
     rule = @_getChildRule(child, childRoot)
@@ -497,12 +499,12 @@ class Kazitori
     return matched.length > 0
 
 
-    
+
   #before で登録した処理が無難に終わった
   beforeComplete:(event)=>
     @._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, @beforeComplete)
     @._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_FAILED, @beforeFailed)
-    
+
     @._dispatcher.dispatchEvent( new KazitoriEvent(KazitoriEvent.BEFORE_EXECUTED, @.fragment, @.lastFragment))
     #ここではんだんするしかないかなー
     if @.isTemae
@@ -522,7 +524,7 @@ class Kazitori
         d.execute(d)
         return
       )
-    
+
     matched = @._matchCheck(fragment, @.beforeHandlers)
     for handler in matched
       @._beforeDeffer.deffered((d)->
@@ -533,7 +535,7 @@ class Kazitori
     @._beforeDeffer.addEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, @beforeComplete)
     @._beforeDeffer.addEventListener(KazitoriEvent.TASK_QUEUE_FAILED, @beforeFailed)
     @._beforeDeffer.execute(@._beforeDeffer)
-  
+
   #routes で登録されたメソッドを実行
   executeHandlers:()=>
     @._processStep.status = 'executeHandlers'
@@ -566,10 +568,10 @@ class Kazitori
     else
       if isMatched
         @._dispatcher.dispatchEvent( new KazitoriEvent(KazitoriEvent.EXECUTED, @.fragment, @.lastFragment))
-    
+
     return matched
 
-  
+
   beforeFailed:(event)=>
     @.beforeFailedHandler.apply(@, arguments)
     @._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_FAILED, @beforeFailed)
@@ -637,7 +639,7 @@ class Kazitori
       notFoundFragment = @_keys(@.notFound)[0]
 
     notFoundFuncName = @.notFound[notFoundFragment]
-    
+
     if typeof notFoundFuncName is "function"
       callback = notFoundFuncName
     else
@@ -670,7 +672,7 @@ class Kazitori
     matched = []
     tmpFrag = fragment
     if tmpFrag isnt undefined and tmpFrag isnt 'undefined'
-      
+
       hasQuery = @_match.apply(tmpFrag, [/(\?[\w\d=|]+)/g])
     if hasQuery
       fragment = fragment.split('?')[0]
@@ -693,7 +695,7 @@ class Kazitori
                 argsMatch.push true
               else
                 argsMatch.push @_typeCheck(a,t)
-            i++          
+            i++
           argsMatched = true
           for match in argsMatch
             if not match
@@ -731,14 +733,14 @@ class Kazitori
           fragment = @.root
         fragment = fragment + @.location.search
         root = @.root.replace(trailingSlash, '')
-        
+
         if fragment.indexOf(root) > -1
           fragment = fragment.substr(root.length)
       else
         fragment = @getHash()
     else
       root = @.root.replace(trailingSlash, '')
-      
+
       if fragment.indexOf(@.root) > -1 and fragment.indexOf(root) > -1
         fragment = fragment.substr(root.length)
     return fragment
@@ -985,7 +987,7 @@ class Rule
 
 #うーん…
 class InternalGroup
-  prefix: null #root ? 
+  prefix: null #root ?
   rules: []
   constructor:(prefix, rules)->
     @.prefix = prefix
@@ -1039,7 +1041,7 @@ class EventDispatcher
         return i
       i++
     return -1
-  
+
 
 ## Deffered
 # **internal**
@@ -1051,7 +1053,7 @@ class Deffered extends EventDispatcher
   constructor:()->
     @queue = []
     @isSuspend = false
-  
+
   deffered:(func)->
     @queue.push func
     return @
