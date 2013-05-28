@@ -203,16 +203,14 @@ class Kazitori
       @.history.replaceState({}, document.title, @.root + @.fragment + @.location.search)
     #スタートイベントをディスパッチ
     @._dispatcher.dispatchEvent( new KazitoriEvent( KazitoriEvent.START, @.fragment ))
+
+    override = @.root
     if !@.options.silent
-      override = @.root
       if not @._hasPushState and atRoot
         override = @.root + @.fragment.replace(routeStripper, '')
       else if not atRoot
         override = @.fragment
-      return  @loadURL(override)
-    else
-      #んー
-      return @loadURL(@.fragment)
+    return @loadURL(override)
 
 
   #止める
