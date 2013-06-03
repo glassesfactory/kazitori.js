@@ -9,17 +9,13 @@ kazitori.js
 kazitori.js は pushState を良い感じにさばいてくれるライブラリです。  
 外部ライブラリへの依存は無いため、単体で使用することが出来ます。  
 
-サンプル
+####サンプル
 [http://pstest.hageee.net](http://pstest.hageee.net)  
 [http://webgl.hageee.net](http://webgl.hageee.net)
 
-Python や Rails など他言語における Web フレームワークの挙動を参考にしています。
-
-既存の pjax 系ライブラリと異なり、
-Ajax 通信と pushState 処理が分離しています。
-また、多くのサーバーサイド言語フレームワークの思想や設計を参考、それに習っています。
-結果として、pushState の対象となる URL とその設計を  
-明示的に示せることを実現しています。
+Python や Rails など他言語における Web フレームワークの挙動を参考にしているため  
+URL 設計が多少複雑になっても  
+見通しの良い ルーティングが実現出来ます。
 
 インストール
 ------------
