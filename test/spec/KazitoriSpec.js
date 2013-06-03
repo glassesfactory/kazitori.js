@@ -544,6 +544,7 @@ describe("Kazitori", function() {
       router.change('/posts/1');
       expect(controller.show).toHaveBeenCalled();
       expect(window.location.pathname).toEqual("/");
+      expect(router.fragment).toEqual("/posts/1");
       router.silent = false;
       router.change('/posts/2');
       return expect(window.location.pathname).toEqual("/posts/2");

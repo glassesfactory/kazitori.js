@@ -3,22 +3,23 @@ kazitori.js
 
 [![Build Status](https://travis-ci.org/glassesfactory/kazitori.js.png?branch=master)](https://travis-ci.org/glassesfactory/kazitori.js)
 
+
+**Lastest version:** 0.9.9
+
 kazitori.js は pushState を良い感じにさばいてくれるライブラリです。  
-依存している外部ライブラリなどは存在しないので  
-様々なコンテンツに組み合わせることができます。  
+外部ライブラリへの依存は無いため、単体で使用することが出来ます。  
 
 サンプル
-[http://pstest.hageee.net](http://pstest.hageee.net)
+[http://pstest.hageee.net](http://pstest.hageee.net)  
 [http://webgl.hageee.net](http://webgl.hageee.net)
 
-[Backbone.js](http://backbonejs.org) の  
-`Backbone.Router` と `Backbone.History` にインスパイアされつつ、
-Python や Rails など他言語の Web フレームワークの挙動を参考にしています。
+Python や Rails など他言語における Web フレームワークの挙動を参考にしています。
 
 既存の pjax 系ライブラリと異なり、
-Ajax 通信と pushState が分離しています。
-また、多くの Web フレームワークを参考にしていることで
-pushState を活用するルーティングを明示的に示すことができます。
+Ajax 通信と pushState 処理が分離しています。
+また、多くのサーバーサイド言語フレームワークの思想や設計を参考、それに習っています。
+結果として、pushState の対象となる URL とその設計を  
+明示的に示せることを実現しています。
 
 インストール
 ------------
@@ -46,42 +47,42 @@ routes に対して URL マップを定義。
 
 ```coffee
 class Router extends Kazitori
-	beforeAnytime:["testBefore"]
-	befores:
-		'/<int:id>':['testShow']
-	routes :
-		'/':'index'
-		'/<int:id>':'show'
-		'/<string:username>/<int:id>':'post'
-		
-	index:()->
-		# console.log "index"
-		$('.currentPage').empty().append "this page is index"
+  beforeAnytime:["testBefore"]
+  befores:
+    '/<int:id>':['testShow']
+  routes :
+    '/':'index'
+    '/<int:id>':'show'
+    '/<string:username>/<int:id>':'post'
+    
+  index:()->
+    # console.log "index"
+    $('.currentPage').empty().append "this page is index"
 
-	show:(id)->
-		# console.log id
-		$('.currentPage').empty().append "this page is test" + id
+  show:(id)->
+    # console.log id
+    $('.currentPage').empty().append "this page is test" + id
 
-	post:(username, id)->
-		$('.currentPage').empty().append username + "post " + id
+  post:(username, id)->
+    $('.currentPage').empty().append username + "post " + id
 
-	###
-		some before handlers
-	###
-	testBefore:()->
-		console.log "before!"
-	testShow:()->
-		console.log "before show"
+  ###
+    some before handlers
+  ###
+  testBefore:()->
+    console.log "before!"
+  testShow:()->
+    console.log "before show"
 
 
-
-$(document).ready ()->
-	window.App = new Router({root:'/'})
-	$('.test').on "click", (event)->
-		event.preventDefault()
-		target = event.currentTarget.pathname
-		#url を変更
-		window.App.change(target)
+$(()->
+  window.App = new Router({root:'/'})
+  $('.test').on "click", (event)->
+    event.preventDefault()
+    target = event.currentTarget.pathname
+    #url を変更
+    window.App.change(target)
+)
 ```
 
 [こちらの記事](http://dev.hageee.net/4) でもうちょっと解説しています。  
@@ -119,13 +120,17 @@ LICENSE
 要望とか
 ------------
 こういう風にしたら使いやすいんじゃないとか  
-オメーこれ実装たりてねーよ ks! とか  
-本家 Backbone.js に言いづらい or 英語分かんねーよといった方がいるのなら  
+オメーこれ実装たりてねーよ ks! などありましたら  
 [@__hage__](https://twitter.com/__hage__) あたりに連絡を下さい。
 
 
 Change Log
 --------------
+
+**2013 06 06 ver 0.9.9**
+
+* ネスト機能を実装しました。別々で開発していた Kazitori を、あとから結合することができます。
+* サイレントモードを搭載しました。 pushState コンテンツ以外でも Kazitori をメディエイターやオブザーバー + コントローラーのような扱いで使用することができます。
 
 **2013 04 22 ver 0.2.3**
 

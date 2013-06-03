@@ -1,7 +1,7 @@
 {
   "name": "kazitori.js",
   "repo": "glassesfactory/kazitori.js",
-  "version": "0.2.3",
+  "version": "0.9.9",
   "description": "pushState library.",
   "keywords": ["route", "router", "routes", "pushState"],
   "scripts": ["src/js/kazitori.js"],
