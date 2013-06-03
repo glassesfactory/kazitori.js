@@ -64,6 +64,10 @@ Kazitori = (function() {
 
   Kazitori.prototype.isIE = false;
 
+  Kazitori.prototype.silent = false;
+
+  Kazitori.prototype.started = false;
+
   Kazitori.prototype._params = {
     params: [],
     'fragment': ''
@@ -128,8 +132,9 @@ Kazitori = (function() {
     if (options.routes) {
       this.routes = options.routes;
     }
-    this.root = options.root ? options.root : '/';
+    this.root = options.root ? options.root : this.root === null ? '/' : this.root;
     this.isTemae = options.isTemae ? options.isTemae : false;
+    this.silent = options.silent ? options.silent : false;
     this._params = {
       params: [],
       queries: {},
@@ -178,10 +183,10 @@ Kazitori = (function() {
     var atRoot, fragment, frame, ieFrag, override, win;
     this._processStep.status = 'start';
     this._processStep.args = [options];
-    if (Kazitori.started) {
+    if (this.started) {
       throw new Error('mou hazim matteru');
     }
-    Kazitori.started = true;
+    this.started = true;
     win = window;
     this.options = this._extend({}, {
       root: '/'
@@ -209,17 +214,15 @@ Kazitori = (function() {
       this.history.replaceState({}, document.title, this.root + this.fragment + this.location.search);
     }
     this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.START, this.fragment));
-    if (!this.options.silent) {
-      override = this.root;
+    override = this.root;
+    if (!this.silent) {
       if (!this._hasPushState && atRoot) {
         override = this.root + this.fragment.replace(routeStripper, '');
       } else if (!atRoot) {
         override = this.fragment;
       }
-      return this.loadURL(override);
-    } else {
-      return this.loadURL(this.fragment);
     }
+    return this.loadURL(override);
   };
 
   Kazitori.prototype.stop = function() {
@@ -227,7 +230,7 @@ Kazitori = (function() {
     win = window;
     win.removeEventListener('popstate', this.observeURLHandler);
     win.removeEventListener('hashchange', this.observeURLHandler);
-    Kazitori.started = false;
+    this.started = false;
     return this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.STOP, this.fragment));
   };
 
@@ -241,7 +244,7 @@ Kazitori = (function() {
 
   Kazitori.prototype.direction = function(option, direction) {
     var tmpFrag;
-    if (!Kazitori.started) {
+    if (!this.started) {
       return false;
     }
     tmpFrag = this.lastFragment;
@@ -264,7 +267,7 @@ Kazitori = (function() {
 
   Kazitori.prototype.change = function(fragment, options) {
     var frag, matched, next, url;
-    if (!Kazitori.started) {
+    if (!this.started) {
       return false;
     }
     this._processStep.status = 'change';
@@ -325,7 +328,7 @@ Kazitori = (function() {
       options = this._changeOptions;
     }
     url = this.root + this.fragment.replace(routeStripper, '');
-    if (!this.options.silent) {
+    if (!this.silent) {
       if (this._hasPushState) {
         this.history[options.replace ? 'replaceState' : 'pushState']({}, document.title, url);
       } else if (this._wantChangeHash) {
@@ -360,7 +363,7 @@ Kazitori = (function() {
     if (this._beforeDeffer != null) {
       this._beforeDeffer.suspend();
     }
-    Kazitori.started = false;
+    this.started = false;
     this.isSuspend = true;
     this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.SUSPEND, this.fragment, this.lastFragment));
   };
@@ -369,7 +372,7 @@ Kazitori = (function() {
     if (this._beforeDeffer != null) {
       this._beforeDeffer.resume();
     }
-    Kazitori.started = true;
+    this.started = true;
     this.isSuspend = false;
     this[this._processStep.status](this._processStep.args);
     this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.RESUME, this.fragment, this.lastFragment));
@@ -425,11 +428,15 @@ Kazitori = (function() {
       childBefore = childBefores[_j];
       childBefore.update(rule);
     }
-    return this.beforeHandlers = childBefores.concat(this.beforeHandlers);
+    this.beforeHandlers = childBefores.concat(this.beforeHandlers);
+    if (child.beforeAnytimeHandler) {
+      this.lastAnytime = this.beforeAnytime.concat();
+      return this._bindBeforeAnytime(this.beforeAnytime, [child.beforeAnytimeHandler.callback]);
+    }
   };
 
   Kazitori.prototype.appendRouter = function(child, childRoot) {
-    var rule;
+    var rule, _instance;
     if (!child instanceof Kazitori && typeof child !== "function") {
       throw new Error("引数の値が不正です。 引数として与えられるオブジェクトは Kazitori を継承している必要があります。");
       return;
@@ -439,31 +446,31 @@ Kazitori = (function() {
       this._bindChild(rule, child);
       return this;
     } else {
-      if (name.hasOwnProperty('__super__')) {
+      if (child.hasOwnProperty('__super__')) {
         try {
-          child = new name({
+          _instance = new child({
             'isAutoStart': false
           });
-          rule = this._getChildRule(child, childRoot);
-          this._bindChild(rule, child);
+          rule = this._getChildRule(_instance, childRoot);
+          this._bindChild(rule, _instance);
           return this;
         } catch (e) {
           throw new Error("引数の値が不正です。 引数として与えられるオブジェクトは Kazitori を継承している必要があります。");
         }
       }
     }
+    this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.ADDED, this.fragment, this.lastFragment));
     return this;
   };
 
   Kazitori.prototype._getChildRule = function(child, childRoot) {
-    var lne, rule;
+    var rule;
     rule = child.root;
     if (childRoot) {
-      lne = childRoot.length;
-      if (childRoot.match(trailingSlash)) {
-        childRoot = childRoot.replace(trailingSlash, '');
-      }
       rule = childRoot;
+    }
+    if (rule.match(trailingSlash)) {
+      rule = rule.replace(trailingSlash, '');
     }
     if (rule === this.root) {
       throw new Error("かぶってる");
@@ -472,25 +479,28 @@ Kazitori = (function() {
   };
 
   Kazitori.prototype.removeRouter = function(child, childRoot) {
+    var _instance;
     if (!child instanceof Kazitori && typeof child !== "function") {
       throw new Error("引数の値が不正です。 引数として与えられるオブジェクトは Kazitori を継承している必要があります。");
       return;
     }
     if (child instanceof Kazitori) {
-      return this._unbindChild(child, childRoot);
+      this._unbindChild(child, childRoot);
     } else {
-      if (name.hasOwnProperty('__super__')) {
+      if (child.hasOwnProperty('__super__')) {
         try {
-          child = new name({
+          _instance = new child({
             'isAutoStart': false
           });
-          this._unbindChild(child, childRoot);
+          this._unbindChild(_instance, childRoot);
           return this;
         } catch (e) {
           throw new Error("引数の値が不正です。 引数として与えられるオブジェクトは Kazitori を継承している必要があります。");
         }
       }
     }
+    this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.REMOVED, this.fragment, this.lastFragment));
+    return this;
   };
 
   Kazitori.prototype._unbindChild = function(child, childRoot) {
@@ -578,7 +588,7 @@ Kazitori = (function() {
   };
 
   Kazitori.prototype.executeHandlers = function() {
-    var handler, isMatched, matched, _i, _len,
+    var handler, isMatched, match, matched, _i, _j, _len, _len1,
       _this = this;
     this._processStep.status = 'executeHandlers';
     this._processStep.args = [];
@@ -594,10 +604,15 @@ Kazitori = (function() {
       isMatched = false;
       this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.NOT_FOUND));
     } else if (matched.length > 1) {
-      console.log("too many matched...");
-    } else {
       for (_i = 0, _len = matched.length; _i < _len; _i++) {
-        handler = matched[_i];
+        match = matched[_i];
+        if (this.fragment.indexOf(match.rule) > -1) {
+          match.callback(this.fragment);
+        }
+      }
+    } else {
+      for (_j = 0, _len1 = matched.length; _j < _len1; _j++) {
+        handler = matched[_j];
         handler.callback(this.fragment);
       }
     }
@@ -662,16 +677,9 @@ Kazitori = (function() {
   };
 
   Kazitori.prototype._bindBefores = function() {
-    var befores, callback, key, _i, _len;
+    var befores, key, _i, _len;
     if (this.beforeAnytime) {
-      callback = this._bindFunctions(this.beforeAnytime);
-      this.beforeAnytimeHandler = {
-        callback: this._binder(function(fragment) {
-          var args;
-          args = [fragment];
-          return callback && callback.apply(this, args);
-        }, this)
-      };
+      this._bindBeforeAnytime(this.beforeAnytime);
     }
     if (!(this.befores != null)) {
       return;
@@ -681,6 +689,18 @@ Kazitori = (function() {
       key = befores[_i];
       this.registerHandler(key, this.befores[key], true);
     }
+  };
+
+  Kazitori.prototype._bindBeforeAnytime = function(funcs, bindedFuncs) {
+    var callback;
+    callback = this._bindFunctions(funcs, bindedFuncs);
+    return this.beforeAnytimeHandler = {
+      callback: this._binder(function(fragment) {
+        var args;
+        args = [fragment];
+        return callback && callback.apply(this, args);
+      }, this)
+    };
   };
 
   Kazitori.prototype._bindNotFound = function() {
@@ -1017,7 +1037,7 @@ Kazitori = (function() {
     }
   };
 
-  Kazitori.prototype._bindFunctions = function(funcs) {
+  Kazitori.prototype._bindFunctions = function(funcs, insert) {
     var bindedFuncs, callback, f, func, funcName, i, len, names, newF, _i, _len;
     if (typeof funcs === 'string') {
       funcs = funcs.split(',');
@@ -1049,6 +1069,9 @@ Kazitori = (function() {
       if (func != null) {
         bindedFuncs.push(func);
       }
+    }
+    if (insert) {
+      bindedFuncs = insert.concat(bindedFuncs);
     }
     callback = function(args) {
       var _j, _len1;
@@ -1117,6 +1140,9 @@ Rule = (function() {
   Rule.prototype.update = function(path) {
     var m, matched, re, t, _i, _len, _results;
     this.rule = path + this.rule;
+    if (this.rule !== '/') {
+      this.rule = this.rule.replace(trailingSlash, '');
+    }
     this._regexp = this._ruleToRegExp(this.rule);
     re = new RegExp(namedParam);
     matched = path.match(re);
@@ -1342,4 +1368,6 @@ KazitoriEvent.RESUME = 'resume';
 
 KazitoriEvent.FIRST_REQUEST = 'first_request';
 
-Kazitori.started = false;
+KazitoriEvent.ADDED = 'added';
+
+KazitoriEvent.REMOVED = 'removed';

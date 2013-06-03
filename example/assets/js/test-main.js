@@ -16,6 +16,10 @@ FooRouter = (function(_super) {
     return FooRouter.__super__.constructor.apply(this, arguments);
   }
 
+  FooRouter.prototype.root = '/foo/';
+
+  FooRouter.prototype.beforeAnytime = ['beforeFoobar'];
+
   FooRouter.prototype.befores = {
     '/': ['beforeFooMinchi']
   };
@@ -80,8 +84,12 @@ Router = (function(_super) {
     return Router.__super__.constructor.apply(this, arguments);
   }
 
+  Router.prototype.beforeAnytime = ['anytime'];
+
   Router.prototype.routes = {
-    '/': 'index'
+    '/': 'index',
+    '/foo': FooRouter,
+    '/<string:id>': 'show'
   };
 
   Router.prototype.index = function() {
@@ -89,6 +97,7 @@ Router = (function(_super) {
   };
 
   Router.prototype.show = function(id) {
+    console.log("show");
     return $('.currentPage').empty().append("this page is test" + id);
   };
 
@@ -174,23 +183,19 @@ USER = "hage";
 PASS = "hikaru";
 
 $(document).ready(function() {
-  var foo;
   $('#dialog').css({
     top: window.innerHeight / 2 - 90,
     left: window.innerWidth / 2 - 150
   });
   $('#dialog').hide();
-  window.App = new Router({
-    root: '/brand/'
+  window.App = new Router();
+  console.log(window.App.handlers);
+  window.App.appendRouter(FooRouter);
+  window.App.removeRouter(FooRouter);
+  console.log(window.App.handlers);
+  window.App.addEventListener(KazitoriEvent.NOT_FOUND, function(event) {
+    return console.log("not found");
   });
-  console.log(window.App.handlers);
-  foo = new FooRouter({
-    'isAutoStart': false
-  });
-  window.App.appendRouter(foo, '/foo/');
-  console.log(window.App.handlers);
-  window.App.removeRouter(foo, '/foo/');
-  console.log(window.App.handlers);
   $('.test').on("click", clickHandler);
   $('.prev').on("click", prevHandler);
   $('.next').on("click", nextHandler);
@@ -214,7 +219,6 @@ clickHandler = function(event) {
   event.preventDefault();
   target = $(event.currentTarget);
   url = target.attr('href');
-  console.log(url);
   return window.App.change(url);
 };
 

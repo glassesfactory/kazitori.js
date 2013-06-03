@@ -4,6 +4,8 @@ test3 = ()->
 isLoaded = false
 
 class FooRouter extends Kazitori
+  root: '/foo/'
+  beforeAnytime: ['beforeFoobar']
   befores:
     '/': ['beforeFooMinchi']
   routes:
@@ -35,18 +37,19 @@ class BarRouter extends FooRouter
     console.log "extends extends bar"
 
 class Router extends Kazitori
-  # beforeAnytime:['checkMaterial']
+  beforeAnytime:['anytime']
   # beforeAnytime: ["anytime"]
   # befores:
-    
+
   #   # 'admin' :['ninshou']
   #   '/<string:user>/<int:post>/<friend>':['beforeMinchi']
   #   '/<int:id>':['beforeShow']
   routes :
     '/':'index'
+    '/foo': FooRouter
     # '/bar': BarRouter
     # '/<int:id>':'show'
-    # '/<string:id>':'show'
+    '/<string:id>':'show'
     # # '/admin/<int:id>':'show'
     # '/admin':'admin'
     # '/login':'login'
@@ -64,6 +67,7 @@ class Router extends Kazitori
     # $('.currentPage').empty().append "this page is index"
 
   show:(id)->
+    console.log "show"
     # console.log Kai.GET_CSS_PATH(Kai.RELATIVE)
     $('.currentPage').empty().append "this page is test" + id
 
@@ -146,13 +150,16 @@ $(document).ready ()->
   })
   $('#dialog').hide()
 
-  window.App = new Router({root:'/brand/'})
+  window.App = new Router()
   console.log window.App.handlers
-  foo = new FooRouter({'isAutoStart':false})
-  window.App.appendRouter foo, '/foo/'
+  # foo = new FooRouter({'isAutoStart':false})
+  # window.App.appendRouter foo, '/foo/'
+  window.App.appendRouter FooRouter
+
+  window.App.removeRouter FooRouter
   console.log window.App.handlers
-  window.App.removeRouter foo, '/foo/'
-  console.log window.App.handlers
+  # window.App.appendRouter foo, '/foo/'
+  # window.App.removeRouter foo, '/foo/'
   # #チェンジイベント
   # window.App.addEventListener( KazitoriEvent.CHANGE, (event)->
   #   console.log event, "change"
@@ -161,7 +168,7 @@ $(document).ready ()->
   # window.App.addEventListener( KazitoriEvent.FIRST_REQUEST, (event)->
   #   console.log event, "firstrequest"
   #   )
-  
+
   # window.App.addEventListener( KazitoriEvent.PREV, (event)->
   #   console.log event, "prev"
   #   )
@@ -174,9 +181,9 @@ $(document).ready ()->
   #   )
 
   # #not foudn
-  # window.App.addEventListener(KazitoriEvent.NOT_FOUND, (event)->
-  #   console.log "not found"
-  #   )
+  window.App.addEventListener(KazitoriEvent.NOT_FOUND, (event)->
+    console.log "not found"
+  )
 
   # window.App.addEventListener(KazitoriEvent.EXECUTED, (event)->
   #   console.log event, "executed"
@@ -186,13 +193,13 @@ $(document).ready ()->
   # console.log "matche check....", window.App.match('/webebebeaaa')
   # console.log window.App.params
 
-  
+
   $('.test').on "click", clickHandler
 
   $('.prev').on "click", prevHandler
 
   $('.next').on "click", nextHandler
-  
+
   $('form').on 'submit', (event)->
     event.preventDefault()
     userID = $('input[name=user]').val()
@@ -211,7 +218,6 @@ clickHandler =(event)->
   event.preventDefault()
   target = $(event.currentTarget)
   url = target.attr('href')
-  console.log url
   window.App.change(url)
 
 prevHandler =(event)->

@@ -1,4 +1,4 @@
-var Router, controller, originalLocation, view,
+var Child, ChildAppend, Router, childController, controller, originalLocation, view,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
@@ -16,6 +16,97 @@ controller = {
     return view.showEntry(id);
   }
 };
+
+childController = {
+  beforeAny: function() {},
+  beforeShow: function(id) {},
+  index: function() {},
+  show: function(id) {}
+};
+
+Child = (function(_super) {
+
+  __extends(Child, _super);
+
+  function Child() {
+    return Child.__super__.constructor.apply(this, arguments);
+  }
+
+  Child.prototype.root = "/child";
+
+  Child.prototype.beforeAnytime = ["beforeAnyChild"];
+
+  Child.prototype.befores = {
+    '/': ['beforeIndex'],
+    '/<int:id>': ['beforeShow']
+  };
+
+  Child.prototype.routes = {
+    '/': 'index',
+    '/<int:id>': 'show'
+  };
+
+  Child.prototype.index = function() {
+    return childController.index();
+  };
+
+  Child.prototype.show = function(id) {
+    return childController.show();
+  };
+
+  Child.prototype.beforeAnyChild = function() {
+    return childController.beforeAny();
+  };
+
+  Child.prototype.beforeShow = function(id) {
+    return childController.beforeShow();
+  };
+
+  return Child;
+
+})(Kazitori);
+
+ChildAppend = (function(_super) {
+
+  __extends(ChildAppend, _super);
+
+  function ChildAppend() {
+    return ChildAppend.__super__.constructor.apply(this, arguments);
+  }
+
+  ChildAppend.prototype.root = "/appender";
+
+  ChildAppend.prototype.beforeAnytime = ["beforeAny"];
+
+  ChildAppend.prototype.befores = {
+    '/': ['beforeIndex'],
+    '/<int:id>': ['beforeShow']
+  };
+
+  ChildAppend.prototype.routes = {
+    '/': 'index',
+    '/<int:id>': 'show'
+  };
+
+  ChildAppend.prototype.index = function() {
+    return childController.index();
+  };
+
+  ChildAppend.prototype.show = function(id) {
+    return childController.show();
+  };
+
+  ChildAppend.prototype.beforeAny = function() {
+    return childController.beforeAny();
+  };
+
+  ChildAppend.prototype.beforeShow = function(id) {
+    return childController.beforeShow();
+  };
+
+  return ChildAppend;
+
+})(Kazitori);
 
 Router = (function(_super) {
 
@@ -40,7 +131,8 @@ Router = (function(_super) {
     '/posts/new': 'new',
     '/posts/<int:id>/edit': 'edit',
     '/users/<int:id>/posts/<int:id>': 'show',
-    '/entries/<int:id>': controller.showEntry
+    '/entries/<int:id>': controller.showEntry,
+    '/child': Child
   };
 
   Router.prototype.index = function() {
@@ -80,11 +172,11 @@ describe("Kazitori", function() {
   });
   describe("property", function() {
     it("should started to be Truthy", function() {
-      return expect(Kazitori.started).toBeTruthy();
+      return expect(router.started).toBeTruthy();
     });
-    it("should Kazitori.started to be Falsy when router.stop called", function() {
+    it("should router.started to be Falsy when router.stop called", function() {
       router.stop();
-      expect(Kazitori.started).toBeFalsy();
+      expect(router.started).toBeFalsy();
       return router.start();
     });
     it("test getHash", function() {
@@ -109,9 +201,9 @@ describe("Kazitori", function() {
   describe("method", function() {
     return it("should work suspend and resume", function() {
       router.suspend();
-      expect(Kazitori.started).toBeFalsy();
+      expect(router.started).toBeFalsy();
       router.resume();
-      return expect(Kazitori.started).toBeTruthy();
+      return expect(router.started).toBeTruthy();
     });
   });
   describe("event", function() {
@@ -375,10 +467,86 @@ describe("Kazitori", function() {
       return expect(router.queries.hoge).toBe("hogeee");
     });
   });
-  return describe("exception", function() {
+  describe("exception", function() {
     return it("should throw error when Kazitori started and router.start called", function() {
-      expect(Kazitori.started).toBeTruthy();
+      expect(router.started).toBeTruthy();
       return expect(router.start).toThrow();
+    });
+  });
+  describe("nest", function() {
+    it('should call nest router controller', function() {
+      spyOn(childController, 'index');
+      router.change('/child');
+      return expect(childController.index).toHaveBeenCalled();
+    });
+    it('should call nest router controller show', function() {
+      spyOn(childController, 'show');
+      router.change('/child/1');
+      return expect(childController.show).toHaveBeenCalled();
+    });
+    it('child befores should be before called', function() {
+      spyOn(childController, 'beforeShow');
+      router.change('/child/1');
+      return expect(childController.beforeShow).toHaveBeenCalled();
+    });
+    return it('child beforeAny should be before called', function() {
+      spyOn(childController, 'beforeAny');
+      router.change('/posts');
+      expect(childController.beforeAny).toHaveBeenCalled();
+      router.change('/child/1');
+      return expect(childController.beforeAny).toHaveBeenCalled();
+    });
+  });
+  describe("dynamic nest", function() {
+    var notFoundHandler;
+    it('should append router from constructor', function() {
+      spyOn(childController, 'index');
+      router.appendRouter(ChildAppend, '/appender');
+      router.change('/appender');
+      return expect(childController.index).toHaveBeenCalled();
+    });
+    it('should append router from instance', function() {
+      var child;
+      spyOn(childController, 'index');
+      child = new ChildAppend({
+        'isAutoStart': false
+      });
+      router.appendRouter(child, '/appender');
+      router.change('/appender');
+      return expect(childController.index).toHaveBeenCalled();
+    });
+    notFoundHandler = jasmine.createSpy('NOT_FOUND Event');
+    it('should remove router from constructor', function() {
+      spyOn(childController, 'index');
+      router.appendRouter(ChildAppend);
+      router.change('/appender');
+      return expect(childController.index).toHaveBeenCalled();
+    });
+    return it('shuold remove router from instance', function() {
+      var child;
+      spyOn(childController, 'index');
+      child = new ChildAppend({
+        'isAutoStart': false
+      });
+      router.appendRouter(child);
+      router.change('/appender');
+      expect(childController.index).toHaveBeenCalled();
+      router.addEventListener(KazitoriEvent.NOT_FOUND, notFoundHandler);
+      router.removeRouter(childController);
+      return router.change('/appender');
+    });
+  });
+  return describe("silent", function() {
+    return it('shuold call show and not change location', function() {
+      spyOn(controller, 'show');
+      router.silent = true;
+      expect(window.location.pathname).toEqual("/");
+      router.change('/posts/1');
+      expect(controller.show).toHaveBeenCalled();
+      expect(window.location.pathname).toEqual("/");
+      router.silent = false;
+      router.change('/posts/2');
+      return expect(window.location.pathname).toEqual("/posts/2");
     });
   });
 });
