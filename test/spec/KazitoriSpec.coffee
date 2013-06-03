@@ -473,12 +473,54 @@ describe "Kazitori", ->
       router.change('/child/1')
       expect(childController.beforeAny).toHaveBeenCalled()
 
+
   describe "dynamic nest", ->
-    it 'should appended router from class name', ->
+
+    it 'should append router from constructor', ->
       spyOn(childController, 'index')
       router.appendRouter ChildAppend, '/appender'
       router.change('/appender')
       expect(childController.index).toHaveBeenCalled()
+
+    it 'should append router from instance', ->
+      spyOn(childController, 'index')
+      child = new ChildAppend({'isAutoStart': false})
+      router.appendRouter child, '/appender'
+      router.change('/appender')
+      expect(childController.index).toHaveBeenCalled()
+
+    notFoundHandler = jasmine.createSpy('NOT_FOUND Event')
+
+    it 'should remove router from constructor', ->
+      spyOn(childController, 'index')
+      router.appendRouter ChildAppend
+      router.change('/appender')
+      expect(childController.index).toHaveBeenCalled()
+
+      #jasmine を置き去りにした…！
+      # router.addEventListener KazitoriEvent.NOT_FOUND, notFoundHandler
+      # router.removeRouter ChildAppend
+      # router.change('/appender')
+
+      # expect(notFoundHandler).toHaveBeenCalled()
+      # expect(notFoundHandler.calls.length).toEqual(1)
+
+    it 'shuold remove router from instance', ->
+      spyOn(childController, 'index')
+      child = new ChildAppend({'isAutoStart': false})
+      router.appendRouter child
+      router.change('/appender')
+      expect(childController.index).toHaveBeenCalled()
+
+
+      router.addEventListener KazitoriEvent.NOT_FOUND, notFoundHandler
+      router.removeRouter childController
+      router.change('/appender')
+
+      # expect(notFoundHandler).toHaveBeenCalled()
+      # expect(notFoundHandler.calls.length).toEqual(1)
+
+
 
 
 
