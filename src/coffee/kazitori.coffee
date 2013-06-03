@@ -56,18 +56,20 @@ VARIABLE_TYPES = [
 
 ## Kazitori クラス
 class Kazitori
-  VERSION:"0.9.9"
-  history:null
-  location:null
-  handlers:[]
-  beforeHandlers:[]
-  afterhandlers:[]
+  VERSION: "0.9.9"
+  history: null
+  location: null
+  handlers: []
+  beforeHandlers: []
+  afterhandlers: []
   rootFiles: ['index.html', 'index.htm', 'index.php', 'unko.html']
-  root:null
-  notFound:null
-  beforeAnytimeHandler:null
-  direct:null
-  isIE:false
+  root: null
+  notFound: null
+  beforeAnytimeHandler: null
+  direct: null
+  isIE: false
+  silent: false
+  started: false
   #URL パラメーター
   _params:
     params:[]
@@ -83,32 +85,32 @@ class Kazitori
 
 
   ###isBeforeForce###
-  isBeforeForce:false
+  isBeforeForce: false
   #befores の処理を URL 変更前にするかどうか
-  isTemae:false
-  _changeOptions:null
+  isTemae: false
+  _changeOptions: null
 
-  isNotFoundForce:false
-  _notFoudn:null
+  isNotFoundForce: false
+  _notFoudn: null
 
-  breaker:{}
+  breaker: {}
 
-  _dispatcher:null
-  _beforeDeffer:null
+  _dispatcher: null
+  _beforeDeffer: null
 
-  fragment:null
-  lastFragment:null
-  isUserAction:false
+  fragment: null
+  lastFragment: null
+  isUserAction: false
 
-  _isFirstRequest:true
+  _isFirstRequest: true
 
 
 
   #一時停止しているかどうか
-  isSuspend:false
+  isSuspend: false
   _processStep:
-    'status':'null'
-    'args':[]
+    'status': 'null'
+    'args': []
 
   constructor:(options)->
     @._processStep.status = 'constructor'
@@ -118,8 +120,10 @@ class Kazitori
     if options.routes
       @.routes = options.routes
 
-    @.root = if options.root then options.root else '/'
+    @.root = if options.root then options.root else if @.root is null then '/' else @.root
     @.isTemae = if options.isTemae then options.isTemae else false
+    @.silent = if options.silent then options.silent else false
+
 
     @._params = {
       params:[]
@@ -159,7 +163,6 @@ class Kazitori
         })
     catch e
       #throw new Error(e)
-      # console.log e
       #IEだと defineProperty がアレらしいので
       #@.__defineGetter__ したほうがいいかなー
 
@@ -172,9 +175,9 @@ class Kazitori
   start:(options)->
     @._processStep.status = 'start'
     @._processStep.args = [options]
-    if Kazitori.started
+    if @.started
       throw new Error('mou hazim matteru')
-    Kazitori.started = true
+    @.started = true
     win = window
     @.options = @_extend({}, {root:'/'}, @.options, options)
     @._hasPushState = !!(@.history and @.history.pushState)
@@ -205,7 +208,7 @@ class Kazitori
     @._dispatcher.dispatchEvent( new KazitoriEvent( KazitoriEvent.START, @.fragment ))
 
     override = @.root
-    if !@.options.silent
+    if !@.silent
       if not @._hasPushState and atRoot
         override = @.root + @.fragment.replace(routeStripper, '')
       else if not atRoot
@@ -218,7 +221,7 @@ class Kazitori
     win = window
     win.removeEventListener 'popstate', @observeURLHandler
     win.removeEventListener 'hashchange', @observeURLHandler
-    Kazitori.started = false
+    @.started = false
     #ストップイベントをディスパッチ
     @._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.STOP, @.fragment))
 
@@ -233,7 +236,7 @@ class Kazitori
     return @direction(options, "prev")
 
   direction:(option, direction)->
-    if not Kazitori.started
+    if not @.started
       return false
 
     tmpFrag = @.lastFragment
@@ -255,7 +258,7 @@ class Kazitori
 
   #url を変更する
   change:(fragment, options)->
-    if not Kazitori.started
+    if not @.started
       return false
     @._processStep.status = 'change'
     @._processStep.args = [fragment, options]
@@ -276,7 +279,6 @@ class Kazitori
     #frag が undefined になってしまう
     # console.debug frag
     url = @.root + @_replace.apply(frag,[routeStripper, ''])
-
     matched = @_matchCheck(@.fragment, @.handlers)
     if matched is false and @.isNotFoundForce is false
       if @.notFound isnt null
@@ -312,7 +314,7 @@ class Kazitori
     if not options
       options = @._changeOptions
     url = @.root + @.fragment.replace(routeStripper, '')
-    if not @.options.silent
+    if not @.silent
       if @._hasPushState
         @.history[ if options.replace then 'replaceState' else 'pushState' ]({}, document.title, url)
       else if @._wantChangeHash
@@ -334,7 +336,7 @@ class Kazitori
   #中断する
   #メソッド名 intercept のほうがいいかな
   reject:()->
-    @dispatchEvent(new KazitoriEvent(KazitoriEvent.REJECT, @.fragment))
+    @dispatchEvent(new KazitoriEvent(KazitoriEvent.REJECT, @.fragment ))
     if @._beforeDeffer
       @._beforeDeffer.removeEventListener KazitoriEvent.TASK_QUEUE_COMPLETE, @beforeComplete
       @._beforeDeffer.removeEventListener KazitoriEvent.TASK_QUEUE_FAILED, @beforeFailed
@@ -345,19 +347,19 @@ class Kazitori
   suspend:()->
     if @._beforeDeffer?
       @._beforeDeffer.suspend()
-    Kazitori.started = false
+    @.started = false
     @.isSuspend = true
-    @._dispatcher.dispatchEvent( new KazitoriEvent(KazitoriEvent.SUSPEND, @.fragment, @.lastFragment))
+    @._dispatcher.dispatchEvent( new KazitoriEvent( KazitoriEvent.SUSPEND, @.fragment, @.lastFragment ))
     return
 
   #処理を再開する
   resume:()->
     if @._beforeDeffer?
       @._beforeDeffer.resume()
-    Kazitori.started = true
+    @.started = true
     @.isSuspend = false
     @[@._processStep.status](@._processStep.args)
-    @._dispatcher.dispatchEvent( new KazitoriEvent(KazitoriEvent.RESUME, @.fragment, @.lastFragment))
+    @._dispatcher.dispatchEvent( new KazitoriEvent( KazitoriEvent.RESUME, @.fragment, @.lastFragment ))
     return
 
   registerHandler:(rule, name, isBefore, callback )->
@@ -405,6 +407,8 @@ class Kazitori
       childBefore.update(rule)
     @.beforeHandlers = childBefores.concat @.beforeHandlers
 
+    #before anytime bind するのどうしようかなー
+
 
   #ルールを後から追加する
   appendRouter:(child, childRoot)->
@@ -417,23 +421,26 @@ class Kazitori
       @_bindChild(rule, child)
       return @
     else
-      if name.hasOwnProperty('__super__')
+      if child.hasOwnProperty('__super__')
         try
-          child = new name({'isAutoStart':false})
-          rule = @_getChildRule(child, childRoot)
-          @_bindChild(rule, child)
+          _instance = new child({'isAutoStart':false})
+          rule = @_getChildRule(_instance, childRoot)
+          @_bindChild(rule, _instance)
           return @
         catch e
           throw new Error("引数の値が不正です。 引数として与えられるオブジェクトは Kazitori を継承している必要があります。")
+    @._dispatcher.dispatchEvent( new KazitoriEvent( KazitoriEvent.ADDED, @.fragment, @.lastFragment ))
     return @
 
   _getChildRule:(child, childRoot)->
     rule = child.root
     if childRoot
-      lne = childRoot.length
-      if childRoot.match(trailingSlash)
-        childRoot = childRoot.replace(trailingSlash, '')
+      # lne = childRoot.length
+      # if childRoot.match(trailingSlash)
+      #   childRoot = childRoot.replace(trailingSlash, '')
       rule = childRoot
+    if rule.match(trailingSlash)
+      rule = rule.replace(trailingSlash, '')
     if rule is @.root
       throw new Error("かぶってる")
     return rule
@@ -446,13 +453,15 @@ class Kazitori
     if child instanceof Kazitori
       @_unbindChild(child, childRoot)
     else
-      if name.hasOwnProperty('__super__')
+      if child.hasOwnProperty('__super__')
         try
-          child = new name({'isAutoStart':false})
-          @_unbindChild(child, childRoot)
+          _instance = new child({'isAutoStart':false})
+          @_unbindChild(_instance, childRoot)
           return @
         catch e
           throw new Error("引数の値が不正です。 引数として与えられるオブジェクトは Kazitori を継承している必要があります。")
+    @._dispatcher.dispatchEvent( new KazitoriEvent(KazitoriEvent.REMOVED, @.fragment, @.lastFragment))
+    return @
 
   _unbindChild:(child, childRoot)->
     rule = @_getChildRule(child, childRoot)
@@ -481,7 +490,6 @@ class Kazitori
   loadURL:(fragmentOverride, options)->
     @._processStep.status = 'loadURL'
     @._processStep.args = [fragmentOverride, options]
-
     if @.isSuspend
       return
     fragment = @.fragment = @getFragment(fragmentOverride)
@@ -550,7 +558,11 @@ class Kazitori
       @._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.NOT_FOUND))
 
     else if matched.length > 1
-      console.log "too many matched..."
+      for match in matched
+        if @.fragment.indexOf(match.rule) > -1
+            match.callback(@.fragment)
+
+        # if @.fragment.indexOf match.rule
     else
       for handler in matched
         handler.callback(@.fragment)
@@ -774,8 +786,6 @@ class Kazitori
           v = if kv[1] then kv[1] else ""
           if v.indexOf('|') > -1
             v = v.split("|")
-          # obj = {}
-          # obj[k] = v
           newQueries[k] = v
         newParam.pop()
         newParam.push last.split('?')[0]
@@ -945,8 +955,8 @@ class Kazitori
 # ちょっと大げさな気もするけど外部的には変わらんし
 # 今後を見据えてクラス化しておく
 class Rule
-  rule:""
-  _regexp:null
+  rule: ""
+  _regexp: null
   callback:null
   name:""
   router:null
@@ -973,6 +983,9 @@ class Rule
 
   update:(path)=>
     @.rule = path + @.rule
+    #trailing last slash
+    if @.rule isnt '/'
+      @.rule = @.rule.replace(trailingSlash, '')
     @._regexp = @_ruleToRegExp(@.rule)
     re = new RegExp(namedParam)
     matched = path.match(re)
@@ -1155,4 +1168,6 @@ KazitoriEvent.RESUME = 'resume'
 #一番最初のアクセスがあった
 KazitoriEvent.FIRST_REQUEST = 'first_request'
 
-Kazitori.started = false
+KazitoriEvent.ADDED = 'added'
+
+KazitoriEvent.REMOVED = 'removed'
