@@ -407,7 +407,9 @@ class Kazitori
       childBefore.update(rule)
     @.beforeHandlers = childBefores.concat @.beforeHandlers
 
-    #before anytime bind するのどうしようかなー
+    if child.beforeAnytimeHandler
+      @.lastAnytime = @.beforeAnytime.concat()
+      @_bindBeforeAnytime(@.beforeAnytime, [child.beforeAnytimeHandler.callback])
 
 
   #ルールを後から追加する
@@ -622,19 +624,22 @@ class Kazitori
   # befores から指定された事前に処理したいメソッドをバインド
   _bindBefores:()->
     if @.beforeAnytime
-      callback = @_bindFunctions(@.beforeAnytime)
-      @.beforeAnytimeHandler = {
-        callback:@_binder (fragment)->
-          args = [fragment]
-          callback && callback.apply(@, args)
-        ,@
-      }
+      @_bindBeforeAnytime(@.beforeAnytime)
     if not @.befores?
       return
     befores = @_keys(@.befores)
     for key in befores
       @registerHandler(key, @.befores[key], true)
     return
+
+  _bindBeforeAnytime:(funcs, bindedFuncs)->
+    callback = @_bindFunctions(funcs, bindedFuncs)
+    @.beforeAnytimeHandler = {
+      callback:@_binder (fragment)->
+        args = [fragment]
+        callback && callback.apply(@, args)
+      ,@
+    }
 
   # notFound で指定されたメソッドをバインド
   _bindNotFound:()->
@@ -910,7 +915,7 @@ class Kazitori
           if iter.call(ctx, obj[k], k, obj) is @breaker
             return
 
-  _bindFunctions:(funcs)->
+  _bindFunctions:(funcs, insert)->
     if typeof funcs is 'string'
       funcs = funcs.split(',')
     bindedFuncs = []
@@ -935,6 +940,8 @@ class Kazitori
 
       if func?
         bindedFuncs.push(func)
+    if insert
+      bindedFuncs = insert.concat bindedFuncs
     callback =(args)->
       for func in bindedFuncs
         func.apply(@, [args])

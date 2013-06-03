@@ -17,6 +17,62 @@ controller =
     # console.log "controller.showEntry"
     view.showEntry(id)
 
+childController =
+  beforeAny: ->
+    # console.log 'childController.beforeAny'
+  beforeShow: (id) ->
+    # console.log 'childController.beforeShow'
+  index: ->
+    # console.log 'childController.index'
+  show: (id) ->
+    # console.log "childController.show"
+
+class Child extends Kazitori
+  root: "/child"
+  beforeAnytime: ["beforeAnyChild"]
+  befores:
+    '/': ['beforeIndex']
+    '/<int:id>': ['beforeShow']
+
+  routes:
+    '/': 'index'
+    '/<int:id>': 'show'
+
+  index: ->
+    childController.index()
+
+  show: (id)->
+    childController.show()
+
+  beforeAnyChild: ->
+    childController.beforeAny()
+
+  beforeShow: (id)->
+    childController.beforeShow()
+
+class ChildAppend extends Kazitori
+  root: "/appender"
+  beforeAnytime: ["beforeAny"]
+  befores:
+    '/': ['beforeIndex']
+    '/<int:id>': ['beforeShow']
+
+  routes:
+    '/': 'index'
+    '/<int:id>': 'show'
+
+  index: ->
+    childController.index()
+
+  show: (id)->
+    childController.show()
+
+  beforeAny: ->
+    childController.beforeAny()
+
+  beforeShow: (id)->
+    childController.beforeShow()
+
 class Router extends Kazitori
   beforeAnytime:["beforeAny"]
 
@@ -33,6 +89,7 @@ class Router extends Kazitori
     '/posts/<int:id>/edit': 'edit'
     '/users/<int:id>/posts/<int:id>': 'show'
     '/entries/<int:id>': controller.showEntry
+    '/child': Child
 
   index: ->
     controller.index()
@@ -53,6 +110,8 @@ class Router extends Kazitori
 
 originalLocation = location.href
 
+
+
 describe "Kazitori", ->
 
   beforeEach ->
@@ -66,11 +125,11 @@ describe "Kazitori", ->
   describe "property", ->
 
     it "should started to be Truthy", ->
-      expect(Kazitori.started).toBeTruthy()
+      expect(router.started).toBeTruthy()
 
-    it "should Kazitori.started to be Falsy when router.stop called", ->
+    it "should router.started to be Falsy when router.stop called", ->
       router.stop()
-      expect(Kazitori.started).toBeFalsy()
+      expect(router.started).toBeFalsy()
       router.start()
 
     it "test getHash", ->
@@ -93,9 +152,9 @@ describe "Kazitori", ->
   describe "method", ->
     it "should work suspend and resume", ->
       router.suspend()
-      expect(Kazitori.started).toBeFalsy()
+      expect(router.started).toBeFalsy()
       router.resume()
-      expect(Kazitori.started).toBeTruthy()
+      expect(router.started).toBeTruthy()
 
   describe "event", ->
 
@@ -386,8 +445,43 @@ describe "Kazitori", ->
 
   describe "exception", ->
     it "should throw error when Kazitori started and router.start called", ->
-      expect(Kazitori.started).toBeTruthy()
+      expect(router.started).toBeTruthy()
       expect(router.start).toThrow()
+
+  describe "nest", ->
+    it 'should call nest router controller', ->
+      spyOn(childController, 'index')
+      router.change('/child')
+      expect(childController.index).toHaveBeenCalled()
+
+    it 'should call nest router controller show', ->
+      spyOn(childController, 'show')
+      router.change('/child/1')
+      expect(childController.show).toHaveBeenCalled()
+
+    it 'child befores should be before called', ->
+      spyOn(childController, 'beforeShow')
+      router.change('/child/1')
+      expect(childController.beforeShow).toHaveBeenCalled()
+
+    it 'child beforeAny should be before called', ->
+      spyOn(childController, 'beforeAny')
+      #ここの挙動どうしようかな…
+      #まんま bind するのと、/child 配下だった時だけ動作するの…
+      router.change('/posts')
+      expect(childController.beforeAny).toHaveBeenCalled()
+      router.change('/child/1')
+      expect(childController.beforeAny).toHaveBeenCalled()
+
+  describe "dynamic nest", ->
+    it 'should appended router from class name', ->
+      spyOn(childController, 'index')
+      router.appendRouter ChildAppend, '/appender'
+      router.change('/appender')
+      expect(childController.index).toHaveBeenCalled()
+
+
+
 
 
 @d = new Deffered()
