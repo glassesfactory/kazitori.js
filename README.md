@@ -14,8 +14,7 @@ kazitori.js は pushState を良い感じにさばいてくれるライブラリ
 [http://webgl.hageee.net](http://webgl.hageee.net)
 
 Python や Rails など他言語における Web フレームワークの挙動を参考にしているため  
-URL 設計が多少複雑になっても  
-見通しの良い ルーティングが実現出来ます。
+URL 設計が多少複雑になっても見通しの良いルーティングが実現することができます。
 
 インストール
 ------------
