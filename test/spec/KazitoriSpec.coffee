@@ -520,6 +520,17 @@ describe "Kazitori", ->
       # expect(notFoundHandler).toHaveBeenCalled()
       # expect(notFoundHandler.calls.length).toEqual(1)
 
+  describe "silent", ->
+    it 'shuold call show and not change location', ->
+      spyOn(controller, 'show')
+      router.silent = true
+      expect(window.location.pathname).toEqual "/"
+      router.change('/posts/1')
+      expect(controller.show).toHaveBeenCalled()
+      expect(window.location.pathname).toEqual "/"
+      router.silent = false
+      router.change('/posts/2')
+      expect(window.location.pathname).toEqual "/posts/2"
 
 
 
