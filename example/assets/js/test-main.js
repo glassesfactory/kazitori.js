@@ -188,11 +188,19 @@ $(document).ready(function() {
     left: window.innerWidth / 2 - 150
   });
   $('#dialog').hide();
-  window.App = new Router();
+  window.App = new Router({
+    'silent': true
+  });
   console.log(window.App.handlers);
-  window.App.appendRouter(FooRouter);
-  window.App.removeRouter(FooRouter);
-  console.log(window.App.handlers);
+  Kai.init();
+  console.log(Kai.GET_CSS_PATH());
+  console.log(Kai.GET_IMAGE_PATH());
+  console.log(Kai.GET_IMAGE_PATH(Kai.RELATIVE));
+  console.log(Kai.GET_SCRIPT_PATH());
+  Kai.init({
+    scripts: "js"
+  });
+  console.log(Kai.GET_SCRIPT_PATH());
   window.App.addEventListener(KazitoriEvent.NOT_FOUND, function(event) {
     return console.log("not found");
   });

@@ -7,10 +7,11 @@ Kazitori Path Helper
   Kai = function() {
     throw new Error('インスタンス化できません');
   };
+  Kai.version = 0.8;
   Kai.host = '';
   Kai.ASSET_DIR = 'assets';
   Kai.CSS_DIR = 'css';
-  Kai.SCRIPT_DIR = 'js';
+  Kai.SCRIPT_DIR = 'scripts';
   Kai.IMAGE_DIR = 'images';
   Kai.DATA_DIR = 'data';
   Kai.deviceIsParent = true;
@@ -24,18 +25,22 @@ Kazitori Path Helper
   */
 
   Kai.init = function(options) {
-    var loc;
+    var loc, owner;
+    if (!options) {
+      return;
+    }
     loc = window.location;
-    Kai.ASSET_DIR = options.packageRoot != null ? options.packageRoot : 'assets';
-    Kai.CSS_DIR = options.css != null ? options.css : 'css';
-    Kai.SCRIPT_DIR = options.js != null ? options.js : 'js';
-    Kai.IMAGE_DIR = options.images != null ? options.images : 'images';
-    Kai.DATA_DIR = options.data != null ? options.data : 'data';
-    Kai.PC_DIR = options.pc != null ? options.pc : 'pc';
-    Kai.SP_DIR = options.sp != null ? options.sp : 'sp';
-    Kai.TABLET_DIR = options.tablet ? options.tablet : 'tablet';
-    Kai.host = options.host != null ? options.host : loc.host;
-    Kai.root = options.root != null ? options.root : '/';
+    owner = Object.prototype.hasOwnProperty;
+    Kai.ASSET_DIR = owner.call(options, 'packageRoot') ? options.packageRoot : 'assets';
+    Kai.CSS_DIR = owner.call(options, 'css') ? options.css : 'css';
+    Kai.SCRIPT_DIR = owner.call(options, 'scripts') ? options.scripts : 'scripts';
+    Kai.IMAGE_DIR = owner.call(options, 'images') ? options.images : 'images';
+    Kai.DATA_DIR = owner.call(options, 'data') ? options.data : 'data';
+    Kai.PC_DIR = owner.call(options, 'pc') ? options.pc : 'pc';
+    Kai.SP_DIR = owner.call(options, 'sp') ? options.sp : 'sp';
+    Kai.TABLET_DIR = owner.call(options, 'tablet') ? options.tablet : 'tablet';
+    Kai.host = owner.call(options, 'host') ? options.host : loc.host;
+    Kai.root = owner.call(options, 'root') ? options.root : '/';
   };
   /*Kai.GET_CSS_PATH
   */

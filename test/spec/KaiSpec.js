@@ -27,7 +27,7 @@ this.t = {
 Kai.init({
   packageRoot: t.PACKAGE_ROOT,
   css: t.CSS,
-  js: t.JS,
+  scripts: t.JS,
   images: t.IMAGES,
   data: t.DATA,
   pc: t.PC,

@@ -14,6 +14,7 @@ class FooRouter extends Kazitori
 
   index:()->
     console.log 'Foo!'
+    # console.log window.App.fragment
     $('.currentPage').empty().append "this page is Foo!"
 
   show:(id)->
@@ -149,15 +150,27 @@ $(document).ready ()->
     left : window.innerWidth / 2 - 150
   })
   $('#dialog').hide()
-
-  window.App = new Router()
+  window.App = new Router({'silent': true})
   console.log window.App.handlers
   # foo = new FooRouter({'isAutoStart':false})
   # window.App.appendRouter foo, '/foo/'
-  window.App.appendRouter FooRouter
+  # window.App.appendRouter FooRouter
 
-  window.App.removeRouter FooRouter
-  console.log window.App.handlers
+  # window.App.removeRouter FooRouter
+
+  Kai.init()
+  #CSS のパスを返す
+  console.log Kai.GET_CSS_PATH()
+  #script のパスを返す
+
+  #画像のパスを返す
+  console.log Kai.GET_IMAGE_PATH()
+  console.log Kai.GET_IMAGE_PATH(Kai.RELATIVE)
+
+  console.log Kai.GET_SCRIPT_PATH()
+  Kai.init
+    scripts: "js"
+  console.log Kai.GET_SCRIPT_PATH()
   # window.App.appendRouter foo, '/foo/'
   # window.App.removeRouter foo, '/foo/'
   # #チェンジイベント
