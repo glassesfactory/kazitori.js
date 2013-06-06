@@ -6,13 +6,15 @@ do(window)->
   Kai =()->
     throw new Error('インスタンス化できません')
 
+  Kai.version = 0.8
+
   Kai.host = ''
 
   Kai.ASSET_DIR = 'assets'
 
   Kai.CSS_DIR = 'css'
 
-  Kai.SCRIPT_DIR = 'js'
+  Kai.SCRIPT_DIR = 'scripts'
 
   Kai.IMAGE_DIR = 'images'
 
@@ -31,20 +33,28 @@ do(window)->
 
   Kai.RELATIVE = 'relative'
 
+  # 結合済みのパスが云々
+  # Kai.useCache = false
+  # _cache = {}
+
+
   ###Kai.init###
   ##初期化
   Kai.init=(options)->
+    if not options
+      return
     loc = window.location
-    Kai.ASSET_DIR = if options.packageRoot? then options.packageRoot else 'assets'
-    Kai.CSS_DIR = if options.css? then options.css else 'css'
-    Kai.SCRIPT_DIR = if options.js? then options.js else 'js'
-    Kai.IMAGE_DIR = if options.images? then options.images else 'images'
-    Kai.DATA_DIR = if options.data? then options.data else 'data'
-    Kai.PC_DIR = if options.pc? then options.pc else 'pc'
-    Kai.SP_DIR = if options.sp? then options.sp else 'sp'
-    Kai.TABLET_DIR = if options.tablet then options.tablet else 'tablet'
-    Kai.host = if options.host? then options.host else loc.host
-    Kai.root = if options.root? then options.root else '/'
+    owner = Object.prototype.hasOwnProperty
+    Kai.ASSET_DIR = if owner.call(options, 'packageRoot') then options.packageRoot else 'assets'
+    Kai.CSS_DIR = if owner.call(options, 'css') then options.css else 'css'
+    Kai.SCRIPT_DIR = if owner.call(options, 'scripts') then options.scripts else 'scripts'
+    Kai.IMAGE_DIR = if owner.call(options, 'images') then options.images else 'images'
+    Kai.DATA_DIR = if owner.call(options, 'data') then options.data else 'data'
+    Kai.PC_DIR = if owner.call(options, 'pc') then options.pc else 'pc'
+    Kai.SP_DIR = if owner.call(options, 'sp') then options.sp else 'sp'
+    Kai.TABLET_DIR = if owner.call(options, 'tablet') then options.tablet else 'tablet'
+    Kai.host = if owner.call(options, 'host') then options.host else loc.host
+    Kai.root = if owner.call(options, 'root') then options.root else '/'
     return
 
   ###Kai.GET_CSS_PATH###
@@ -109,9 +119,9 @@ do(window)->
     if Kai.root?
       fragment = fragment.replace(Kai.root, '')
     level = fragment.split('/').length - 1
-    
+
     result = _GET_PATH(asset, device)
-    
+
     i = 0
     while i < level
       result = '../' + result
