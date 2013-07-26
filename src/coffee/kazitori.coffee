@@ -1,8 +1,3 @@
-# pushState をいい感じに捌けるルーターライブラリ
-# pushState を使ったコンテンツで必要なことはひと通り出来るはず。
-#
-#----------------------------------------------
-
 #### Copyrights
 # (c) 2013 Eikichi Yamaguchi
 # kazitori.js may be freely distributed under the MIT license.
@@ -54,31 +49,152 @@ VARIABLE_TYPES = [
 
 #--------------------------------------------
 
+###*
+* Kazitori.js は pushState をいい感じにさばいてくれるルーターライブラリです。<br>
+* シンプルかつ見通しよく pushState コンテンツのルーティングを定義することができます。
+*
+* 使い方はとても簡単。
+* <ul><li>Kazitori を継承したクラスを作る</li><li>routes に扱いたい URL と、それに対応したメソッドを指定。</li><li>インスタンス化</li></ul>
+*
+* <h4>example</h4>
+*      class Router extends Kazitori
+*        routes:
+*          "/": "index"
+*          "/<int:id>": "show"
+*
+*        index:()->
+*          console.log "index!"
+*        show:(id)->
+*          console.log id
+*
+*      $(()->
+*        app = new Router()
+*      )
+*
+* Kazitori では pushState で非同期コンテンツを作っていく上で必要となるであろう機能を他にも沢山用意しています。<br>
+* 詳細は API 一覧から確認して下さい。
+* @module Kazitori.js
+* @main Kazitori
+###
+
 ## Kazitori クラス
+
+###*
+*  Kazitori のメインクラス
+*
+*  @class Kazitori
+*  @constructor
+###
 class Kazitori
   VERSION: "0.9.9"
   history: null
   location: null
+
+
+  ###*
+  * マッチするURLのルールと、それに対応する処理を定義します。
+  * <h4>example</h4>
+  *     routes:
+  *       '/':'index'
+  *       '/<int:id>':'show'
+  *
+  * @property routes
+  * @type Object
+  * @default {}
+  ###
+  routes: {}
+
   handlers: []
+
+
+  ###*
+  * マッチした URL に対する処理を行う前に実行したい処理を定義します。
+  * @property befores
+  * @type Object
+  * @default {}
+  ###
+  befores: {}
   beforeHandlers: []
-  afterhandlers: []
-  rootFiles: ['index.html', 'index.htm', 'index.php', 'unko.html']
-  root: null
-  notFound: null
+
+
+  ###*
+  * URL が変わる際、事前に実行したい処理を定義します。<br>
+  * このプロパティに登録された処理は、与えられた URL にマッチするかどうかにかかわらず、常に実行されます。
+  * @property beforeAnytimeHandler
+  * @type Array
+  * @default []
+  ###
   beforeAnytimeHandler: null
+  afterhandlers: []
+
+
+  ###*
+  * 特定のファイル名が URL に含まれていた時、ルートとして処理するリストです。
+  * @property rootFiles
+  * @type Array
+  ###
+  rootFiles: ['index.html', 'index.htm', 'index.php', 'unko.html']
+
+
+  ###*
+  * ルートを指定します。<br>
+  * ここで指定された値が URL の prefix として必ずつきます。<br>
+  * 物理的に URL のルートより 1ディレクトリ下がった箇所で pushState を行いたい場合<br>
+  * この値を / 以外に指定します。
+  * <h4>example</h4>
+  * コンテンツを配置する実ディレクトリが example だった場合
+  *
+  *     app = new Router({root:'/example/'})
+  * @property root
+  * @type String
+  * @default /
+  ###
+  root: null
+
+
+  ###*
+  * 現在の URL にマッチするルールがなかった場合に変更する URL
+  * @property notFound
+  * @type String
+  * @default null
+  ###
+  notFound: null
+
   direct: null
   isIE: false
+
+
+  ###*
+  * URL を実際には変更しないようにするかどうかを決定します。<br>
+  * true にした場合、URL は変更されず、内部で保持している状態管理オブジェクトを基準に展開します。
+  * @property silent
+  * @type Boolean
+  * @default false
+  ###
   silent: false
+
+
+  ###*
+  * pushState への監視が開始されているかどうか
+  * @property started
+  * @type Boolean
+  * @default false
+  ###
   started: false
+
+
   #URL パラメーター
   _params:
     params:[]
     'fragment':''
-  ###beforeFailedHandler ###
-  # before 処理が失敗した時に実行されます。
-  # デフォルトでは空の function になっています。
-  #
-  #--------------------------------------------
+
+
+  ###*
+  * before 処理が失敗した時に実行されます。<br>
+  * デフォルトでは空の function になっています。
+  *
+  * @method beforeFailedHandler
+  ###
   beforeFailedHandler:()->
     return
 
@@ -91,14 +207,28 @@ class Kazitori
   _changeOptions: null
 
   isNotFoundForce: false
-  _notFoudn: null
+  _notFound: null
 
   breaker: {}
 
   _dispatcher: null
   _beforeDeffer: null
 
+  ###*
+  * 現在の URL を返します。
+  * @property fragment
+  * @type String
+  * @default null
+  ###
   fragment: null
+
+
+  ###*
+  * 現在の URL から 1つ前の URL を返します。
+  * @property lastFragment
+  * @type String
+  * @default null
+  ###
   lastFragment: null
   isUserAction: false
 
@@ -106,8 +236,15 @@ class Kazitori
 
 
 
-  #一時停止しているかどうか
+  ###*
+  * 一時停止しているかどうかを返します。
+  *
+  * @property isSuspend
+  * @type Boolean
+  * @default false
+  ###
   isSuspend: false
+
   _processStep:
     'status': 'null'
     'args': []
@@ -171,7 +308,12 @@ class Kazitori
     return
 
 
-  #開始する
+  ###*
+  * Kazitori.js を開始します。<br>
+  * START イベントがディスパッチされます。
+  * @method start
+  * @param {Object} options オプション
+  ###
   start:(options)->
     @._processStep.status = 'start'
     @._processStep.args = [options]
@@ -216,7 +358,11 @@ class Kazitori
     return @loadURL(override)
 
 
-  #止める
+  ###*
+  * Kazitori.js を停止します。<br>
+  * STOP イベントがディスパッチされます。
+  * @method stop
+  ###
   stop:()->
     win = window
     win.removeEventListener 'popstate', @observeURLHandler
@@ -225,13 +371,21 @@ class Kazitori
     #ストップイベントをディスパッチ
     @._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.STOP, @.fragment))
 
-  ## torikazi
-  # ヒストリーネクストを実行します。
+  ###*
+  * ブラウザのヒストリー機能を利用して「進む」を実行します。<br>
+  * 成功した場合 NEXT イベントがディスパッチされます。
+  * @method torikazi
+  * @param {Object} options
+  ###
   torikazi:(options)->
     return @direction(options, "next")
 
-  ## omokazi
-  # ヒストリーバックを実行します
+  ###*
+  * ブラウザヒストリー機能を利用して「戻る」を実行します。<br>
+  * 成功した場合 PREV イベントがディスパッチされます。
+  * @method omokazi
+  * @param {Object} options
+  ###
   omokazi:(options)->
     return @direction(options, "prev")
 
@@ -256,7 +410,15 @@ class Kazitori
     return @loadURL(tmpFrag)
 
 
-  #url を変更する
+  ###*
+  * url を変更します。<br>
+  * 無事 URL が切り替わった場合、CHANGE イベントがディスパッチされます。
+  * <h4>example</h4>
+  *     app.change('/someurl');
+  * @method change
+  * @param {String} fragment 変更したい URL
+  * @param {Object} options オプション
+  ###
   change:(fragment, options)->
     if not @.started
       return false
@@ -294,7 +456,15 @@ class Kazitori
       @_urlChange(frag, options)
     return
 
-  #pushState ではなく replaceState で処理する
+  ###*
+  * pushState ではなく replaceState で処理します。<br>
+  * replaceState は現在の URL を置き換えるため、履歴には追加されません。
+  * <h4>example</h4>
+  *     app.replace('/someurl');
+  * @method replace
+  * @param {String} fragment 変更したい URL
+  * @param {Object} options オプション
+  ###
   replace:(fragment, options)->
     @._processStep.status = 'replace'
     @._processStep.args = [fragment, options]
@@ -333,8 +503,10 @@ class Kazitori
     @loadURL(@.fragment, options)
 
 
-  #中断する
-  #メソッド名 intercept のほうがいいかな
+  ###*
+  * 中止します。
+  * @method reject
+  ###
   reject:()->
     @dispatchEvent(new KazitoriEvent(KazitoriEvent.REJECT, @.fragment ))
     if @._beforeDeffer
@@ -343,7 +515,11 @@ class Kazitori
       @._beforeDeffer = null
     return
 
-  #処理を一時停止する
+  ###*
+  * 処理を一時停止します。<br>
+  * SUSPEND イベントがディスパッチされます。
+  * @method suspend
+  ###
   suspend:()->
     if @._beforeDeffer?
       @._beforeDeffer.suspend()
@@ -352,7 +528,11 @@ class Kazitori
     @._dispatcher.dispatchEvent( new KazitoriEvent( KazitoriEvent.SUSPEND, @.fragment, @.lastFragment ))
     return
 
-  #処理を再開する
+  ###*
+  * 処理を再開します。<br>
+  * RESUME イベントがディスパッチされます。
+  * @method resume
+  ###
   resume:()->
     if @._beforeDeffer?
       @._beforeDeffer.resume()
@@ -398,8 +578,6 @@ class Kazitori
     childHandlers = child.handlers.concat()
     for childRule in childHandlers
       childRule.update(rule)
-    #うーん
-    # @._groups.push new InternalGroup(rule, child.handlers)
     @.handlers = childHandlers.concat @.handlers
 
     childBefores = child.beforeHandlers.concat()
@@ -412,7 +590,16 @@ class Kazitori
       @_bindBeforeAnytime(@.beforeAnytime, [child.beforeAnytimeHandler.callback])
 
 
-  #ルールを後から追加する
+  ###*
+  * ルーターを動的に追加します。<br>
+  * ルーターの追加に成功した場合、ADDED イベントがディスパッチされます。
+  * <h4>example</h4>
+  *     fooRouter = new FooRouter();
+  *     app.appendRouter(foo);
+  * @method appendRouter
+  * @param {Object} child
+  * @param {String} childRoot
+  ###
   appendRouter:(child, childRoot)->
     if not child instanceof Kazitori and typeof child isnt "function"
       throw new Error("引数の値が不正です。 引数として与えられるオブジェクトは Kazitori を継承している必要があります。")
@@ -437,9 +624,6 @@ class Kazitori
   _getChildRule:(child, childRoot)->
     rule = child.root
     if childRoot
-      # lne = childRoot.length
-      # if childRoot.match(trailingSlash)
-      #   childRoot = childRoot.replace(trailingSlash, '')
       rule = childRoot
     if rule.match(trailingSlash)
       rule = rule.replace(trailingSlash, '')
@@ -447,7 +631,17 @@ class Kazitori
       throw new Error("かぶってる")
     return rule
 
-  #ルールを削除する
+  ###*
+  * 動的に追加したルーターを削除します。
+  * ルーターの削除に成功した場合、REMOVED イベントがディスパッチされます。
+  * <h4>example</h4>
+  *     foo = new FooRouter();
+  *     app.appendRouter(foo);
+  *     app.removeRouter(foo);
+  * @method removeRouter
+  * @param {Object} child
+  * @param {String} childRoot
+  ###
   removeRouter:(child, childRoot)->
     if not child instanceof Kazitori and typeof child isnt "function"
       throw new Error("引数の値が不正です。 引数として与えられるオブジェクトは Kazitori を継承している必要があります。")
@@ -488,7 +682,12 @@ class Kazitori
     @.beforeHandlers = newBefores
 
 
-  #URL を読み込む
+  ###*
+  * ブラウザから現在の URL を読み込みます。
+  * @method loadURL
+  * @param {String} fragmentOverride
+  * @param {Object} options
+  ###
   loadURL:(fragmentOverride, options)->
     @._processStep.status = 'loadURL'
     @._processStep.args = [fragmentOverride, options]
@@ -501,7 +700,15 @@ class Kazitori
       @executeHandlers()
     return
 
-  #指定した URL に対応した handler が設定されているかどうかチェック
+  ###*
+  * 指定した 文字列に対応した URL ルールが設定されているかどうか<br>
+  * Boolean で返します。
+  * <h4>example</h4>
+  *     app.match('/hoge');
+  * @method match
+  * @param {String} fragment
+  * @return {Boolean}
+  ###
   match:(fragment)->
     matched = @._matchCheck(fragment, @.handlers, true)
     return matched.length > 0
@@ -728,7 +935,11 @@ class Kazitori
   #
   #==============================================
 
-  # URL ルート以下を取得
+  ###*
+  * URL ルート以下を取得
+  * @method getFragment
+  * @param {String} fragment
+  ###
   getFragment:(fragment)->
     if not fragment? or fragment == undefined
       if @._hasPushState or !@._wantChangeHash
@@ -761,7 +972,11 @@ class Kazitori
     return fragment
 
 
-  # URL の # 以降を取得
+  ###*
+  * URL の # 以降を取得
+  * @method getHash
+  * @return {String} URL の # 以降の文字列
+  ###
   getHash:()->
     match = (window || @).location.href.match(/#(.*)$/)
     if match?
@@ -770,7 +985,13 @@ class Kazitori
       return ''
 
 
-  #URL パラメータを分解
+  ###*
+  * URL パラメータを分解
+  * @method extractParams
+  * @param {Rule} rule
+  * @param {String} fragment
+  * @param {Boolean} test
+  ###
   extractParams:(rule, fragment, test=false)->
     if @._params.params.length > 0 and @._params.fragment is fragment
       return @._params.params
@@ -961,10 +1182,35 @@ class Kazitori
 # URL を定義する Rule クラス
 # ちょっと大げさな気もするけど外部的には変わらんし
 # 今後を見据えてクラス化しておく
+###*
+* pushState で処理したいルールを定義するクラス
+*
+* @class Rule
+* @constructor
+* @param {String} rule
+* @param {Function} callback
+* @param {Kazitori} router
+###
 class Rule
+  ###*
+  * ルール文字列
+  * @property rule
+  * @type String
+  * @default ""
+  ###
   rule: ""
+
   _regexp: null
+
+  ###*
+  * コールバック関数
+  * ルールとマッチする場合実行されます。
+  * @property callback
+  * @type: Function
+  * @default null
+  ###
   callback:null
+
   name:""
   router:null
   isVariable:false
@@ -981,6 +1227,12 @@ class Rule
   # fragment : テスト対象となる URL
   # **return**
   # Boolean : テスト結果の真偽値
+  ###*
+  * Rule として定義したパターンと fragment として与えられた文字列がマッチするかどうかテストする
+  * @method test
+  * @param {String} fragment
+  * @return {Boolean} マッチする場合 true を返す
+  ###
   test:(fragment)->
     return @_regexp.test(fragment)
 
@@ -988,6 +1240,11 @@ class Rule
     newRule = rule.replace(escapeRegExp, '\\$&').replace(optionalParam, '(?:$1)?').replace(namedParam, '([^\/]+)').replace(splatParam, '(.*?)')
     return new RegExp('^' + newRule + '$')
 
+  ###*
+  * 与えられた path で現在の Rule をアップデートします。
+  * @method update
+  * @param {String} path
+  ###
   update:(path)=>
     @.rule = path + @.rule
     #trailing last slash
@@ -1003,15 +1260,11 @@ class Rule
         @types.push if t isnt null then t[1] else null
 
 
-#うーん…
-class InternalGroup
-  prefix: null #root ?
-  rules: []
-  constructor:(prefix, rules)->
-    @.prefix = prefix
-    @.rules = rules
-
-
+###*
+* イベントディスパッチャ
+* @class EventDispatcher
+* @constructor
+###
 class EventDispatcher
   listeners:{}
   addEventListener:(type, listener)->
@@ -1110,6 +1363,14 @@ class Deffered extends EventDispatcher
 
 ## KazitoriEvent
 # Kazitori がディスパッチするイベント
+###*
+* pushState 処理や Kazitori にまつわるイベント
+* @class KazitoriEvent
+* @constructor
+* @param {String} type
+* @param {String} next
+* @param {String} prev
+###
 class KazitoriEvent
   next:null
   prev:null
@@ -1127,54 +1388,155 @@ class KazitoriEvent
     return "KazitoriEvent :: " + "type:" + @type + " next:" + String(@next) + " prev:" + String(@prev)
 
 
-#タスクキューが空になった
+###*
+* タスクキューが空になった
+* @property TASK_QUEUE_COMPLETE
+* @type String
+* @default task_queue_complete
+###
 KazitoriEvent.TASK_QUEUE_COMPLETE = 'task_queue_complete'
 
-#タスクキューが中断された
+###*
+* タスクキューが中断された
+* @property TASK_QUEUE_FAILED
+* @type String
+* @default task_queue_failed
+###
 KazitoriEvent.TASK_QUEUE_FAILED = 'task_queue_failed'
 
-#URL が変わった時
+
+###*
+* URL が変更された
+* @property CHANGE
+* @type String
+* @default change
+###
 KazitoriEvent.CHANGE = 'change'
 
-#URL に登録されたメソッドがちゃんと実行された
+
+###*
+* URL に登録されたメソッドがちゃんと実行された
+* @property EXECUTED
+* @type String
+* @default executed
+###
 KazitoriEvent.EXECUTED = 'executed'
 
-#ビフォアー処理が完了した
+
+###*
+* 事前処理が完了した
+* @property BEFORE_EXECUTED
+* @type String
+* @default before_executed
+###
 KazitoriEvent.BEFORE_EXECUTED = 'before_executed'
 
-#ユーザーアクション以外で URL の変更があった
+
+###*
+* ユーザーアクション以外で URL の変更があった
+* @property INTERNAL_CHANGE
+* @type String
+* @default internal_change
+###
 KazitoriEvent.INTERNAL_CHANGE = 'internal_change'
 
-#ユーザー操作によって URL が変わった時
+
 KazitoriEvent.USER_CHANGE = 'user_change'
 
-#ヒストリーバックした時
+
+###*
+* ヒストリーバックした
+* @property PREV
+* @type String
+* @default prev
+###
 KazitoriEvent.PREV = 'prev'
 
-#ヒストリーネクストした時
+
+###*
+* ヒストリーネクストした時
+* @property NEXT
+* @type String
+* @default next
+###
 KazitoriEvent.NEXT = 'next'
 
-#中断
+
+###*
+* Kazitori が中断した
+* @property REJECT
+* @type String
+* @default reject
+###
 KazitoriEvent.REJECT = 'reject'
 
-#見つからなかった
+
+###*
+* URL にマッチする処理が見つからなかった
+* @property NOT_FOUND
+* @type String
+* @default not_found
+###
 KazitoriEvent.NOT_FOUND = 'not_found'
 
-#スタート
+
+###*
+* Kazitori が開始した
+* @property START
+* @type String
+* @default start
+###
 KazitoriEvent.START = 'start'
 
-#ストップ
+
+###*
+* Kazitori が停止した
+* @property STOP
+* @type String
+* @default stop
+###
 KazitoriEvent.STOP = 'stop'
 
-#一時停止
+
+###*
+* Kazitori が一時停止した
+* @property SUSPEND
+* @type String
+* @default SUSPEND
+###
 KazitoriEvent.SUSPEND = 'SUSPEND'
 
-#再開
+
+###*
+* Kazitori が再開した
+* @property RESUME
+* @type String
+* @default resume
+###
 KazitoriEvent.RESUME = 'resume'
 
-#一番最初のアクセスがあった
+
+###*
+* Kazitori が開始してから、一番最初のアクセスがあった
+* @property FIRST_REQUEST
+* @type String
+* @default first_request
+###
 KazitoriEvent.FIRST_REQUEST = 'first_request'
 
+
+###*
+* ルーターが追加された
+* @property ADDED
+* @type String
+* @default added
+###
 KazitoriEvent.ADDED = 'added'
 
+###*
+* ルーターが削除された
+* @property REMOVED
+* @type String
+* @default removed
+###
 KazitoriEvent.REMOVED = 'removed'

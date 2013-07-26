@@ -1,4 +1,4 @@
-var Deffered, EventDispatcher, InternalGroup, Kazitori, KazitoriEvent, Rule, VARIABLE_TYPES, delegater, escapeRegExp, genericParam, namedParam, optionalParam, routeStripper, splatParam, trailingSlash,
+var Deffered, EventDispatcher, Kazitori, KazitoriEvent, Rule, VARIABLE_TYPES, delegater, escapeRegExp, genericParam, namedParam, optionalParam, routeStripper, splatParam, trailingSlash,
   __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
   __hasProp = {}.hasOwnProperty,
@@ -38,6 +38,43 @@ VARIABLE_TYPES = [
   }
 ];
 
+/**
+* Kazitori.js は pushState をいい感じにさばいてくれるルーターライブラリです。<br>
+* シンプルかつ見通しよく pushState コンテンツのルーティングを定義することができます。
+*
+* 使い方はとても簡単。
+* <ul><li>Kazitori を継承したクラスを作る</li><li>routes に扱いたい URL と、それに対応したメソッドを指定。</li><li>インスタンス化</li></ul>
+*
+* <h4>example</h4>
+*      class Router extends Kazitori
+*        routes:
+*          "/": "index"
+*          "/<int:id>": "show"
+*
+*        index:()->
+*          console.log "index!"
+*        show:(id)->
+*          console.log id
+*
+*      $(()->
+*        app = new Router()
+*      )
+*
+* Kazitori では pushState で非同期コンテンツを作っていく上で必要となるであろう機能を他にも沢山用意しています。<br>
+* 詳細は API 一覧から確認して下さい。
+* @module Kazitori.js
+* @main Kazitori
+*/
+
+
+/**
+*  Kazitori のメインクラス
+*
+*  @class Kazitori
+*  @constructor
+*/
+
+
 Kazitori = (function() {
 
   Kazitori.prototype.VERSION = "0.9.9";
@@ -46,25 +83,106 @@ Kazitori = (function() {
 
   Kazitori.prototype.location = null;
 
+  /**
+  * マッチするURLのルールと、それに対応する処理を定義します。
+  * <h4>example</h4>
+  *     routes:
+  *       '/':'index'
+  *       '/<int:id>':'show'
+  *
+  * @property routes
+  * @type Object
+  * @default {}
+  */
+
+
+  Kazitori.prototype.routes = {};
+
   Kazitori.prototype.handlers = [];
+
+  /**
+  * マッチした URL に対する処理を行う前に実行したい処理を定義します。
+  * @property befores
+  * @type Object
+  * @default {}
+  */
+
+
+  Kazitori.prototype.befores = {};
 
   Kazitori.prototype.beforeHandlers = [];
 
+  /**
+  * URL が変わる際、事前に実行したい処理を定義します。<br>
+  * このプロパティに登録された処理は、与えられた URL にマッチするかどうかにかかわらず、常に実行されます。
+  * @property beforeAnytimeHandler
+  * @type Array
+  * @default []
+  */
+
+
+  Kazitori.prototype.beforeAnytimeHandler = null;
+
   Kazitori.prototype.afterhandlers = [];
+
+  /**
+  * 特定のファイル名が URL に含まれていた時、ルートとして処理するリストです。
+  * @property rootFiles
+  * @type Array
+  */
+
 
   Kazitori.prototype.rootFiles = ['index.html', 'index.htm', 'index.php', 'unko.html'];
 
+  /**
+  * ルートを指定します。<br>
+  * ここで指定された値が URL の prefix として必ずつきます。<br>
+  * 物理的に URL のルートより 1ディレクトリ下がった箇所で pushState を行いたい場合<br>
+  * この値を / 以外に指定します。
+  * <h4>example</h4>
+  * コンテンツを配置する実ディレクトリが example だった場合
+  *
+  *     app = new Router({root:'/example/'})
+  * @property root
+  * @type String
+  * @default /
+  */
+
+
   Kazitori.prototype.root = null;
 
-  Kazitori.prototype.notFound = null;
+  /**
+  * 現在の URL にマッチするルールがなかった場合に変更する URL
+  * @property notFound
+  * @type String
+  * @default null
+  */
 
-  Kazitori.prototype.beforeAnytimeHandler = null;
+
+  Kazitori.prototype.notFound = null;
 
   Kazitori.prototype.direct = null;
 
   Kazitori.prototype.isIE = false;
 
+  /**
+  * URL を実際には変更しないようにするかどうかを決定します。<br>
+  * true にした場合、URL は変更されず、内部で保持している状態管理オブジェクトを基準に展開します。
+  * @property silent
+  * @type Boolean
+  * @default false
+  */
+
+
   Kazitori.prototype.silent = false;
+
+  /**
+  * pushState への監視が開始されているかどうか
+  * @property started
+  * @type Boolean
+  * @default false
+  */
+
 
   Kazitori.prototype.started = false;
 
@@ -73,7 +191,11 @@ Kazitori = (function() {
     'fragment': ''
   };
 
-  /*beforeFailedHandler
+  /**
+  * before 処理が失敗した時に実行されます。<br>
+  * デフォルトでは空の function になっています。
+  *
+  * @method beforeFailedHandler
   */
 
 
@@ -91,7 +213,7 @@ Kazitori = (function() {
 
   Kazitori.prototype.isNotFoundForce = false;
 
-  Kazitori.prototype._notFoudn = null;
+  Kazitori.prototype._notFound = null;
 
   Kazitori.prototype.breaker = {};
 
@@ -99,13 +221,38 @@ Kazitori = (function() {
 
   Kazitori.prototype._beforeDeffer = null;
 
+  /**
+  * 現在の URL を返します。
+  * @property fragment
+  * @type String
+  * @default null
+  */
+
+
   Kazitori.prototype.fragment = null;
+
+  /**
+  * 現在の URL から 1つ前の URL を返します。
+  * @property lastFragment
+  * @type String
+  * @default null
+  */
+
 
   Kazitori.prototype.lastFragment = null;
 
   Kazitori.prototype.isUserAction = false;
 
   Kazitori.prototype._isFirstRequest = true;
+
+  /**
+  * 一時停止しているかどうかを返します。
+  *
+  * @property isSuspend
+  * @type Boolean
+  * @default false
+  */
+
 
   Kazitori.prototype.isSuspend = false;
 
@@ -179,6 +326,14 @@ Kazitori = (function() {
     return;
   }
 
+  /**
+  * Kazitori.js を開始します。<br>
+  * START イベントがディスパッチされます。
+  * @method start
+  * @param {Object} options オプション
+  */
+
+
   Kazitori.prototype.start = function(options) {
     var atRoot, fragment, frame, ieFrag, override, win;
     this._processStep.status = 'start';
@@ -225,6 +380,13 @@ Kazitori = (function() {
     return this.loadURL(override);
   };
 
+  /**
+  * Kazitori.js を停止します。<br>
+  * STOP イベントがディスパッチされます。
+  * @method stop
+  */
+
+
   Kazitori.prototype.stop = function() {
     var win;
     win = window;
@@ -234,9 +396,25 @@ Kazitori = (function() {
     return this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.STOP, this.fragment));
   };
 
+  /**
+  * ブラウザのヒストリー機能を利用して「進む」を実行します。<br>
+  * 成功した場合 NEXT イベントがディスパッチされます。
+  * @method torikazi
+  * @param {Object} options
+  */
+
+
   Kazitori.prototype.torikazi = function(options) {
     return this.direction(options, "next");
   };
+
+  /**
+  * ブラウザヒストリー機能を利用して「戻る」を実行します。<br>
+  * 成功した場合 PREV イベントがディスパッチされます。
+  * @method omokazi
+  * @param {Object} options
+  */
+
 
   Kazitori.prototype.omokazi = function(options) {
     return this.direction(options, "prev");
@@ -264,6 +442,17 @@ Kazitori = (function() {
     this._addPopStateHandler();
     return this.loadURL(tmpFrag);
   };
+
+  /**
+  * url を変更します。<br>
+  * 無事 URL が切り替わった場合、CHANGE イベントがディスパッチされます。
+  * <h4>example</h4>
+  *     app.change('/someurl');
+  * @method change
+  * @param {String} fragment 変更したい URL
+  * @param {Object} options オプション
+  */
+
 
   Kazitori.prototype.change = function(fragment, options) {
     var frag, matched, next, url;
@@ -303,6 +492,17 @@ Kazitori = (function() {
       this._urlChange(frag, options);
     }
   };
+
+  /**
+  * pushState ではなく replaceState で処理します。<br>
+  * replaceState は現在の URL を置き換えるため、履歴には追加されません。
+  * <h4>example</h4>
+  *     app.replace('/someurl');
+  * @method replace
+  * @param {String} fragment 変更したい URL
+  * @param {Object} options オプション
+  */
+
 
   Kazitori.prototype.replace = function(fragment, options) {
     this._processStep.status = 'replace';
@@ -350,6 +550,12 @@ Kazitori = (function() {
     return this.loadURL(this.fragment, options);
   };
 
+  /**
+  * 中止します。
+  * @method reject
+  */
+
+
   Kazitori.prototype.reject = function() {
     this.dispatchEvent(new KazitoriEvent(KazitoriEvent.REJECT, this.fragment));
     if (this._beforeDeffer) {
@@ -359,6 +565,13 @@ Kazitori = (function() {
     }
   };
 
+  /**
+  * 処理を一時停止します。<br>
+  * SUSPEND イベントがディスパッチされます。
+  * @method suspend
+  */
+
+
   Kazitori.prototype.suspend = function() {
     if (this._beforeDeffer != null) {
       this._beforeDeffer.suspend();
@@ -367,6 +580,13 @@ Kazitori = (function() {
     this.isSuspend = true;
     this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.SUSPEND, this.fragment, this.lastFragment));
   };
+
+  /**
+  * 処理を再開します。<br>
+  * RESUME イベントがディスパッチされます。
+  * @method resume
+  */
+
 
   Kazitori.prototype.resume = function() {
     if (this._beforeDeffer != null) {
@@ -435,6 +655,18 @@ Kazitori = (function() {
     }
   };
 
+  /**
+  * ルーターを動的に追加します。<br>
+  * ルーターの追加に成功した場合、ADDED イベントがディスパッチされます。
+  * <h4>example</h4>
+  *     fooRouter = new FooRouter();
+  *     app.appendRouter(foo);
+  * @method appendRouter
+  * @param {Object} child
+  * @param {String} childRoot
+  */
+
+
   Kazitori.prototype.appendRouter = function(child, childRoot) {
     var rule, _instance;
     if (!child instanceof Kazitori && typeof child !== "function") {
@@ -477,6 +709,19 @@ Kazitori = (function() {
     }
     return rule;
   };
+
+  /**
+  * 動的に追加したルーターを削除します。
+  * ルーターの削除に成功した場合、REMOVED イベントがディスパッチされます。
+  * <h4>example</h4>
+  *     foo = new FooRouter();
+  *     app.appendRouter(foo);
+  *     app.removeRouter(foo);
+  * @method removeRouter
+  * @param {Object} child
+  * @param {String} childRoot
+  */
+
 
   Kazitori.prototype.removeRouter = function(child, childRoot) {
     var _instance;
@@ -530,6 +775,14 @@ Kazitori = (function() {
     return this.beforeHandlers = newBefores;
   };
 
+  /**
+  * ブラウザから現在の URL を読み込みます。
+  * @method loadURL
+  * @param {String} fragmentOverride
+  * @param {Object} options
+  */
+
+
   Kazitori.prototype.loadURL = function(fragmentOverride, options) {
     var fragment;
     this._processStep.status = 'loadURL';
@@ -544,6 +797,17 @@ Kazitori = (function() {
       this.executeHandlers();
     }
   };
+
+  /**
+  * 指定した 文字列に対応した URL ルールが設定されているかどうか<br>
+  * Boolean で返します。
+  * <h4>example</h4>
+  *     app.match('/hoge');
+  * @method match
+  * @param {String} fragment
+  * @return {Boolean}
+  */
+
 
   Kazitori.prototype.match = function(fragment) {
     var matched;
@@ -804,6 +1068,13 @@ Kazitori = (function() {
     }
   };
 
+  /**
+  * URL ルート以下を取得
+  * @method getFragment
+  * @param {String} fragment
+  */
+
+
   Kazitori.prototype.getFragment = function(fragment) {
     var frag, index, matched, root, _i, _len, _ref;
     if (!(fragment != null) || fragment === void 0) {
@@ -845,6 +1116,13 @@ Kazitori = (function() {
     return fragment;
   };
 
+  /**
+  * URL の # 以降を取得
+  * @method getHash
+  * @return {String} URL の # 以降の文字列
+  */
+
+
   Kazitori.prototype.getHash = function() {
     var match;
     match = (window || this).location.href.match(/#(.*)$/);
@@ -854,6 +1132,15 @@ Kazitori = (function() {
       return '';
     }
   };
+
+  /**
+  * URL パラメータを分解
+  * @method extractParams
+  * @param {Rule} rule
+  * @param {String} fragment
+  * @param {Boolean} test
+  */
+
 
   Kazitori.prototype.extractParams = function(rule, fragment, test) {
     var k, kv, last, newParam, newQueries, param, q, queries, query, queryParams, v, _i, _len;
@@ -1101,11 +1388,37 @@ Kazitori = (function() {
 
 })();
 
+/**
+* pushState で処理したいルールを定義するクラス
+*
+* @class Rule
+* @constructor
+* @param {String} rule
+* @param {Function} callback
+* @param {Kazitori} router
+*/
+
+
 Rule = (function() {
+  /**
+  * ルール文字列
+  * @property rule
+  * @type String
+  * @default ""
+  */
 
   Rule.prototype.rule = "";
 
   Rule.prototype._regexp = null;
+
+  /**
+  * コールバック関数
+  * ルールとマッチする場合実行されます。
+  * @property callback
+  * @type: Function
+  * @default null
+  */
+
 
   Rule.prototype.callback = null;
 
@@ -1127,6 +1440,14 @@ Rule = (function() {
     this.update(rule);
   }
 
+  /**
+  * Rule として定義したパターンと fragment として与えられた文字列がマッチするかどうかテストする
+  * @method test
+  * @param {String} fragment
+  * @return {Boolean} マッチする場合 true を返す
+  */
+
+
   Rule.prototype.test = function(fragment) {
     return this._regexp.test(fragment);
   };
@@ -1136,6 +1457,13 @@ Rule = (function() {
     newRule = rule.replace(escapeRegExp, '\\$&').replace(optionalParam, '(?:$1)?').replace(namedParam, '([^\/]+)').replace(splatParam, '(.*?)');
     return new RegExp('^' + newRule + '$');
   };
+
+  /**
+  * 与えられた path で現在の Rule をアップデートします。
+  * @method update
+  * @param {String} path
+  */
+
 
   Rule.prototype.update = function(path) {
     var m, matched, re, t, _i, _len, _results;
@@ -1162,20 +1490,12 @@ Rule = (function() {
 
 })();
 
-InternalGroup = (function() {
+/**
+* イベントディスパッチャ
+* @class EventDispatcher
+* @constructor
+*/
 
-  InternalGroup.prototype.prefix = null;
-
-  InternalGroup.prototype.rules = [];
-
-  function InternalGroup(prefix, rules) {
-    this.prefix = prefix;
-    this.rules = rules;
-  }
-
-  return InternalGroup;
-
-})();
 
 EventDispatcher = (function() {
 
@@ -1310,6 +1630,16 @@ Deffered = (function(_super) {
 
 })(EventDispatcher);
 
+/**
+* pushState 処理や Kazitori にまつわるイベント
+* @class KazitoriEvent
+* @constructor
+* @param {String} type
+* @param {String} next
+* @param {String} prev
+*/
+
+
 KazitoriEvent = (function() {
 
   KazitoriEvent.prototype.next = null;
@@ -1336,38 +1666,174 @@ KazitoriEvent = (function() {
 
 })();
 
+/**
+* タスクキューが空になった
+* @property TASK_QUEUE_COMPLETE
+* @type String
+* @default task_queue_complete
+*/
+
+
 KazitoriEvent.TASK_QUEUE_COMPLETE = 'task_queue_complete';
+
+/**
+* タスクキューが中断された
+* @property TASK_QUEUE_FAILED
+* @type String
+* @default task_queue_failed
+*/
+
 
 KazitoriEvent.TASK_QUEUE_FAILED = 'task_queue_failed';
 
+/**
+* URL が変更された
+* @property CHANGE
+* @type String
+* @default change
+*/
+
+
 KazitoriEvent.CHANGE = 'change';
+
+/**
+* URL に登録されたメソッドがちゃんと実行された
+* @property EXECUTED
+* @type String
+* @default executed
+*/
+
 
 KazitoriEvent.EXECUTED = 'executed';
 
+/**
+* 事前処理が完了した
+* @property BEFORE_EXECUTED
+* @type String
+* @default before_executed
+*/
+
+
 KazitoriEvent.BEFORE_EXECUTED = 'before_executed';
+
+/**
+* ユーザーアクション以外で URL の変更があった
+* @property INTERNAL_CHANGE
+* @type String
+* @default internal_change
+*/
+
 
 KazitoriEvent.INTERNAL_CHANGE = 'internal_change';
 
 KazitoriEvent.USER_CHANGE = 'user_change';
 
+/**
+* ヒストリーバックした
+* @property PREV
+* @type String
+* @default prev
+*/
+
+
 KazitoriEvent.PREV = 'prev';
+
+/**
+* ヒストリーネクストした時
+* @property NEXT
+* @type String
+* @default next
+*/
+
 
 KazitoriEvent.NEXT = 'next';
 
+/**
+* Kazitori が中断した
+* @property REJECT
+* @type String
+* @default reject
+*/
+
+
 KazitoriEvent.REJECT = 'reject';
+
+/**
+* URL にマッチする処理が見つからなかった
+* @property NOT_FOUND
+* @type String
+* @default not_found
+*/
+
 
 KazitoriEvent.NOT_FOUND = 'not_found';
 
+/**
+* Kazitori が開始した
+* @property START
+* @type String
+* @default start
+*/
+
+
 KazitoriEvent.START = 'start';
+
+/**
+* Kazitori が停止した
+* @property STOP
+* @type String
+* @default stop
+*/
+
 
 KazitoriEvent.STOP = 'stop';
 
+/**
+* Kazitori が一時停止した
+* @property SUSPEND
+* @type String
+* @default SUSPEND
+*/
+
+
 KazitoriEvent.SUSPEND = 'SUSPEND';
+
+/**
+* Kazitori が再開した
+* @property RESUME
+* @type String
+* @default resume
+*/
+
 
 KazitoriEvent.RESUME = 'resume';
 
+/**
+* Kazitori が開始してから、一番最初のアクセスがあった
+* @property FIRST_REQUEST
+* @type String
+* @default first_request
+*/
+
+
 KazitoriEvent.FIRST_REQUEST = 'first_request';
 
+/**
+* ルーターが追加された
+* @property ADDED
+* @type String
+* @default added
+*/
+
+
 KazitoriEvent.ADDED = 'added';
+
+/**
+* ルーターが削除された
+* @property REMOVED
+* @type String
+* @default removed
+*/
+
 
 KazitoriEvent.REMOVED = 'removed';
