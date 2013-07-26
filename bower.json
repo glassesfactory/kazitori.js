@@ -1,0 +1,14 @@
+{
+  "name": "kazitori.js",
+  "version": "0.9.9",
+  "main": "./src/js/kazitori.js",
+  "ignore": [
+    ".*",
+    "build",
+    "docs",
+    "example",
+    "node_modules"
+    "*.coffee",
+    "test"
+  ]
+}
