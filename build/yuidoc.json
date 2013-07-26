@@ -1,0 +1,16 @@
+{
+    "version": "0.9.9",
+    "name": "Kazitori.js",
+    "description": "pushState Library.",
+
+    "url": "http://kazitori.kageya.ma",
+    "logo":"assets/img/logo.png",
+    "options": {
+        "outdir": "../docs",
+        "linkNatives": "true",
+        "attributesEmit": "true",
+        "selleck": "true",
+        "paths":["../src/js"],
+        "helpers":["./path.js"]
+    }
+}
