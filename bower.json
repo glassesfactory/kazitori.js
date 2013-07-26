@@ -9,6 +9,7 @@
     "example",
     "node_modules"
     "*.coffee",
+    "*.md",
     "test"
   ]
 }
