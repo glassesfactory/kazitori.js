@@ -1,0 +1,781 @@
+{
+    "project": {
+        "version": "0.9.9",
+        "name": "Kazitori.js",
+        "description": "pushState Library.",
+        "url": "http://kazitori.kageya.ma",
+        "logo": "assets/img/logo.png"
+    },
+    "files": {
+        "../src/js/kazitori.js": {
+            "name": "../src/js/kazitori.js",
+            "modules": {
+                "Kazitori.js": 1
+            },
+            "classes": {
+                "Kazitori": 1,
+                "Rule": 1,
+                "EventDispatcher": 1,
+                "KazitoriEvent": 1
+            },
+            "fors": {},
+            "namespaces": {}
+        }
+    },
+    "modules": {
+        "Kazitori.js": {
+            "name": "Kazitori.js",
+            "submodules": {},
+            "classes": {
+                "Kazitori": 1,
+                "Rule": 1,
+                "EventDispatcher": 1,
+                "KazitoriEvent": 1
+            },
+            "fors": {},
+            "namespaces": {},
+            "tag": "module",
+            "file": "../src/js/kazitori.js",
+            "line": 1633,
+            "description": "Kazitori.js は pushState をいい感じにさばいてくれるルーターライブラリです。<br>\nシンプルかつ見通しよく pushState コンテンツのルーティングを定義することができます。\n\n使い方はとても簡単。\n<ul><li>Kazitori を継承したクラスを作る</li><li>routes に扱いたい URL と、それに対応したメソッドを指定。</li><li>インスタンス化</li></ul>\n\n<h4>example</h4>\n     class Router extends Kazitori\n       routes:\n         \"/\": \"index\"\n         \"/<int:id>\": \"show\"\n\n       index:()->\n         console.log \"index!\"\n       show:(id)->\n         console.log id\n\n     $(()->\n       app = new Router()\n     )\n\nKazitori では pushState で非同期コンテンツを作っていく上で必要となるであろう機能を他にも沢山用意しています。<br>\n詳細は API 一覧から確認して下さい。",
+            "itemtype": "main"
+        }
+    },
+    "classes": {
+        "Kazitori": {
+            "name": "Kazitori",
+            "shortname": "Kazitori",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "module": "Kazitori.js",
+            "namespace": "",
+            "file": "../src/js/kazitori.js",
+            "line": 70,
+            "description": "Kazitori のメインクラス",
+            "is_constructor": 1
+        },
+        "Rule": {
+            "name": "Rule",
+            "shortname": "Rule",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "module": "Kazitori.js",
+            "namespace": "",
+            "file": "../src/js/kazitori.js",
+            "line": 1391,
+            "description": "pushState で処理したいルールを定義するクラス",
+            "is_constructor": 1,
+            "params": [
+                {
+                    "name": "rule",
+                    "description": "",
+                    "type": "String"
+                },
+                {
+                    "name": "callback",
+                    "description": "",
+                    "type": "Function"
+                },
+                {
+                    "name": "router",
+                    "description": "",
+                    "type": "Kazitori"
+                }
+            ]
+        },
+        "EventDispatcher": {
+            "name": "EventDispatcher",
+            "shortname": "EventDispatcher",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "module": "Kazitori.js",
+            "namespace": "",
+            "file": "../src/js/kazitori.js",
+            "line": 1493,
+            "description": "イベントディスパッチャ",
+            "is_constructor": 1
+        },
+        "KazitoriEvent": {
+            "name": "KazitoriEvent",
+            "shortname": "KazitoriEvent",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "module": "Kazitori.js",
+            "namespace": "",
+            "file": "../src/js/kazitori.js",
+            "line": 1633,
+            "description": "pushState 処理や Kazitori にまつわるイベント",
+            "is_constructor": 1,
+            "params": [
+                {
+                    "name": "type",
+                    "description": "",
+                    "type": "String"
+                },
+                {
+                    "name": "next",
+                    "description": "",
+                    "type": "String"
+                },
+                {
+                    "name": "prev",
+                    "description": "",
+                    "type": "String"
+                }
+            ]
+        }
+    },
+    "classitems": [
+        {
+            "file": "../src/js/kazitori.js",
+            "line": 86,
+            "description": "マッチするURLのルールと、それに対応する処理を定義します。\n<h4>example</h4>\n    routes:\n      '/':'index'\n      '/<int:id>':'show'",
+            "itemtype": "property",
+            "name": "routes",
+            "type": "Object",
+            "default": "{}",
+            "class": "Kazitori",
+            "module": "Kazitori.js"
+        },
+        {
+            "file": "../src/js/kazitori.js",
+            "line": 103,
+            "description": "マッチした URL に対する処理を行う前に実行したい処理を定義します。",
+            "itemtype": "property",
+            "name": "befores",
+            "type": "Object",
+            "default": "{}",
+            "class": "Kazitori",
+            "module": "Kazitori.js"
+        },
+        {
+            "file": "../src/js/kazitori.js",
+            "line": 115,
+            "description": "URL が変わる際、事前に実行したい処理を定義します。<br>\nこのプロパティに登録された処理は、与えられた URL にマッチするかどうかにかかわらず、常に実行されます。",
+            "itemtype": "property",
+            "name": "beforeAnytimeHandler",
+            "type": "Array",
+            "default": "[]",
+            "class": "Kazitori",
+            "module": "Kazitori.js"
+        },
+        {
+            "file": "../src/js/kazitori.js",
+            "line": 128,
+            "description": "特定のファイル名が URL に含まれていた時、ルートとして処理するリストです。",
+            "itemtype": "property",
+            "name": "rootFiles",
+            "type": "Array",
+            "class": "Kazitori",
+            "module": "Kazitori.js"
+        },
+        {
+            "file": "../src/js/kazitori.js",
+            "line": 137,
+            "description": "ルートを指定します。<br>\nここで指定された値が URL の prefix として必ずつきます。<br>\n物理的に URL のルートより 1ディレクトリ下がった箇所で pushState を行いたい場合<br>\nこの値を / 以外に指定します。\n<h4>example</h4>\nコンテンツを配置する実ディレクトリが example だった場合\n\n    app = new Router({root:'/example/'})",
+            "itemtype": "property",
+            "name": "root",
+            "type": "String",
+            "default": "/",
+            "class": "Kazitori",
+            "module": "Kazitori.js"
+        },
+        {
+            "file": "../src/js/kazitori.js",
+            "line": 154,
+            "description": "現在の URL にマッチするルールがなかった場合に変更する URL",
+            "itemtype": "property",
+            "name": "notFound",
+            "type": "String",
+            "default": "null",
+            "class": "Kazitori",
+            "module": "Kazitori.js"
+        },
+        {
+            "file": "../src/js/kazitori.js",
+            "line": 168,
+            "description": "URL を実際には変更しないようにするかどうかを決定します。<br>\ntrue にした場合、URL は変更されず、内部で保持している状態管理オブジェクトを基準に展開します。",
+            "itemtype": "property",
+            "name": "silent",
+            "type": "Boolean",
+            "default": "false",
+            "class": "Kazitori",
+            "module": "Kazitori.js"
+        },
+        {
+            "file": "../src/js/kazitori.js",
+            "line": 179,
+            "description": "pushState への監視が開始されているかどうか",
+            "itemtype": "property",
+            "name": "started",
+            "type": "Boolean",
+            "default": "false",
+            "class": "Kazitori",
+            "module": "Kazitori.js"
+        },
+        {
+            "file": "../src/js/kazitori.js",
+            "line": 194,
+            "description": "before 処理が失敗した時に実行されます。<br>\nデフォルトでは空の function になっています。",
+            "itemtype": "method",
+            "name": "beforeFailedHandler",
+            "class": "Kazitori",
+            "module": "Kazitori.js"
+        },
+        {
+            "file": "../src/js/kazitori.js",
+            "line": 224,
+            "description": "現在の URL を返します。",
+            "itemtype": "property",
+            "name": "fragment",
+            "type": "String",
+            "default": "null",
+            "class": "Kazitori",
+            "module": "Kazitori.js"
+        },
+        {
+            "file": "../src/js/kazitori.js",
+            "line": 234,
+            "description": "現在の URL から 1つ前の URL を返します。",
+            "itemtype": "property",
+            "name": "lastFragment",
+            "type": "String",
+            "default": "null",
+            "class": "Kazitori",
+            "module": "Kazitori.js"
+        },
+        {
+            "file": "../src/js/kazitori.js",
+            "line": 248,
+            "description": "一時停止しているかどうかを返します。",
+            "itemtype": "property",
+            "name": "isSuspend",
+            "type": "Boolean",
+            "default": "false",
+            "class": "Kazitori",
+            "module": "Kazitori.js"
+        },
+        {
+            "file": "../src/js/kazitori.js",
+            "line": 329,
+            "description": "Kazitori.js を開始します。<br>\nSTART イベントがディスパッチされます。",
+            "itemtype": "method",
+            "name": "start",
+            "params": [
+                {
+                    "name": "options",
+                    "description": "オプション",
+                    "type": "Object"
+                }
+            ],
+            "class": "Kazitori",
+            "module": "Kazitori.js"
+        },
+        {
+            "file": "../src/js/kazitori.js",
+            "line": 383,
+            "description": "Kazitori.js を停止します。<br>\nSTOP イベントがディスパッチされます。",
+            "itemtype": "method",
+            "name": "stop",
+            "class": "Kazitori",
+            "module": "Kazitori.js"
+        },
+        {
+            "file": "../src/js/kazitori.js",
+            "line": 399,
+            "description": "ブラウザのヒストリー機能を利用して「進む」を実行します。<br>\n成功した場合 NEXT イベントがディスパッチされます。",
+            "itemtype": "method",
+            "name": "torikazi",
+            "params": [
+                {
+                    "name": "options",
+                    "description": "",
+                    "type": "Object"
+                }
+            ],
+            "class": "Kazitori",
+            "module": "Kazitori.js"
+        },
+        {
+            "file": "../src/js/kazitori.js",
+            "line": 411,
+            "description": "ブラウザヒストリー機能を利用して「戻る」を実行します。<br>\n成功した場合 PREV イベントがディスパッチされます。",
+            "itemtype": "method",
+            "name": "omokazi",
+            "params": [
+                {
+                    "name": "options",
+                    "description": "",
+                    "type": "Object"
+                }
+            ],
+            "class": "Kazitori",
+            "module": "Kazitori.js"
+        },
+        {
+            "file": "../src/js/kazitori.js",
+            "line": 446,
+            "description": "url を変更します。<br>\n無事 URL が切り替わった場合、CHANGE イベントがディスパッチされます。\n<h4>example</h4>\n    app.change('/someurl');",
+            "itemtype": "method",
+            "name": "change",
+            "params": [
+                {
+                    "name": "fragment",
+                    "description": "変更したい URL",
+                    "type": "String"
+                },
+                {
+                    "name": "options",
+                    "description": "オプション",
+                    "type": "Object"
+                }
+            ],
+            "class": "Kazitori",
+            "module": "Kazitori.js"
+        },
+        {
+            "file": "../src/js/kazitori.js",
+            "line": 496,
+            "description": "pushState ではなく replaceState で処理します。<br>\nreplaceState は現在の URL を置き換えるため、履歴には追加されません。\n<h4>example</h4>\n    app.replace('/someurl');",
+            "itemtype": "method",
+            "name": "replace",
+            "params": [
+                {
+                    "name": "fragment",
+                    "description": "変更したい URL",
+                    "type": "String"
+                },
+                {
+                    "name": "options",
+                    "description": "オプション",
+                    "type": "Object"
+                }
+            ],
+            "class": "Kazitori",
+            "module": "Kazitori.js"
+        },
+        {
+            "file": "../src/js/kazitori.js",
+            "line": 553,
+            "description": "中止します。",
+            "itemtype": "method",
+            "name": "reject",
+            "class": "Kazitori",
+            "module": "Kazitori.js"
+        },
+        {
+            "file": "../src/js/kazitori.js",
+            "line": 568,
+            "description": "処理を一時停止します。<br>\nSUSPEND イベントがディスパッチされます。",
+            "itemtype": "method",
+            "name": "suspend",
+            "class": "Kazitori",
+            "module": "Kazitori.js"
+        },
+        {
+            "file": "../src/js/kazitori.js",
+            "line": 584,
+            "description": "処理を再開します。<br>\nRESUME イベントがディスパッチされます。",
+            "itemtype": "method",
+            "name": "resume",
+            "class": "Kazitori",
+            "module": "Kazitori.js"
+        },
+        {
+            "file": "../src/js/kazitori.js",
+            "line": 658,
+            "description": "ルーターを動的に追加します。<br>\nルーターの追加に成功した場合、ADDED イベントがディスパッチされます。\n<h4>example</h4>\n    fooRouter = new FooRouter();\n    app.appendRouter(foo);",
+            "itemtype": "method",
+            "name": "appendRouter",
+            "params": [
+                {
+                    "name": "child",
+                    "description": "",
+                    "type": "Object"
+                },
+                {
+                    "name": "childRoot",
+                    "description": "",
+                    "type": "String"
+                }
+            ],
+            "class": "Kazitori",
+            "module": "Kazitori.js"
+        },
+        {
+            "file": "../src/js/kazitori.js",
+            "line": 713,
+            "description": "動的に追加したルーターを削除します。\nルーターの削除に成功した場合、REMOVED イベントがディスパッチされます。\n<h4>example</h4>\n    foo = new FooRouter();\n    app.appendRouter(foo);\n    app.removeRouter(foo);",
+            "itemtype": "method",
+            "name": "removeRouter",
+            "params": [
+                {
+                    "name": "child",
+                    "description": "",
+                    "type": "Object"
+                },
+                {
+                    "name": "childRoot",
+                    "description": "",
+                    "type": "String"
+                }
+            ],
+            "class": "Kazitori",
+            "module": "Kazitori.js"
+        },
+        {
+            "file": "../src/js/kazitori.js",
+            "line": 778,
+            "description": "ブラウザから現在の URL を読み込みます。",
+            "itemtype": "method",
+            "name": "loadURL",
+            "params": [
+                {
+                    "name": "fragmentOverride",
+                    "description": "",
+                    "type": "String"
+                },
+                {
+                    "name": "options",
+                    "description": "",
+                    "type": "Object"
+                }
+            ],
+            "class": "Kazitori",
+            "module": "Kazitori.js"
+        },
+        {
+            "file": "../src/js/kazitori.js",
+            "line": 801,
+            "description": "指定した 文字列に対応した URL ルールが設定されているかどうか<br>\nBoolean で返します。\n<h4>example</h4>\n    app.match('/hoge');",
+            "itemtype": "method",
+            "name": "match",
+            "params": [
+                {
+                    "name": "fragment",
+                    "description": "",
+                    "type": "String"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "Boolean"
+            },
+            "class": "Kazitori",
+            "module": "Kazitori.js"
+        },
+        {
+            "file": "../src/js/kazitori.js",
+            "line": 1071,
+            "description": "URL ルート以下を取得",
+            "itemtype": "method",
+            "name": "getFragment",
+            "params": [
+                {
+                    "name": "fragment",
+                    "description": "",
+                    "type": "String"
+                }
+            ],
+            "class": "Kazitori",
+            "module": "Kazitori.js"
+        },
+        {
+            "file": "../src/js/kazitori.js",
+            "line": 1119,
+            "description": "URL の # 以降を取得",
+            "itemtype": "method",
+            "name": "getHash",
+            "return": {
+                "description": "URL の # 以降の文字列",
+                "type": "String"
+            },
+            "class": "Kazitori",
+            "module": "Kazitori.js"
+        },
+        {
+            "file": "../src/js/kazitori.js",
+            "line": 1136,
+            "description": "URL パラメータを分解",
+            "itemtype": "method",
+            "name": "extractParams",
+            "params": [
+                {
+                    "name": "rule",
+                    "description": "",
+                    "type": "Rule"
+                },
+                {
+                    "name": "fragment",
+                    "description": "",
+                    "type": "String"
+                },
+                {
+                    "name": "test",
+                    "description": "",
+                    "type": "Boolean"
+                }
+            ],
+            "class": "Kazitori",
+            "module": "Kazitori.js"
+        },
+        {
+            "file": "../src/js/kazitori.js",
+            "line": 1403,
+            "description": "ルール文字列",
+            "itemtype": "property",
+            "name": "rule",
+            "type": "String",
+            "default": "\"\"",
+            "class": "Rule",
+            "module": "Kazitori.js"
+        },
+        {
+            "file": "../src/js/kazitori.js",
+            "line": 1414,
+            "description": "コールバック関数\nルールとマッチする場合実行されます。",
+            "itemtype": "property",
+            "name": "callback",
+            "type": ": Function",
+            "default": "null",
+            "class": "Rule",
+            "module": "Kazitori.js"
+        },
+        {
+            "file": "../src/js/kazitori.js",
+            "line": 1443,
+            "description": "Rule として定義したパターンと fragment として与えられた文字列がマッチするかどうかテストする",
+            "itemtype": "method",
+            "name": "test",
+            "params": [
+                {
+                    "name": "fragment",
+                    "description": "",
+                    "type": "String"
+                }
+            ],
+            "return": {
+                "description": "マッチする場合 true を返す",
+                "type": "Boolean"
+            },
+            "class": "Rule",
+            "module": "Kazitori.js"
+        },
+        {
+            "file": "../src/js/kazitori.js",
+            "line": 1461,
+            "description": "与えられた path で現在の Rule をアップデートします。",
+            "itemtype": "method",
+            "name": "update",
+            "params": [
+                {
+                    "name": "path",
+                    "description": "",
+                    "type": "String"
+                }
+            ],
+            "class": "Rule",
+            "module": "Kazitori.js"
+        },
+        {
+            "file": "../src/js/kazitori.js",
+            "line": 1669,
+            "description": "タスクキューが空になった",
+            "itemtype": "property",
+            "name": "TASK_QUEUE_COMPLETE",
+            "type": "String",
+            "default": "task_queue_complete",
+            "class": "KazitoriEvent",
+            "module": "Kazitori.js"
+        },
+        {
+            "file": "../src/js/kazitori.js",
+            "line": 1679,
+            "description": "タスクキューが中断された",
+            "itemtype": "property",
+            "name": "TASK_QUEUE_FAILED",
+            "type": "String",
+            "default": "task_queue_failed",
+            "class": "KazitoriEvent",
+            "module": "Kazitori.js"
+        },
+        {
+            "file": "../src/js/kazitori.js",
+            "line": 1689,
+            "description": "URL が変更された",
+            "itemtype": "property",
+            "name": "CHANGE",
+            "type": "String",
+            "default": "change",
+            "class": "KazitoriEvent",
+            "module": "Kazitori.js"
+        },
+        {
+            "file": "../src/js/kazitori.js",
+            "line": 1699,
+            "description": "URL に登録されたメソッドがちゃんと実行された",
+            "itemtype": "property",
+            "name": "EXECUTED",
+            "type": "String",
+            "default": "executed",
+            "class": "KazitoriEvent",
+            "module": "Kazitori.js"
+        },
+        {
+            "file": "../src/js/kazitori.js",
+            "line": 1709,
+            "description": "事前処理が完了した",
+            "itemtype": "property",
+            "name": "BEFORE_EXECUTED",
+            "type": "String",
+            "default": "before_executed",
+            "class": "KazitoriEvent",
+            "module": "Kazitori.js"
+        },
+        {
+            "file": "../src/js/kazitori.js",
+            "line": 1719,
+            "description": "ユーザーアクション以外で URL の変更があった",
+            "itemtype": "property",
+            "name": "INTERNAL_CHANGE",
+            "type": "String",
+            "default": "internal_change",
+            "class": "KazitoriEvent",
+            "module": "Kazitori.js"
+        },
+        {
+            "file": "../src/js/kazitori.js",
+            "line": 1731,
+            "description": "ヒストリーバックした",
+            "itemtype": "property",
+            "name": "PREV",
+            "type": "String",
+            "default": "prev",
+            "class": "KazitoriEvent",
+            "module": "Kazitori.js"
+        },
+        {
+            "file": "../src/js/kazitori.js",
+            "line": 1741,
+            "description": "ヒストリーネクストした時",
+            "itemtype": "property",
+            "name": "NEXT",
+            "type": "String",
+            "default": "next",
+            "class": "KazitoriEvent",
+            "module": "Kazitori.js"
+        },
+        {
+            "file": "../src/js/kazitori.js",
+            "line": 1751,
+            "description": "Kazitori が中断した",
+            "itemtype": "property",
+            "name": "REJECT",
+            "type": "String",
+            "default": "reject",
+            "class": "KazitoriEvent",
+            "module": "Kazitori.js"
+        },
+        {
+            "file": "../src/js/kazitori.js",
+            "line": 1761,
+            "description": "URL にマッチする処理が見つからなかった",
+            "itemtype": "property",
+            "name": "NOT_FOUND",
+            "type": "String",
+            "default": "not_found",
+            "class": "KazitoriEvent",
+            "module": "Kazitori.js"
+        },
+        {
+            "file": "../src/js/kazitori.js",
+            "line": 1771,
+            "description": "Kazitori が開始した",
+            "itemtype": "property",
+            "name": "START",
+            "type": "String",
+            "default": "start",
+            "class": "KazitoriEvent",
+            "module": "Kazitori.js"
+        },
+        {
+            "file": "../src/js/kazitori.js",
+            "line": 1781,
+            "description": "Kazitori が停止した",
+            "itemtype": "property",
+            "name": "STOP",
+            "type": "String",
+            "default": "stop",
+            "class": "KazitoriEvent",
+            "module": "Kazitori.js"
+        },
+        {
+            "file": "../src/js/kazitori.js",
+            "line": 1791,
+            "description": "Kazitori が一時停止した",
+            "itemtype": "property",
+            "name": "SUSPEND",
+            "type": "String",
+            "default": "SUSPEND",
+            "class": "KazitoriEvent",
+            "module": "Kazitori.js"
+        },
+        {
+            "file": "../src/js/kazitori.js",
+            "line": 1801,
+            "description": "Kazitori が再開した",
+            "itemtype": "property",
+            "name": "RESUME",
+            "type": "String",
+            "default": "resume",
+            "class": "KazitoriEvent",
+            "module": "Kazitori.js"
+        },
+        {
+            "file": "../src/js/kazitori.js",
+            "line": 1811,
+            "description": "Kazitori が開始してから、一番最初のアクセスがあった",
+            "itemtype": "property",
+            "name": "FIRST_REQUEST",
+            "type": "String",
+            "default": "first_request",
+            "class": "KazitoriEvent",
+            "module": "Kazitori.js"
+        },
+        {
+            "file": "../src/js/kazitori.js",
+            "line": 1821,
+            "description": "ルーターが追加された",
+            "itemtype": "property",
+            "name": "ADDED",
+            "type": "String",
+            "default": "added",
+            "class": "KazitoriEvent",
+            "module": "Kazitori.js"
+        },
+        {
+            "file": "../src/js/kazitori.js",
+            "line": 1831,
+            "description": "ルーターが削除された",
+            "itemtype": "property",
+            "name": "REMOVED",
+            "type": "String",
+            "default": "removed",
+            "class": "KazitoriEvent",
+            "module": "Kazitori.js"
+        }
+    ],
+    "warnings": []
+}

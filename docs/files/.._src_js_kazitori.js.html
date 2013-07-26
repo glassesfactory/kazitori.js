@@ -1,0 +1,1954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>../src/js/kazitori.js - Kazitori.js</title>
+    <link rel="stylesheet" href="http://yui.yahooapis.com/3.9.1/build/cssgrids/cssgrids-min.css">
+    <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
+    <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
+    <link rel="shortcut icon" type="image/png" href="../assets/favicon.png">
+    <script src="http://yui.yahooapis.com/combo?3.9.1/build/yui/yui-min.js"></script>
+</head>
+<body class="">
+
+<div id="doc">
+    <div id="hd" class="yui3-g header">
+        <div class="yui3-u-3-4">
+            
+                <h1><img src="../assets/img/logo.png" title="Kazitori.js" width="250"></h1>
+            
+        </div>
+        <div class="yui3-u-1-4 version">
+            <em>API Docs for: 0.9.9</em>
+        </div>
+    </div>
+    <div id="bd" class="yui3-g">
+
+        <div class="yui3-u-1-4">
+            <div id="docs-sidebar" class="sidebar apidocs">
+                <div id="api-list">
+    <h2 class="off-left">APIs</h2>
+    <div id="api-tabview" class="tabview">
+        <ul class="tabs" id="sideLabel">
+            <li><a href="#api-classes" id="classes">Classes</a></li>
+        </ul>
+
+        <div id="api-tabview-filter">
+            <input type="search" id="api-filter" placeholder="Type to filter APIs">
+        </div>
+
+        <div id="api-tabview-panel">
+            <ul id="api-classes" class="apis classes">
+            
+                <li><a href="../classes/EventDispatcher.html">EventDispatcher</a></li>
+            
+                <li><a href="../classes/Kazitori.html">Kazitori</a></li>
+            
+                <li><a href="../classes/KazitoriEvent.html">KazitoriEvent</a></li>
+            
+                <li><a href="../classes/Rule.html">Rule</a></li>
+            
+            </ul>
+
+            <ul id="api-modules" class="apis modules">
+            
+                <li><a href="../modules/Kazitori.js.html">Kazitori.js</a></li>
+            
+            </ul>
+        </div>
+    </div>
+</div>
+
+            </div>
+        </div>
+        <div class="yui3-u-3-4">
+                <div id="api-options">
+        Show:
+        <label for="api-show-inherited">
+            <input type="checkbox" id="api-show-inherited" checked>
+            Inherited
+        </label>
+
+        <label for="api-show-protected">
+            <input type="checkbox" id="api-show-protected">
+            Protected
+        </label>
+
+        <label for="api-show-private">
+            <input type="checkbox" id="api-show-private">
+            Private
+        </label>
+        <label for="api-show-deprecated">
+            <input type="checkbox" id="api-show-deprecated">
+            Deprecated
+        </label>
+
+    </div>
+
+
+            <div class="apidocs">
+                <div id="docs-main">
+                    <div class="content">
+                        <h1 class="file-heading">File: ../src/js/kazitori.js</h1>
+
+<div class="file">
+    <pre class="code prettyprint linenums">
+var Deffered, EventDispatcher, Kazitori, KazitoriEvent, Rule, VARIABLE_TYPES, delegater, escapeRegExp, genericParam, namedParam, optionalParam, routeStripper, splatParam, trailingSlash,
+  __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
+  __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i &lt; l; i++) { if (i in this &amp;&amp; this[i] === item) return i; } return -1; },
+  __hasProp = {}.hasOwnProperty,
+  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+delegater = function(target, func) {
+  return function() {
+    return func.apply(target, arguments);
+  };
+};
+
+trailingSlash = /\/$/;
+
+routeStripper = /^[#\/]|\s+$/g;
+
+escapeRegExp = /[\-{}\[\]+?.,\\\^$|#\s]/g;
+
+namedParam = /&lt;(\w+|[A-Za-z_-]+:\w+)&gt;/g;
+
+genericParam = /([A-Za-z_-]+):(\w+)/;
+
+optionalParam = /\((.*?)\)/g;
+
+splatParam = /\*\w+/g;
+
+/*URL 変数に対して指定できる型
+*/
+
+
+VARIABLE_TYPES = [
+  {
+    name: &quot;int&quot;,
+    cast: Number
+  }, {
+    name: &quot;string&quot;,
+    cast: String
+  }
+];
+
+/**
+* Kazitori.js は pushState をいい感じにさばいてくれるルーターライブラリです。&lt;br&gt;
+* シンプルかつ見通しよく pushState コンテンツのルーティングを定義することができます。
+*
+* 使い方はとても簡単。
+* &lt;ul&gt;&lt;li&gt;Kazitori を継承したクラスを作る&lt;/li&gt;&lt;li&gt;routes に扱いたい URL と、それに対応したメソッドを指定。&lt;/li&gt;&lt;li&gt;インスタンス化&lt;/li&gt;&lt;/ul&gt;
+*
+* &lt;h4&gt;example&lt;/h4&gt;
+*      class Router extends Kazitori
+*        routes:
+*          &quot;/&quot;: &quot;index&quot;
+*          &quot;/&lt;int:id&gt;&quot;: &quot;show&quot;
+*
+*        index:()-&gt;
+*          console.log &quot;index!&quot;
+*        show:(id)-&gt;
+*          console.log id
+*
+*      $(()-&gt;
+*        app = new Router()
+*      )
+*
+* Kazitori では pushState で非同期コンテンツを作っていく上で必要となるであろう機能を他にも沢山用意しています。&lt;br&gt;
+* 詳細は API 一覧から確認して下さい。
+* @module Kazitori.js
+* @main Kazitori
+*/
+
+
+/**
+*  Kazitori のメインクラス
+*
+*  @class Kazitori
+*  @constructor
+*/
+
+
+Kazitori = (function() {
+
+  Kazitori.prototype.VERSION = &quot;0.9.9&quot;;
+
+  Kazitori.prototype.history = null;
+
+  Kazitori.prototype.location = null;
+
+  /**
+  * マッチするURLのルールと、それに対応する処理を定義します。
+  * &lt;h4&gt;example&lt;/h4&gt;
+  *     routes:
+  *       &#x27;/&#x27;:&#x27;index&#x27;
+  *       &#x27;/&lt;int:id&gt;&#x27;:&#x27;show&#x27;
+  *
+  * @property routes
+  * @type Object
+  * @default {}
+  */
+
+
+  Kazitori.prototype.routes = {};
+
+  Kazitori.prototype.handlers = [];
+
+  /**
+  * マッチした URL に対する処理を行う前に実行したい処理を定義します。
+  * @property befores
+  * @type Object
+  * @default {}
+  */
+
+
+  Kazitori.prototype.befores = {};
+
+  Kazitori.prototype.beforeHandlers = [];
+
+  /**
+  * URL が変わる際、事前に実行したい処理を定義します。&lt;br&gt;
+  * このプロパティに登録された処理は、与えられた URL にマッチするかどうかにかかわらず、常に実行されます。
+  * @property beforeAnytimeHandler
+  * @type Array
+  * @default []
+  */
+
+
+  Kazitori.prototype.beforeAnytimeHandler = null;
+
+  Kazitori.prototype.afterhandlers = [];
+
+  /**
+  * 特定のファイル名が URL に含まれていた時、ルートとして処理するリストです。
+  * @property rootFiles
+  * @type Array
+  */
+
+
+  Kazitori.prototype.rootFiles = [&#x27;index.html&#x27;, &#x27;index.htm&#x27;, &#x27;index.php&#x27;, &#x27;unko.html&#x27;];
+
+  /**
+  * ルートを指定します。&lt;br&gt;
+  * ここで指定された値が URL の prefix として必ずつきます。&lt;br&gt;
+  * 物理的に URL のルートより 1ディレクトリ下がった箇所で pushState を行いたい場合&lt;br&gt;
+  * この値を / 以外に指定します。
+  * &lt;h4&gt;example&lt;/h4&gt;
+  * コンテンツを配置する実ディレクトリが example だった場合
+  *
+  *     app = new Router({root:&#x27;/example/&#x27;})
+  * @property root
+  * @type String
+  * @default /
+  */
+
+
+  Kazitori.prototype.root = null;
+
+  /**
+  * 現在の URL にマッチするルールがなかった場合に変更する URL
+  * @property notFound
+  * @type String
+  * @default null
+  */
+
+
+  Kazitori.prototype.notFound = null;
+
+  Kazitori.prototype.direct = null;
+
+  Kazitori.prototype.isIE = false;
+
+  /**
+  * URL を実際には変更しないようにするかどうかを決定します。&lt;br&gt;
+  * true にした場合、URL は変更されず、内部で保持している状態管理オブジェクトを基準に展開します。
+  * @property silent
+  * @type Boolean
+  * @default false
+  */
+
+
+  Kazitori.prototype.silent = false;
+
+  /**
+  * pushState への監視が開始されているかどうか
+  * @property started
+  * @type Boolean
+  * @default false
+  */
+
+
+  Kazitori.prototype.started = false;
+
+  Kazitori.prototype._params = {
+    params: [],
+    &#x27;fragment&#x27;: &#x27;&#x27;
+  };
+
+  /**
+  * before 処理が失敗した時に実行されます。&lt;br&gt;
+  * デフォルトでは空の function になっています。
+  *
+  * @method beforeFailedHandler
+  */
+
+
+  Kazitori.prototype.beforeFailedHandler = function() {};
+
+  /*isBeforeForce
+  */
+
+
+  Kazitori.prototype.isBeforeForce = false;
+
+  Kazitori.prototype.isTemae = false;
+
+  Kazitori.prototype._changeOptions = null;
+
+  Kazitori.prototype.isNotFoundForce = false;
+
+  Kazitori.prototype._notFound = null;
+
+  Kazitori.prototype.breaker = {};
+
+  Kazitori.prototype._dispatcher = null;
+
+  Kazitori.prototype._beforeDeffer = null;
+
+  /**
+  * 現在の URL を返します。
+  * @property fragment
+  * @type String
+  * @default null
+  */
+
+
+  Kazitori.prototype.fragment = null;
+
+  /**
+  * 現在の URL から 1つ前の URL を返します。
+  * @property lastFragment
+  * @type String
+  * @default null
+  */
+
+
+  Kazitori.prototype.lastFragment = null;
+
+  Kazitori.prototype.isUserAction = false;
+
+  Kazitori.prototype._isFirstRequest = true;
+
+  /**
+  * 一時停止しているかどうかを返します。
+  *
+  * @property isSuspend
+  * @type Boolean
+  * @default false
+  */
+
+
+  Kazitori.prototype.isSuspend = false;
+
+  Kazitori.prototype._processStep = {
+    &#x27;status&#x27;: &#x27;null&#x27;,
+    &#x27;args&#x27;: []
+  };
+
+  function Kazitori(options) {
+    this.observeURLHandler = __bind(this.observeURLHandler, this);
+
+    this.beforeFailed = __bind(this.beforeFailed, this);
+
+    this.executeHandlers = __bind(this.executeHandlers, this);
+
+    this._executeBefores = __bind(this._executeBefores, this);
+
+    this.beforeComplete = __bind(this.beforeComplete, this);
+
+    var docMode, win;
+    this._processStep.status = &#x27;constructor&#x27;;
+    this._processStep.args = [options];
+    this.options = options || (options = {});
+    if (options.routes) {
+      this.routes = options.routes;
+    }
+    this.root = options.root ? options.root : this.root === null ? &#x27;/&#x27; : this.root;
+    this.isTemae = options.isTemae ? options.isTemae : false;
+    this.silent = options.silent ? options.silent : false;
+    this._params = {
+      params: [],
+      queries: {},
+      fragment: null
+    };
+    if (this.notFound === null) {
+      this.notFound = options.notFound ? options.notFound : this.root;
+    }
+    win = window;
+    if (typeof win !== &#x27;undefined&#x27;) {
+      this.location = win.location;
+      this.history = win.history;
+    }
+    docMode = document.docmentMode;
+    this.isIE = win.navigator.userAgent.toLowerCase().indexOf(&#x27;msie&#x27;) !== -1;
+    this.isOldIE = this.isIE &amp;&amp; (!docMode || docMode &lt; 7);
+    this._dispatcher = new EventDispatcher();
+    this.handlers = [];
+    this.beforeHandlers = [];
+    this._bindBefores();
+    this._bindRules();
+    this._bindNotFound();
+    try {
+      Object.defineProperty(this, &#x27;params&#x27;, {
+        enumerable: true,
+        get: function() {
+          return this._params.params;
+        }
+      });
+      Object.defineProperty(this, &#x27;queries&#x27;, {
+        enumerable: true,
+        get: function() {
+          return this._params.queries;
+        }
+      });
+    } catch (e) {
+
+    }
+    if (!(this.options.isAutoStart != null) || this.options.isAutoStart !== false) {
+      this.start();
+    }
+    return;
+  }
+
+  /**
+  * Kazitori.js を開始します。&lt;br&gt;
+  * START イベントがディスパッチされます。
+  * @method start
+  * @param {Object} options オプション
+  */
+
+
+  Kazitori.prototype.start = function(options) {
+    var atRoot, fragment, frame, ieFrag, override, win;
+    this._processStep.status = &#x27;start&#x27;;
+    this._processStep.args = [options];
+    if (this.started) {
+      throw new Error(&#x27;mou hazim matteru&#x27;);
+    }
+    this.started = true;
+    win = window;
+    this.options = this._extend({}, {
+      root: &#x27;/&#x27;
+    }, this.options, options);
+    this._hasPushState = !!(this.history &amp;&amp; this.history.pushState);
+    this._wantChangeHash = this.options.hashChange !== false;
+    fragment = this.fragment = this.getFragment();
+    atRoot = this.location.pathname.replace(/[^\/]$/, &#x27;$&amp;/&#x27;) === this.root;
+    if (this.isIE &amp;&amp; !atRoot) {
+      ieFrag = this.location.pathname.replace(this.root, &#x27;&#x27;);
+      this._updateHashIE(ieFrag);
+    }
+    if (this.isOldIE &amp;&amp; this._wantChangeHash) {
+      frame = document.createElement(&quot;iframe&quot;);
+      frame.setAttribute(&quot;src&quot;, &quot;javascript:0&quot;);
+      frame.setAttribute(&quot;tabindex&quot;, &quot;-1&quot;);
+      frame.style.display = &quot;none&quot;;
+      document.body.appendChild(frame);
+      this.iframe = frame.contentWindow;
+      this.change(fragment);
+    }
+    this._addPopStateHandler();
+    if (this._hasPushState &amp;&amp; atRoot &amp;&amp; this.location.hash) {
+      this.fragment = this.lastFragment = this.getHash().replace(routeStripper, &#x27;&#x27;);
+      this.history.replaceState({}, document.title, this.root + this.fragment + this.location.search);
+    }
+    this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.START, this.fragment));
+    override = this.root;
+    if (!this.silent) {
+      if (!this._hasPushState &amp;&amp; atRoot) {
+        override = this.root + this.fragment.replace(routeStripper, &#x27;&#x27;);
+      } else if (!atRoot) {
+        override = this.fragment;
+      }
+    }
+    return this.loadURL(override);
+  };
+
+  /**
+  * Kazitori.js を停止します。&lt;br&gt;
+  * STOP イベントがディスパッチされます。
+  * @method stop
+  */
+
+
+  Kazitori.prototype.stop = function() {
+    var win;
+    win = window;
+    win.removeEventListener(&#x27;popstate&#x27;, this.observeURLHandler);
+    win.removeEventListener(&#x27;hashchange&#x27;, this.observeURLHandler);
+    this.started = false;
+    return this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.STOP, this.fragment));
+  };
+
+  /**
+  * ブラウザのヒストリー機能を利用して「進む」を実行します。&lt;br&gt;
+  * 成功した場合 NEXT イベントがディスパッチされます。
+  * @method torikazi
+  * @param {Object} options
+  */
+
+
+  Kazitori.prototype.torikazi = function(options) {
+    return this.direction(options, &quot;next&quot;);
+  };
+
+  /**
+  * ブラウザヒストリー機能を利用して「戻る」を実行します。&lt;br&gt;
+  * 成功した場合 PREV イベントがディスパッチされます。
+  * @method omokazi
+  * @param {Object} options
+  */
+
+
+  Kazitori.prototype.omokazi = function(options) {
+    return this.direction(options, &quot;prev&quot;);
+  };
+
+  Kazitori.prototype.direction = function(option, direction) {
+    var tmpFrag;
+    if (!this.started) {
+      return false;
+    }
+    tmpFrag = this.lastFragment;
+    this.lastFragment = this.getFragment();
+    this.direct = direction;
+    this.isUserAction = true;
+    this._removePopStateHandler();
+    if (direction === &quot;prev&quot;) {
+      this.history.back();
+      this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.PREV, tmpFrag, this.lastFragment));
+    } else if (direction === &quot;next&quot;) {
+      this.history.forward();
+      this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.NEXT, tmpFrag, this.lastFragment));
+    } else {
+      return;
+    }
+    this._addPopStateHandler();
+    return this.loadURL(tmpFrag);
+  };
+
+  /**
+  * url を変更します。&lt;br&gt;
+  * 無事 URL が切り替わった場合、CHANGE イベントがディスパッチされます。
+  * &lt;h4&gt;example&lt;/h4&gt;
+  *     app.change(&#x27;/someurl&#x27;);
+  * @method change
+  * @param {String} fragment 変更したい URL
+  * @param {Object} options オプション
+  */
+
+
+  Kazitori.prototype.change = function(fragment, options) {
+    var frag, matched, next, url;
+    if (!this.started) {
+      return false;
+    }
+    this._processStep.status = &#x27;change&#x27;;
+    this._processStep.args = [fragment, options];
+    if (!options) {
+      options = {
+        &#x27;trigger&#x27;: options
+      };
+    }
+    this._changeOptions = options;
+    this.isBeforeForce = options.isBeforeForce !== false;
+    frag = this.getFragment(fragment || &#x27;&#x27;);
+    if (this.fragment === frag) {
+      return;
+    }
+    this.lastFragment = this.fragment;
+    this.fragment = frag;
+    next = this.fragment;
+    url = this.root + this._replace.apply(frag, [routeStripper, &#x27;&#x27;]);
+    matched = this._matchCheck(this.fragment, this.handlers);
+    if (matched === false &amp;&amp; this.isNotFoundForce === false) {
+      if (this.notFound !== null) {
+        this._notFound.callback(this.fragment);
+        url = this.root + this._notFound.rule.replace(routeStripper, &#x27;&#x27;);
+        this.history[options.replace ? &#x27;replaceState&#x27; : &#x27;pushState&#x27;]({}, document.title, url);
+      }
+      this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.NOT_FOUND));
+      return;
+    }
+    if (this.isTemae &amp;&amp; (this.beforeAnytimeHandler || this.beforeHandlers.length &gt; 0)) {
+      this._executeBefores(frag);
+    } else {
+      this._urlChange(frag, options);
+    }
+  };
+
+  /**
+  * pushState ではなく replaceState で処理します。&lt;br&gt;
+  * replaceState は現在の URL を置き換えるため、履歴には追加されません。
+  * &lt;h4&gt;example&lt;/h4&gt;
+  *     app.replace(&#x27;/someurl&#x27;);
+  * @method replace
+  * @param {String} fragment 変更したい URL
+  * @param {Object} options オプション
+  */
+
+
+  Kazitori.prototype.replace = function(fragment, options) {
+    this._processStep.status = &#x27;replace&#x27;;
+    this._processStep.args = [fragment, options];
+    if (!options) {
+      options = {
+        replace: true
+      };
+    } else if (!options.replace || options.replace === false) {
+      options.replace = true;
+    }
+    this.change(fragment, options);
+  };
+
+  Kazitori.prototype._urlChange = function(fragment, options) {
+    var url;
+    this._processStep.status = &#x27;_urlChange&#x27;;
+    this._processStep.args = [fragment, options];
+    if (this.isSuspend) {
+      return;
+    }
+    if (!options) {
+      options = this._changeOptions;
+    }
+    url = this.root + this.fragment.replace(routeStripper, &#x27;&#x27;);
+    if (!this.silent) {
+      if (this._hasPushState) {
+        this.history[options.replace ? &#x27;replaceState&#x27; : &#x27;pushState&#x27;]({}, document.title, url);
+      } else if (this._wantChangeHash) {
+        this._updateHash(this.location, fragment, options.replace);
+        if (this.iframe &amp;&amp; (fragment !== this.getFragment(this.getHash(this.iframe)))) {
+          if (!options.replace) {
+            this.iframe.document.open().close();
+          }
+          this._updateHash(this.iframe.location, fragment, options.replace);
+        }
+      } else {
+        return this.location.assign(url);
+      }
+    }
+    this.dispatchEvent(new KazitoriEvent(KazitoriEvent.CHANGE, this.fragment, this.lastFragment));
+    if (options.internal &amp;&amp; options.internal === true) {
+      this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.INTERNAL_CHANGE, this.fragment, this.lastFragment));
+    }
+    return this.loadURL(this.fragment, options);
+  };
+
+  /**
+  * 中止します。
+  * @method reject
+  */
+
+
+  Kazitori.prototype.reject = function() {
+    this.dispatchEvent(new KazitoriEvent(KazitoriEvent.REJECT, this.fragment));
+    if (this._beforeDeffer) {
+      this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, this.beforeComplete);
+      this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_FAILED, this.beforeFailed);
+      this._beforeDeffer = null;
+    }
+  };
+
+  /**
+  * 処理を一時停止します。&lt;br&gt;
+  * SUSPEND イベントがディスパッチされます。
+  * @method suspend
+  */
+
+
+  Kazitori.prototype.suspend = function() {
+    if (this._beforeDeffer != null) {
+      this._beforeDeffer.suspend();
+    }
+    this.started = false;
+    this.isSuspend = true;
+    this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.SUSPEND, this.fragment, this.lastFragment));
+  };
+
+  /**
+  * 処理を再開します。&lt;br&gt;
+  * RESUME イベントがディスパッチされます。
+  * @method resume
+  */
+
+
+  Kazitori.prototype.resume = function() {
+    if (this._beforeDeffer != null) {
+      this._beforeDeffer.resume();
+    }
+    this.started = true;
+    this.isSuspend = false;
+    this[this._processStep.status](this._processStep.args);
+    this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.RESUME, this.fragment, this.lastFragment));
+  };
+
+  Kazitori.prototype.registerHandler = function(rule, name, isBefore, callback) {
+    var child, target;
+    if (!callback) {
+      if (isBefore) {
+        callback = this._bindFunctions(name);
+      } else if (name instanceof Kazitori) {
+        this._bindChild(rule, name);
+        return this;
+      } else if (typeof name === &quot;function&quot;) {
+        if (name.hasOwnProperty(&#x27;__super__&#x27;)) {
+          try {
+            child = new name({
+              &#x27;isAutoStart&#x27;: false
+            });
+            this._bindChild(rule, child);
+            return this;
+          } catch (e) {
+            callback = name;
+          }
+        } else {
+          callback = name;
+        }
+      } else {
+        callback = this[name];
+      }
+    }
+    target = isBefore ? this.beforeHandlers : this.handlers;
+    target.unshift(new Rule(rule, function(fragment) {
+      var args;
+      args = this.router.extractParams(this, fragment);
+      return callback &amp;&amp; callback.apply(this.router, args);
+    }, this));
+    return this;
+  };
+
+  Kazitori.prototype._bindChild = function(rule, child) {
+    var childBefore, childBefores, childHandlers, childRule, _i, _j, _len, _len1;
+    child.reject();
+    child.stop();
+    childHandlers = child.handlers.concat();
+    for (_i = 0, _len = childHandlers.length; _i &lt; _len; _i++) {
+      childRule = childHandlers[_i];
+      childRule.update(rule);
+    }
+    this.handlers = childHandlers.concat(this.handlers);
+    childBefores = child.beforeHandlers.concat();
+    for (_j = 0, _len1 = childBefores.length; _j &lt; _len1; _j++) {
+      childBefore = childBefores[_j];
+      childBefore.update(rule);
+    }
+    this.beforeHandlers = childBefores.concat(this.beforeHandlers);
+    if (child.beforeAnytimeHandler) {
+      this.lastAnytime = this.beforeAnytime.concat();
+      return this._bindBeforeAnytime(this.beforeAnytime, [child.beforeAnytimeHandler.callback]);
+    }
+  };
+
+  /**
+  * ルーターを動的に追加します。&lt;br&gt;
+  * ルーターの追加に成功した場合、ADDED イベントがディスパッチされます。
+  * &lt;h4&gt;example&lt;/h4&gt;
+  *     fooRouter = new FooRouter();
+  *     app.appendRouter(foo);
+  * @method appendRouter
+  * @param {Object} child
+  * @param {String} childRoot
+  */
+
+
+  Kazitori.prototype.appendRouter = function(child, childRoot) {
+    var rule, _instance;
+    if (!child instanceof Kazitori &amp;&amp; typeof child !== &quot;function&quot;) {
+      throw new Error(&quot;引数の値が不正です。 引数として与えられるオブジェクトは Kazitori を継承している必要があります。&quot;);
+      return;
+    }
+    if (child instanceof Kazitori) {
+      rule = this._getChildRule(child, childRoot);
+      this._bindChild(rule, child);
+      return this;
+    } else {
+      if (child.hasOwnProperty(&#x27;__super__&#x27;)) {
+        try {
+          _instance = new child({
+            &#x27;isAutoStart&#x27;: false
+          });
+          rule = this._getChildRule(_instance, childRoot);
+          this._bindChild(rule, _instance);
+          return this;
+        } catch (e) {
+          throw new Error(&quot;引数の値が不正です。 引数として与えられるオブジェクトは Kazitori を継承している必要があります。&quot;);
+        }
+      }
+    }
+    this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.ADDED, this.fragment, this.lastFragment));
+    return this;
+  };
+
+  Kazitori.prototype._getChildRule = function(child, childRoot) {
+    var rule;
+    rule = child.root;
+    if (childRoot) {
+      rule = childRoot;
+    }
+    if (rule.match(trailingSlash)) {
+      rule = rule.replace(trailingSlash, &#x27;&#x27;);
+    }
+    if (rule === this.root) {
+      throw new Error(&quot;かぶってる&quot;);
+    }
+    return rule;
+  };
+
+  /**
+  * 動的に追加したルーターを削除します。
+  * ルーターの削除に成功した場合、REMOVED イベントがディスパッチされます。
+  * &lt;h4&gt;example&lt;/h4&gt;
+  *     foo = new FooRouter();
+  *     app.appendRouter(foo);
+  *     app.removeRouter(foo);
+  * @method removeRouter
+  * @param {Object} child
+  * @param {String} childRoot
+  */
+
+
+  Kazitori.prototype.removeRouter = function(child, childRoot) {
+    var _instance;
+    if (!child instanceof Kazitori &amp;&amp; typeof child !== &quot;function&quot;) {
+      throw new Error(&quot;引数の値が不正です。 引数として与えられるオブジェクトは Kazitori を継承している必要があります。&quot;);
+      return;
+    }
+    if (child instanceof Kazitori) {
+      this._unbindChild(child, childRoot);
+    } else {
+      if (child.hasOwnProperty(&#x27;__super__&#x27;)) {
+        try {
+          _instance = new child({
+            &#x27;isAutoStart&#x27;: false
+          });
+          this._unbindChild(_instance, childRoot);
+          return this;
+        } catch (e) {
+          throw new Error(&quot;引数の値が不正です。 引数として与えられるオブジェクトは Kazitori を継承している必要があります。&quot;);
+        }
+      }
+    }
+    this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.REMOVED, this.fragment, this.lastFragment));
+    return this;
+  };
+
+  Kazitori.prototype._unbindChild = function(child, childRoot) {
+    var beforeRule, i, len, newBefores, newHandlers, rule, ruleObj;
+    rule = this._getChildRule(child, childRoot);
+    i = 0;
+    len = this.handlers.length;
+    newHandlers = [];
+    while (i &lt; len) {
+      ruleObj = this.handlers.shift();
+      if ((ruleObj.rule.match(rule)) === null) {
+        newHandlers.unshift(ruleObj);
+      }
+      i++;
+    }
+    this.handlers = newHandlers;
+    i = 0;
+    len = this.beforeHandlers.length;
+    newBefores = [];
+    while (i &lt; len) {
+      beforeRule = this.beforeHandlers.shift();
+      if ((beforeRule.rule.match(rule)) === null) {
+        newBefores.unshift(beforeRule);
+      }
+      i++;
+    }
+    return this.beforeHandlers = newBefores;
+  };
+
+  /**
+  * ブラウザから現在の URL を読み込みます。
+  * @method loadURL
+  * @param {String} fragmentOverride
+  * @param {Object} options
+  */
+
+
+  Kazitori.prototype.loadURL = function(fragmentOverride, options) {
+    var fragment;
+    this._processStep.status = &#x27;loadURL&#x27;;
+    this._processStep.args = [fragmentOverride, options];
+    if (this.isSuspend) {
+      return;
+    }
+    fragment = this.fragment = this.getFragment(fragmentOverride);
+    if (this.isTemae === false &amp;&amp; (this.beforeAnytimeHandler || this.beforeHandlers.length &gt; 0)) {
+      this._executeBefores(fragment);
+    } else {
+      this.executeHandlers();
+    }
+  };
+
+  /**
+  * 指定した 文字列に対応した URL ルールが設定されているかどうか&lt;br&gt;
+  * Boolean で返します。
+  * &lt;h4&gt;example&lt;/h4&gt;
+  *     app.match(&#x27;/hoge&#x27;);
+  * @method match
+  * @param {String} fragment
+  * @return {Boolean}
+  */
+
+
+  Kazitori.prototype.match = function(fragment) {
+    var matched;
+    matched = this._matchCheck(fragment, this.handlers, true);
+    return matched.length &gt; 0;
+  };
+
+  Kazitori.prototype.beforeComplete = function(event) {
+    this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, this.beforeComplete);
+    this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_FAILED, this.beforeFailed);
+    this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.BEFORE_EXECUTED, this.fragment, this.lastFragment));
+    if (this.isTemae) {
+      this._urlChange(this.fragment, this._changeOptions);
+    } else {
+      this.executeHandlers();
+    }
+  };
+
+  Kazitori.prototype._executeBefores = function(fragment) {
+    var handler, matched, _i, _len,
+      _this = this;
+    this._processStep.status = &#x27;_executeBefores&#x27;;
+    this._processStep.args = [fragment];
+    this._beforeDeffer = new Deffered();
+    if (this.beforeAnytimeHandler != null) {
+      this._beforeDeffer.deffered(function(d) {
+        _this.beforeAnytimeHandler.callback(fragment);
+        d.execute(d);
+      });
+    }
+    matched = this._matchCheck(fragment, this.beforeHandlers);
+    for (_i = 0, _len = matched.length; _i &lt; _len; _i++) {
+      handler = matched[_i];
+      this._beforeDeffer.deffered(function(d) {
+        handler.callback(fragment);
+        d.execute(d);
+      });
+    }
+    this._beforeDeffer.addEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, this.beforeComplete);
+    this._beforeDeffer.addEventListener(KazitoriEvent.TASK_QUEUE_FAILED, this.beforeFailed);
+    return this._beforeDeffer.execute(this._beforeDeffer);
+  };
+
+  Kazitori.prototype.executeHandlers = function() {
+    var handler, isMatched, match, matched, _i, _j, _len, _len1,
+      _this = this;
+    this._processStep.status = &#x27;executeHandlers&#x27;;
+    this._processStep.args = [];
+    if (this.isSuspend) {
+      return;
+    }
+    matched = this._matchCheck(this.fragment, this.handlers);
+    isMatched = true;
+    if (matched === false || matched.length &lt; 1) {
+      if (this.notFound !== null) {
+        this._notFound.callback(this.fragment);
+      }
+      isMatched = false;
+      this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.NOT_FOUND));
+    } else if (matched.length &gt; 1) {
+      for (_i = 0, _len = matched.length; _i &lt; _len; _i++) {
+        match = matched[_i];
+        if (this.fragment.indexOf(match.rule) &gt; -1) {
+          match.callback(this.fragment);
+        }
+      }
+    } else {
+      for (_j = 0, _len1 = matched.length; _j &lt; _len1; _j++) {
+        handler = matched[_j];
+        handler.callback(this.fragment);
+      }
+    }
+    if (this._isFirstRequest) {
+      setTimeout(function() {
+        _this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.FIRST_REQUEST, _this.fragment, null));
+        if (isMatched) {
+          return _this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.EXECUTED, _this.fragment, null));
+        }
+      }, 0);
+      this._isFirstRequest = false;
+    } else {
+      if (isMatched) {
+        this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.EXECUTED, this.fragment, this.lastFragment));
+      }
+    }
+    return matched;
+  };
+
+  Kazitori.prototype.beforeFailed = function(event) {
+    this.beforeFailedHandler.apply(this, arguments);
+    this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_FAILED, this.beforeFailed);
+    this._beforeDeffer.removeEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, this.beforeComplete);
+    if (this.isBeforeForce) {
+      this.beforeComplete();
+    }
+    this._beforeDeffer = null;
+  };
+
+  Kazitori.prototype.observeURLHandler = function(event) {
+    var current;
+    current = this.getFragment();
+    if (current === this.fragment &amp;&amp; this.iframe) {
+      current = this.getFragment(this.getHash(this.iframe));
+    }
+    if (current === this.fragment) {
+      return false;
+    }
+    if (this.iframe) {
+      this.change(current);
+    }
+    if (this.lastFragment === current &amp;&amp; this.isUserAction === false) {
+      this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.PREV, current, this.fragment));
+    } else if (this.lastFragment === this.fragment &amp;&amp; this.isUserAction === false) {
+      this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.NEXT, current, this.lastFragment));
+    }
+    this.isUserAction = false;
+    this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.CHANGE, current, this.lastFragment));
+    return this.loadURL(current);
+  };
+
+  Kazitori.prototype._bindRules = function() {
+    var routes, rule, _i, _len;
+    if (!(this.routes != null)) {
+      return;
+    }
+    routes = this._keys(this.routes);
+    for (_i = 0, _len = routes.length; _i &lt; _len; _i++) {
+      rule = routes[_i];
+      this.registerHandler(rule, this.routes[rule], false);
+    }
+  };
+
+  Kazitori.prototype._bindBefores = function() {
+    var befores, key, _i, _len;
+    if (this.beforeAnytime) {
+      this._bindBeforeAnytime(this.beforeAnytime);
+    }
+    if (!(this.befores != null)) {
+      return;
+    }
+    befores = this._keys(this.befores);
+    for (_i = 0, _len = befores.length; _i &lt; _len; _i++) {
+      key = befores[_i];
+      this.registerHandler(key, this.befores[key], true);
+    }
+  };
+
+  Kazitori.prototype._bindBeforeAnytime = function(funcs, bindedFuncs) {
+    var callback;
+    callback = this._bindFunctions(funcs, bindedFuncs);
+    return this.beforeAnytimeHandler = {
+      callback: this._binder(function(fragment) {
+        var args;
+        args = [fragment];
+        return callback &amp;&amp; callback.apply(this, args);
+      }, this)
+    };
+  };
+
+  Kazitori.prototype._bindNotFound = function() {
+    var callback, notFoundFragment, notFoundFuncName, rule, _i, _len, _ref;
+    if (!(this.notFound != null)) {
+      return;
+    }
+    if (typeof this.notFound === &quot;string&quot;) {
+      _ref = this.handlers;
+      for (_i = 0, _len = _ref.length; _i &lt; _len; _i++) {
+        rule = _ref[_i];
+        if (rule.rule === &#x27;/&#x27; + this.notFound.replace(this.root, &#x27;&#x27;)) {
+          this._notFound = rule;
+          return;
+        }
+      }
+    } else {
+      notFoundFragment = this._keys(this.notFound)[0];
+    }
+    notFoundFuncName = this.notFound[notFoundFragment];
+    if (typeof notFoundFuncName === &quot;function&quot;) {
+      callback = notFoundFuncName;
+    } else {
+      callback = this[notFoundFuncName];
+    }
+    this._notFound = new Rule(notFoundFragment, function(fragment) {
+      var args;
+      args = this.router.extractParams(this, fragment);
+      return callback &amp;&amp; callback.apply(this.router, args);
+    }, this);
+  };
+
+  Kazitori.prototype._updateHash = function(location, fragment, replace) {
+    var href;
+    if (replace) {
+      href = location.href.replace(/(javascript:|#).*$/, &#x27;&#x27;);
+      location.replace(href + &#x27;#&#x27; + fragment);
+    } else {
+      location.hash = &quot;#&quot; + fragment;
+    }
+  };
+
+  Kazitori.prototype._updateHashIE = function(fragment, replace) {
+    return location.replace(this.root + &#x27;#/&#x27; + fragment);
+  };
+
+  Kazitori.prototype._matchCheck = function(fragment, handlers, test) {
+    var a, args, argsMatch, argsMatched, handler, hasQuery, i, len, match, matched, t, tmpFrag, _i, _j, _len, _len1;
+    if (test == null) {
+      test = false;
+    }
+    matched = [];
+    tmpFrag = fragment;
+    if (tmpFrag !== void 0 &amp;&amp; tmpFrag !== &#x27;undefined&#x27;) {
+      hasQuery = this._match.apply(tmpFrag, [/(\?[\w\d=|]+)/g]);
+    }
+    if (hasQuery) {
+      fragment = fragment.split(&#x27;?&#x27;)[0];
+    }
+    for (_i = 0, _len = handlers.length; _i &lt; _len; _i++) {
+      handler = handlers[_i];
+      if (handler.rule === fragment) {
+        matched.push(handler);
+      } else if (handler.test(fragment)) {
+        if (handler.isVariable &amp;&amp; handler.types.length &gt; 0) {
+          args = this.extractParams(handler, fragment, test);
+          argsMatch = [];
+          len = args.length;
+          i = 0;
+          while (i &lt; len) {
+            a = args[i];
+            t = handler.types[i];
+            if (typeof a !== &quot;object&quot;) {
+              if (t === null) {
+                argsMatch.push(true);
+              } else {
+                argsMatch.push(this._typeCheck(a, t));
+              }
+            }
+            i++;
+          }
+          argsMatched = true;
+          for (_j = 0, _len1 = argsMatch.length; _j &lt; _len1; _j++) {
+            match = argsMatch[_j];
+            if (!match) {
+              argsMatched = false;
+            }
+          }
+          if (argsMatched) {
+            matched.push(handler);
+          }
+        } else {
+          matched.push(handler);
+        }
+      }
+    }
+    if (matched.length &gt; 0) {
+      return matched;
+    } else {
+      return false;
+    }
+  };
+
+  /**
+  * URL ルート以下を取得
+  * @method getFragment
+  * @param {String} fragment
+  */
+
+
+  Kazitori.prototype.getFragment = function(fragment) {
+    var frag, index, matched, root, _i, _len, _ref;
+    if (!(fragment != null) || fragment === void 0) {
+      if (this._hasPushState || !this._wantChangeHash) {
+        fragment = this.location.pathname;
+        matched = false;
+        frag = fragment;
+        if (frag.match(/^\//)) {
+          frag = frag.substr(1);
+        }
+        root = this.root;
+        if (root.match(/^\//)) {
+          root = root.substr(1);
+        }
+        _ref = this.rootFiles;
+        for (_i = 0, _len = _ref.length; _i &lt; _len; _i++) {
+          index = _ref[_i];
+          if (index === frag || root + index === frag) {
+            matched = true;
+          }
+        }
+        if (matched) {
+          fragment = this.root;
+        }
+        fragment = fragment + this.location.search;
+        root = this.root.replace(trailingSlash, &#x27;&#x27;);
+        if (fragment.indexOf(root) &gt; -1) {
+          fragment = fragment.substr(root.length);
+        }
+      } else {
+        fragment = this.getHash();
+      }
+    } else {
+      root = this.root.replace(trailingSlash, &#x27;&#x27;);
+      if (fragment.indexOf(this.root) &gt; -1 &amp;&amp; fragment.indexOf(root) &gt; -1) {
+        fragment = fragment.substr(root.length);
+      }
+    }
+    return fragment;
+  };
+
+  /**
+  * URL の # 以降を取得
+  * @method getHash
+  * @return {String} URL の # 以降の文字列
+  */
+
+
+  Kazitori.prototype.getHash = function() {
+    var match;
+    match = (window || this).location.href.match(/#(.*)$/);
+    if (match != null) {
+      return match[1];
+    } else {
+      return &#x27;&#x27;;
+    }
+  };
+
+  /**
+  * URL パラメータを分解
+  * @method extractParams
+  * @param {Rule} rule
+  * @param {String} fragment
+  * @param {Boolean} test
+  */
+
+
+  Kazitori.prototype.extractParams = function(rule, fragment, test) {
+    var k, kv, last, newParam, newQueries, param, q, queries, query, queryParams, v, _i, _len;
+    if (test == null) {
+      test = false;
+    }
+    if (this._params.params.length &gt; 0 &amp;&amp; this._params.fragment === fragment) {
+      return this._params.params;
+    }
+    param = rule._regexp.exec(fragment);
+    if (param === null &amp;&amp; fragment.indexOf(&#x27;?&#x27;) &gt; -1) {
+      param = [0, &#x27;?&#x27; + fragment.split(&#x27;?&#x27;)[1]];
+    }
+    this._params.fragment = fragment;
+    if (param != null) {
+      newParam = param.slice(1);
+      last = param[param.length - 1];
+      if (last.indexOf(&#x27;?&#x27;) &gt; -1) {
+        newQueries = {};
+        queries = last.split(&#x27;?&#x27;)[1];
+        queryParams = queries.split(&#x27;&amp;&#x27;);
+        for (_i = 0, _len = queryParams.length; _i &lt; _len; _i++) {
+          query = queryParams[_i];
+          kv = query.split(&#x27;=&#x27;);
+          k = kv[0];
+          v = kv[1] ? kv[1] : &quot;&quot;;
+          if (v.indexOf(&#x27;|&#x27;) &gt; -1) {
+            v = v.split(&quot;|&quot;);
+          }
+          newQueries[k] = v;
+        }
+        newParam.pop();
+        newParam.push(last.split(&#x27;?&#x27;)[0]);
+        q = {
+          &quot;queries&quot;: newQueries
+        };
+        newParam.push(q);
+        if (!test) {
+          this._params.params = this._getCastedParams(rule, newParam.slice(0));
+          this._params.queries = newQueries;
+        }
+      } else {
+        if (!test) {
+          this._params.params = this._getCastedParams(rule, newParam);
+        }
+      }
+      return newParam;
+    } else {
+      this._params.params = [];
+      return null;
+    }
+  };
+
+  Kazitori.prototype._getCastedParams = function(rule, params) {
+    var castedParams, i, len, type, _i, _len;
+    i = 0;
+    if (!params) {
+      return params;
+    }
+    if (rule.types.length &lt; 1) {
+      return params;
+    }
+    len = params.length;
+    castedParams = [];
+    while (i &lt; len) {
+      if (rule.types[i] === null) {
+        castedParams.push(params[i]);
+      } else if (typeof params[i] === &quot;object&quot;) {
+        castedParams.push(params[i]);
+      } else {
+        for (_i = 0, _len = VARIABLE_TYPES.length; _i &lt; _len; _i++) {
+          type = VARIABLE_TYPES[_i];
+          if (rule.types[i] === type.name) {
+            castedParams.push(type.cast(params[i]));
+          }
+        }
+      }
+      i++;
+    }
+    return castedParams;
+  };
+
+  Kazitori.prototype.addEventListener = function(type, listener) {
+    return this._dispatcher.addEventListener(type, listener);
+  };
+
+  Kazitori.prototype.removeEventListener = function(type, listener) {
+    return this._dispatcher.removeEventListener(type, listener);
+  };
+
+  Kazitori.prototype.dispatchEvent = function(event) {
+    return this._dispatcher.dispatchEvent(event);
+  };
+
+  Kazitori.prototype._addPopStateHandler = function() {
+    var win;
+    win = window;
+    if (this._hasPushState === true) {
+      win.addEventListener(&#x27;popstate&#x27;, this.observeURLHandler);
+    }
+    if (this._wantChangeHash === true &amp;&amp; (__indexOf.call(win, &#x27;onhashchange&#x27;) &gt;= 0) &amp;&amp; !this.isOldIE) {
+      return win.addEventListener(&#x27;hashchange&#x27;, this.observeURLHandler);
+    }
+  };
+
+  Kazitori.prototype._removePopStateHandler = function() {
+    var win;
+    win = window;
+    win.removeEventListener(&#x27;popstate&#x27;, this.observeURLHandler);
+    return win.removeEventListener(&#x27;hashchange&#x27;, this.observeURLHandler);
+  };
+
+  Kazitori.prototype._slice = Array.prototype.slice;
+
+  Kazitori.prototype._replace = String.prototype.replace;
+
+  Kazitori.prototype._match = String.prototype.match;
+
+  Kazitori.prototype._keys = Object.keys || function(obj) {
+    var key, keys;
+    if (obj === !Object(obj)) {
+      throw new TypeError(&#x27;object ja nai&#x27;);
+    }
+    keys = [];
+    for (key in obj) {
+      if (Object.hasOwnProperty.call(obj, key)) {
+        keys[keys.length] = key;
+      }
+    }
+    return keys;
+  };
+
+  Kazitori.prototype._binder = function(func, obj) {
+    var args, slice;
+    slice = this._slice;
+    args = slice.call(arguments, 2);
+    return function() {
+      return func.apply(obj || {}, args.concat(slice.call(arguments)));
+    };
+  };
+
+  Kazitori.prototype._extend = function(obj) {
+    this._each(this._slice.call(arguments, 1), function(source) {
+      var prop, _results;
+      if (source) {
+        _results = [];
+        for (prop in source) {
+          _results.push(obj[prop] = source[prop]);
+        }
+        return _results;
+      }
+    });
+    return obj;
+  };
+
+  Kazitori.prototype._each = function(obj, iter, ctx) {
+    var each, i, k, l;
+    if (!(obj != null)) {
+      return;
+    }
+    each = Array.prototype.forEach;
+    if (each &amp;&amp; obj.forEach === each) {
+      return obj.forEach(iter, ctx);
+    } else if (obj.length === +obj.length) {
+      i = 0;
+      l = obj.length;
+      while (i &lt; l) {
+        if (iter.call(ctx, obj[i], i, obj) === this.breaker) {
+          return;
+        }
+        i++;
+      }
+    } else {
+      for (k in obj) {
+        if (__indexOf.call(obj, k) &gt;= 0) {
+          if (iter.call(ctx, obj[k], k, obj) === this.breaker) {
+            return;
+          }
+        }
+      }
+    }
+  };
+
+  Kazitori.prototype._bindFunctions = function(funcs, insert) {
+    var bindedFuncs, callback, f, func, funcName, i, len, names, newF, _i, _len;
+    if (typeof funcs === &#x27;string&#x27;) {
+      funcs = funcs.split(&#x27;,&#x27;);
+    }
+    bindedFuncs = [];
+    for (_i = 0, _len = funcs.length; _i &lt; _len; _i++) {
+      funcName = funcs[_i];
+      func = this[funcName];
+      if (!(func != null)) {
+        names = funcName.split(&#x27;.&#x27;);
+        if (names.length &gt; 1) {
+          f = window[names[0]];
+          i = 1;
+          len = names.length;
+          while (i &lt; len) {
+            newF = f[names[i]];
+            if (newF != null) {
+              f = newF;
+              i++;
+            } else {
+              break;
+            }
+          }
+          func = f;
+        } else {
+          func = window[funcName];
+        }
+      }
+      if (func != null) {
+        bindedFuncs.push(func);
+      }
+    }
+    if (insert) {
+      bindedFuncs = insert.concat(bindedFuncs);
+    }
+    callback = function(args) {
+      var _j, _len1;
+      for (_j = 0, _len1 = bindedFuncs.length; _j &lt; _len1; _j++) {
+        func = bindedFuncs[_j];
+        func.apply(this, [args]);
+      }
+    };
+    return callback;
+  };
+
+  Kazitori.prototype._typeCheck = function(a, t) {
+    var matched, type, _i, _len;
+    matched = false;
+    for (_i = 0, _len = VARIABLE_TYPES.length; _i &lt; _len; _i++) {
+      type = VARIABLE_TYPES[_i];
+      if (t.toLowerCase() === type.name) {
+        if (type.cast(a)) {
+          matched = true;
+        }
+      }
+    }
+    return matched;
+  };
+
+  return Kazitori;
+
+})();
+
+/**
+* pushState で処理したいルールを定義するクラス
+*
+* @class Rule
+* @constructor
+* @param {String} rule
+* @param {Function} callback
+* @param {Kazitori} router
+*/
+
+
+Rule = (function() {
+  /**
+  * ルール文字列
+  * @property rule
+  * @type String
+  * @default &quot;&quot;
+  */
+
+  Rule.prototype.rule = &quot;&quot;;
+
+  Rule.prototype._regexp = null;
+
+  /**
+  * コールバック関数
+  * ルールとマッチする場合実行されます。
+  * @property callback
+  * @type: Function
+  * @default null
+  */
+
+
+  Rule.prototype.callback = null;
+
+  Rule.prototype.name = &quot;&quot;;
+
+  Rule.prototype.router = null;
+
+  Rule.prototype.isVariable = false;
+
+  Rule.prototype.types = [];
+
+  function Rule(rule, callback, router) {
+    this.update = __bind(this.update, this);
+    if (typeof rule !== &quot;string&quot; &amp;&amp; typeof rule !== &quot;Number&quot;) {
+      return;
+    }
+    this.callback = callback;
+    this.router = router;
+    this.update(rule);
+  }
+
+  /**
+  * Rule として定義したパターンと fragment として与えられた文字列がマッチするかどうかテストする
+  * @method test
+  * @param {String} fragment
+  * @return {Boolean} マッチする場合 true を返す
+  */
+
+
+  Rule.prototype.test = function(fragment) {
+    return this._regexp.test(fragment);
+  };
+
+  Rule.prototype._ruleToRegExp = function(rule) {
+    var newRule;
+    newRule = rule.replace(escapeRegExp, &#x27;\\$&amp;&#x27;).replace(optionalParam, &#x27;(?:$1)?&#x27;).replace(namedParam, &#x27;([^\/]+)&#x27;).replace(splatParam, &#x27;(.*?)&#x27;);
+    return new RegExp(&#x27;^&#x27; + newRule + &#x27;$&#x27;);
+  };
+
+  /**
+  * 与えられた path で現在の Rule をアップデートします。
+  * @method update
+  * @param {String} path
+  */
+
+
+  Rule.prototype.update = function(path) {
+    var m, matched, re, t, _i, _len, _results;
+    this.rule = path + this.rule;
+    if (this.rule !== &#x27;/&#x27;) {
+      this.rule = this.rule.replace(trailingSlash, &#x27;&#x27;);
+    }
+    this._regexp = this._ruleToRegExp(this.rule);
+    re = new RegExp(namedParam);
+    matched = path.match(re);
+    if (matched !== null) {
+      this.isVariable = true;
+      _results = [];
+      for (_i = 0, _len = matched.length; _i &lt; _len; _i++) {
+        m = matched[_i];
+        t = m.match(genericParam) || null;
+        _results.push(this.types.push(t !== null ? t[1] : null));
+      }
+      return _results;
+    }
+  };
+
+  return Rule;
+
+})();
+
+/**
+* イベントディスパッチャ
+* @class EventDispatcher
+* @constructor
+*/
+
+
+EventDispatcher = (function() {
+
+  function EventDispatcher() {}
+
+  EventDispatcher.prototype.listeners = {};
+
+  EventDispatcher.prototype.addEventListener = function(type, listener) {
+    if (this.listeners[type] === void 0) {
+      this.listeners[type] = [];
+    }
+    if (this._inArray(listener, this.listeners[type]) &lt; 0) {
+      this.listeners[type].push(listener);
+    }
+  };
+
+  EventDispatcher.prototype.removeEventListener = function(type, listener) {
+    var arr, i, len, prop;
+    len = 0;
+    for (prop in this.listeners) {
+      len++;
+    }
+    if (len &lt; 1) {
+      return;
+    }
+    arr = this.listeners[type];
+    if (!arr) {
+      return;
+    }
+    i = 0;
+    len = arr.length;
+    while (i &lt; len) {
+      if (arr[i] === listener) {
+        if (len === 1) {
+          delete this.listeners[type];
+        } else {
+          arr.splice(i, 1);
+        }
+        break;
+      }
+      i++;
+    }
+  };
+
+  EventDispatcher.prototype.dispatchEvent = function(event) {
+    var ary, handler, _i, _len;
+    ary = this.listeners[event.type];
+    if (ary !== void 0) {
+      event.target = this;
+      for (_i = 0, _len = ary.length; _i &lt; _len; _i++) {
+        handler = ary[_i];
+        handler.call(this, event);
+      }
+    }
+  };
+
+  EventDispatcher.prototype._inArray = function(elem, array) {
+    var i, len;
+    i = 0;
+    len = array.length;
+    while (i &lt; len) {
+      if (array[i] === elem) {
+        return i;
+      }
+      i++;
+    }
+    return -1;
+  };
+
+  return EventDispatcher;
+
+})();
+
+Deffered = (function(_super) {
+
+  __extends(Deffered, _super);
+
+  Deffered.prototype.queue = [];
+
+  Deffered.prototype.isSuspend = false;
+
+  function Deffered() {
+    this.queue = [];
+    this.isSuspend = false;
+  }
+
+  Deffered.prototype.deffered = function(func) {
+    this.queue.push(func);
+    return this;
+  };
+
+  Deffered.prototype.execute = function() {
+    var task;
+    if (this.isSuspend) {
+      return;
+    }
+    try {
+      task = this.queue.shift();
+      if (task) {
+        task.apply(this, arguments);
+      }
+      if (this.queue.length &lt; 1) {
+        this.queue = [];
+        return this.dispatchEvent(new KazitoriEvent(KazitoriEvent.TASK_QUEUE_COMPLETE));
+      }
+    } catch (error) {
+      return this.reject(error);
+    }
+  };
+
+  Deffered.prototype.reject = function(error) {
+    var message;
+    message = !error ? &quot;user reject&quot; : error;
+    this.dispatchEvent({
+      type: KazitoriEvent.TASK_QUEUE_FAILED,
+      index: this.index,
+      message: message
+    });
+    return this.isSuspend = false;
+  };
+
+  Deffered.prototype.suspend = function() {
+    this.isSuspend = true;
+  };
+
+  Deffered.prototype.resume = function() {
+    this.isSuspend = false;
+    this.execute();
+  };
+
+  return Deffered;
+
+})(EventDispatcher);
+
+/**
+* pushState 処理や Kazitori にまつわるイベント
+* @class KazitoriEvent
+* @constructor
+* @param {String} type
+* @param {String} next
+* @param {String} prev
+*/
+
+
+KazitoriEvent = (function() {
+
+  KazitoriEvent.prototype.next = null;
+
+  KazitoriEvent.prototype.prev = null;
+
+  KazitoriEvent.prototype.type = null;
+
+  function KazitoriEvent(type, next, prev) {
+    this.type = type;
+    this.next = next;
+    this.prev = prev;
+  }
+
+  KazitoriEvent.prototype.clone = function() {
+    return new KazitoriEvent(this.type, this.next, this.prev);
+  };
+
+  KazitoriEvent.prototype.toString = function() {
+    return &quot;KazitoriEvent :: &quot; + &quot;type:&quot; + this.type + &quot; next:&quot; + String(this.next) + &quot; prev:&quot; + String(this.prev);
+  };
+
+  return KazitoriEvent;
+
+})();
+
+/**
+* タスクキューが空になった
+* @property TASK_QUEUE_COMPLETE
+* @type String
+* @default task_queue_complete
+*/
+
+
+KazitoriEvent.TASK_QUEUE_COMPLETE = &#x27;task_queue_complete&#x27;;
+
+/**
+* タスクキューが中断された
+* @property TASK_QUEUE_FAILED
+* @type String
+* @default task_queue_failed
+*/
+
+
+KazitoriEvent.TASK_QUEUE_FAILED = &#x27;task_queue_failed&#x27;;
+
+/**
+* URL が変更された
+* @property CHANGE
+* @type String
+* @default change
+*/
+
+
+KazitoriEvent.CHANGE = &#x27;change&#x27;;
+
+/**
+* URL に登録されたメソッドがちゃんと実行された
+* @property EXECUTED
+* @type String
+* @default executed
+*/
+
+
+KazitoriEvent.EXECUTED = &#x27;executed&#x27;;
+
+/**
+* 事前処理が完了した
+* @property BEFORE_EXECUTED
+* @type String
+* @default before_executed
+*/
+
+
+KazitoriEvent.BEFORE_EXECUTED = &#x27;before_executed&#x27;;
+
+/**
+* ユーザーアクション以外で URL の変更があった
+* @property INTERNAL_CHANGE
+* @type String
+* @default internal_change
+*/
+
+
+KazitoriEvent.INTERNAL_CHANGE = &#x27;internal_change&#x27;;
+
+KazitoriEvent.USER_CHANGE = &#x27;user_change&#x27;;
+
+/**
+* ヒストリーバックした
+* @property PREV
+* @type String
+* @default prev
+*/
+
+
+KazitoriEvent.PREV = &#x27;prev&#x27;;
+
+/**
+* ヒストリーネクストした時
+* @property NEXT
+* @type String
+* @default next
+*/
+
+
+KazitoriEvent.NEXT = &#x27;next&#x27;;
+
+/**
+* Kazitori が中断した
+* @property REJECT
+* @type String
+* @default reject
+*/
+
+
+KazitoriEvent.REJECT = &#x27;reject&#x27;;
+
+/**
+* URL にマッチする処理が見つからなかった
+* @property NOT_FOUND
+* @type String
+* @default not_found
+*/
+
+
+KazitoriEvent.NOT_FOUND = &#x27;not_found&#x27;;
+
+/**
+* Kazitori が開始した
+* @property START
+* @type String
+* @default start
+*/
+
+
+KazitoriEvent.START = &#x27;start&#x27;;
+
+/**
+* Kazitori が停止した
+* @property STOP
+* @type String
+* @default stop
+*/
+
+
+KazitoriEvent.STOP = &#x27;stop&#x27;;
+
+/**
+* Kazitori が一時停止した
+* @property SUSPEND
+* @type String
+* @default SUSPEND
+*/
+
+
+KazitoriEvent.SUSPEND = &#x27;SUSPEND&#x27;;
+
+/**
+* Kazitori が再開した
+* @property RESUME
+* @type String
+* @default resume
+*/
+
+
+KazitoriEvent.RESUME = &#x27;resume&#x27;;
+
+/**
+* Kazitori が開始してから、一番最初のアクセスがあった
+* @property FIRST_REQUEST
+* @type String
+* @default first_request
+*/
+
+
+KazitoriEvent.FIRST_REQUEST = &#x27;first_request&#x27;;
+
+/**
+* ルーターが追加された
+* @property ADDED
+* @type String
+* @default added
+*/
+
+
+KazitoriEvent.ADDED = &#x27;added&#x27;;
+
+/**
+* ルーターが削除された
+* @property REMOVED
+* @type String
+* @default removed
+*/
+
+
+KazitoriEvent.REMOVED = &#x27;removed&#x27;;
+
+    </pre>
+</div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="../assets/vendor/prettify/prettify-min.js"></script>
+<script>prettyPrint();</script>
+<script src="../assets/js/yui-prettify.js"></script>
+<script src="../assets/../api.js"></script>
+<script src="../assets/js/api-filter.js"></script>
+<script src="../assets/js/api-list.js"></script>
+<script src="../assets/js/api-search.js"></script>
+<script src="../assets/js/apidocs.js"></script>
+</body>
+</html>

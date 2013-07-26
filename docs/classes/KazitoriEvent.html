@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>KazitoriEvent - Kazitori.js</title>
+    <link rel="stylesheet" href="http://yui.yahooapis.com/3.9.1/build/cssgrids/cssgrids-min.css">
+    <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
+    <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
+    <link rel="shortcut icon" type="image/png" href="../assets/favicon.png">
+    <script src="http://yui.yahooapis.com/combo?3.9.1/build/yui/yui-min.js"></script>
+</head>
+<body class="">
+
+<div id="doc">
+    <div id="hd" class="yui3-g header">
+        <div class="yui3-u-3-4">
+            
+                <h1><img src="../assets/img/logo.png" title="Kazitori.js" width="250"></h1>
+            
+        </div>
+        <div class="yui3-u-1-4 version">
+            <em>API Docs for: 0.9.9</em>
+        </div>
+    </div>
+    <div id="bd" class="yui3-g">
+
+        <div class="yui3-u-1-4">
+            <div id="docs-sidebar" class="sidebar apidocs">
+                <div id="api-list">
+    <h2 class="off-left">APIs</h2>
+    <div id="api-tabview" class="tabview">
+        <ul class="tabs" id="sideLabel">
+            <li><a href="#api-classes" id="classes">Classes</a></li>
+        </ul>
+
+        <div id="api-tabview-filter">
+            <input type="search" id="api-filter" placeholder="Type to filter APIs">
+        </div>
+
+        <div id="api-tabview-panel">
+            <ul id="api-classes" class="apis classes">
+            
+                <li><a href="../classes/EventDispatcher.html">EventDispatcher</a></li>
+            
+                <li><a href="../classes/Kazitori.html">Kazitori</a></li>
+            
+                <li><a href="../classes/KazitoriEvent.html">KazitoriEvent</a></li>
+            
+                <li><a href="../classes/Rule.html">Rule</a></li>
+            
+            </ul>
+
+            <ul id="api-modules" class="apis modules">
+            
+                <li><a href="../modules/Kazitori.js.html">Kazitori.js</a></li>
+            
+            </ul>
+        </div>
+    </div>
+</div>
+
+            </div>
+        </div>
+        <div class="yui3-u-3-4">
+                <div id="api-options">
+        Show:
+        <label for="api-show-inherited">
+            <input type="checkbox" id="api-show-inherited" checked>
+            Inherited
+        </label>
+
+        <label for="api-show-protected">
+            <input type="checkbox" id="api-show-protected">
+            Protected
+        </label>
+
+        <label for="api-show-private">
+            <input type="checkbox" id="api-show-private">
+            Private
+        </label>
+        <label for="api-show-deprecated">
+            <input type="checkbox" id="api-show-deprecated">
+            Deprecated
+        </label>
+
+    </div>
+
+
+            <div class="apidocs">
+                <div id="docs-main">
+                    <div class="content">
+                        <h1>KazitoriEvent Class</h1>
+<div class="box meta">
+    
+
+    
+
+    
+        <div class="foundat">
+            Defined in: <a href="../files/.._src_js_kazitori.js.html#l1633"><code>kazitori.js:1633</code></a>
+        </div>
+    
+
+    
+        
+            Module: <a href="../modules/Kazitori.js.html">Kazitori.js</a>
+        
+    
+
+    
+</div>
+
+
+
+<div class="box intro">
+    <p>pushState 処理や Kazitori にまつわるイベント</p>
+</div>
+
+
+    <div class="constructor">
+        <h2>Constructor</h2>
+        <div id="method_KazitoriEvent" class="method item">
+    <h3 class="name"><code>KazitoriEvent</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>type</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>next</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>prev</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_js_kazitori.js.html#l1633"><code>kazitori.js:1633</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">type</code>
+                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">next</code>
+                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">prev</code>
+                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+
+    
+</div>
+
+    </div>
+
+
+<div id="classdocs" class="tabview">
+    <ul class="api-class-tabs">
+        <li class="api-class-tab index"><a href="#index">Index</a></li>
+
+        
+        
+            <li class="api-class-tab properties"><a href="#properties">Properties</a></li>
+        
+        
+        
+    </ul>
+
+    <div>
+        <div id="index" class="api-class-tabpanel index">
+            <h2 class="off-left">Item Index</h2>
+
+            
+
+            
+                <div class="index-section properties">
+                    <h3>Properties</h3>
+
+                    <ul class="index-list properties">
+                        
+                            <li class="index-item property">
+                                <a href="#property_ADDED">ADDED</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item property">
+                                <a href="#property_BEFORE_EXECUTED">BEFORE_EXECUTED</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item property">
+                                <a href="#property_CHANGE">CHANGE</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item property">
+                                <a href="#property_EXECUTED">EXECUTED</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item property">
+                                <a href="#property_FIRST_REQUEST">FIRST_REQUEST</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item property">
+                                <a href="#property_INTERNAL_CHANGE">INTERNAL_CHANGE</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item property">
+                                <a href="#property_NEXT">NEXT</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item property">
+                                <a href="#property_NOT_FOUND">NOT_FOUND</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item property">
+                                <a href="#property_PREV">PREV</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item property">
+                                <a href="#property_REJECT">REJECT</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item property">
+                                <a href="#property_REMOVED">REMOVED</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item property">
+                                <a href="#property_RESUME">RESUME</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item property">
+                                <a href="#property_START">START</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item property">
+                                <a href="#property_STOP">STOP</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item property">
+                                <a href="#property_SUSPEND">SUSPEND</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item property">
+                                <a href="#property_TASK_QUEUE_COMPLETE">TASK_QUEUE_COMPLETE</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item property">
+                                <a href="#property_TASK_QUEUE_FAILED">TASK_QUEUE_FAILED</a>
+
+                                
+                                
+                            </li>
+                        
+                    </ul>
+                </div>
+            
+
+            
+
+            
+        </div>
+
+        
+
+        
+            <div id="properties" class="api-class-tabpanel">
+                <h2 class="off-left">Properties</h2>
+
+                
+                    <div id="property_ADDED" class="property item">
+    <h3 class="name"><code>ADDED</code></h3>
+    <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a></span>
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_js_kazitori.js.html#l1821"><code>kazitori.js:1821</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>ルーターが追加された</p>
+    </div>
+
+    
+        <p><strong>Default:</strong> added</p>
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="property_BEFORE_EXECUTED" class="property item">
+    <h3 class="name"><code>BEFORE_EXECUTED</code></h3>
+    <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a></span>
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_js_kazitori.js.html#l1709"><code>kazitori.js:1709</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>事前処理が完了した</p>
+    </div>
+
+    
+        <p><strong>Default:</strong> before_executed</p>
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="property_CHANGE" class="property item">
+    <h3 class="name"><code>CHANGE</code></h3>
+    <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a></span>
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_js_kazitori.js.html#l1689"><code>kazitori.js:1689</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>URL が変更された</p>
+    </div>
+
+    
+        <p><strong>Default:</strong> change</p>
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="property_EXECUTED" class="property item">
+    <h3 class="name"><code>EXECUTED</code></h3>
+    <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a></span>
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_js_kazitori.js.html#l1699"><code>kazitori.js:1699</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>URL に登録されたメソッドがちゃんと実行された</p>
+    </div>
+
+    
+        <p><strong>Default:</strong> executed</p>
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="property_FIRST_REQUEST" class="property item">
+    <h3 class="name"><code>FIRST_REQUEST</code></h3>
+    <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a></span>
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_js_kazitori.js.html#l1811"><code>kazitori.js:1811</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Kazitori が開始してから、一番最初のアクセスがあった</p>
+    </div>
+
+    
+        <p><strong>Default:</strong> first_request</p>
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="property_INTERNAL_CHANGE" class="property item">
+    <h3 class="name"><code>INTERNAL_CHANGE</code></h3>
+    <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a></span>
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_js_kazitori.js.html#l1719"><code>kazitori.js:1719</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>ユーザーアクション以外で URL の変更があった</p>
+    </div>
+
+    
+        <p><strong>Default:</strong> internal_change</p>
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="property_NEXT" class="property item">
+    <h3 class="name"><code>NEXT</code></h3>
+    <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a></span>
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_js_kazitori.js.html#l1741"><code>kazitori.js:1741</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>ヒストリーネクストした時</p>
+    </div>
+
+    
+        <p><strong>Default:</strong> next</p>
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="property_NOT_FOUND" class="property item">
+    <h3 class="name"><code>NOT_FOUND</code></h3>
+    <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a></span>
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_js_kazitori.js.html#l1761"><code>kazitori.js:1761</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>URL にマッチする処理が見つからなかった</p>
+    </div>
+
+    
+        <p><strong>Default:</strong> not_found</p>
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="property_PREV" class="property item">
+    <h3 class="name"><code>PREV</code></h3>
+    <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a></span>
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_js_kazitori.js.html#l1731"><code>kazitori.js:1731</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>ヒストリーバックした</p>
+    </div>
+
+    
+        <p><strong>Default:</strong> prev</p>
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="property_REJECT" class="property item">
+    <h3 class="name"><code>REJECT</code></h3>
+    <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a></span>
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_js_kazitori.js.html#l1751"><code>kazitori.js:1751</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Kazitori が中断した</p>
+    </div>
+
+    
+        <p><strong>Default:</strong> reject</p>
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="property_REMOVED" class="property item">
+    <h3 class="name"><code>REMOVED</code></h3>
+    <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a></span>
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_js_kazitori.js.html#l1831"><code>kazitori.js:1831</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>ルーターが削除された</p>
+    </div>
+
+    
+        <p><strong>Default:</strong> removed</p>
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="property_RESUME" class="property item">
+    <h3 class="name"><code>RESUME</code></h3>
+    <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a></span>
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_js_kazitori.js.html#l1801"><code>kazitori.js:1801</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Kazitori が再開した</p>
+    </div>
+
+    
+        <p><strong>Default:</strong> resume</p>
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="property_START" class="property item">
+    <h3 class="name"><code>START</code></h3>
+    <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a></span>
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_js_kazitori.js.html#l1771"><code>kazitori.js:1771</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Kazitori が開始した</p>
+    </div>
+
+    
+        <p><strong>Default:</strong> start</p>
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="property_STOP" class="property item">
+    <h3 class="name"><code>STOP</code></h3>
+    <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a></span>
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_js_kazitori.js.html#l1781"><code>kazitori.js:1781</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Kazitori が停止した</p>
+    </div>
+
+    
+        <p><strong>Default:</strong> stop</p>
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="property_SUSPEND" class="property item">
+    <h3 class="name"><code>SUSPEND</code></h3>
+    <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a></span>
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_js_kazitori.js.html#l1791"><code>kazitori.js:1791</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Kazitori が一時停止した</p>
+    </div>
+
+    
+        <p><strong>Default:</strong> SUSPEND</p>
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="property_TASK_QUEUE_COMPLETE" class="property item">
+    <h3 class="name"><code>TASK_QUEUE_COMPLETE</code></h3>
+    <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a></span>
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_js_kazitori.js.html#l1669"><code>kazitori.js:1669</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>タスクキューが空になった</p>
+    </div>
+
+    
+        <p><strong>Default:</strong> task_queue_complete</p>
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="property_TASK_QUEUE_FAILED" class="property item">
+    <h3 class="name"><code>TASK_QUEUE_FAILED</code></h3>
+    <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/String" class="crosslink external" target="_blank">String</a></span>
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_js_kazitori.js.html#l1679"><code>kazitori.js:1679</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>タスクキューが中断された</p>
+    </div>
+
+    
+        <p><strong>Default:</strong> task_queue_failed</p>
+    
+
+    
+
+    
+</div>
+
+                
+            </div>
+        
+
+        
+
+        
+    </div>
+</div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="../assets/vendor/prettify/prettify-min.js"></script>
+<script>prettyPrint();</script>
+<script src="../assets/js/yui-prettify.js"></script>
+<script src="../assets/../api.js"></script>
+<script src="../assets/js/api-filter.js"></script>
+<script src="../assets/js/api-list.js"></script>
+<script src="../assets/js/api-search.js"></script>
+<script src="../assets/js/apidocs.js"></script>
+</body>
+</html>
