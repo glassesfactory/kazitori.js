@@ -971,6 +971,7 @@ class Kazitori
         fragment = fragment.substr(root.length)
     if typeof fragment is "string"
       fragment = fragment.replace(trailingSlash, '')
+      fragment = "/" if fragment is ""
     # console.log "kazitori current fragment::", fragment.replace(trailingSlash, '')
     return fragment
 

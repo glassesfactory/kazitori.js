@@ -150,7 +150,7 @@ $(document).ready ()->
     left : window.innerWidth / 2 - 150
   })
   $('#dialog').hide()
-  window.App = new Router({'root': "/jp/"})
+  window.App = new Router({'root': "/"})
   console.log window.App.handlers
   # foo = new FooRouter({'isAutoStart':false})
   # window.App.appendRouter foo, '/foo/'

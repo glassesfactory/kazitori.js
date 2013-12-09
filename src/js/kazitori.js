@@ -1110,6 +1110,9 @@ Kazitori = (function() {
     }
     if (typeof fragment === "string") {
       fragment = fragment.replace(trailingSlash, '');
+      if (fragment === "") {
+        fragment = "/";
+      }
     }
     return fragment;
   };
