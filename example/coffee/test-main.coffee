@@ -50,7 +50,7 @@ class Router extends Kazitori
     '/foo': FooRouter
     # '/bar': BarRouter
     # '/<int:id>':'show'
-    '/<string:id>':'show'
+    '/<id>/':'show'
     # # '/admin/<int:id>':'show'
     # '/admin':'admin'
     # '/login':'login'
@@ -68,7 +68,7 @@ class Router extends Kazitori
     # $('.currentPage').empty().append "this page is index"
 
   show:(id)->
-    console.log "show"
+    console.log "show::", id
     # console.log Kai.GET_CSS_PATH(Kai.RELATIVE)
     $('.currentPage').empty().append "this page is test" + id
 
@@ -150,7 +150,7 @@ $(document).ready ()->
     left : window.innerWidth / 2 - 150
   })
   $('#dialog').hide()
-  window.App = new Router({'silent': true})
+  window.App = new Router({'root': "/jp/"})
   console.log window.App.handlers
   # foo = new FooRouter({'isAutoStart':false})
   # window.App.appendRouter foo, '/foo/'

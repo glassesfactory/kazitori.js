@@ -24,8 +24,7 @@ optionalParam = /\((.*?)\)/g;
 
 splatParam = /\*\w+/g;
 
-/*URL 変数に対して指定できる型
-*/
+/*URL 変数に対して指定できる型*/
 
 
 VARIABLE_TYPES = [
@@ -76,8 +75,7 @@ VARIABLE_TYPES = [
 
 
 Kazitori = (function() {
-
-  Kazitori.prototype.VERSION = "0.9.9";
+  Kazitori.prototype.VERSION = "0.9.10";
 
   Kazitori.prototype.history = null;
 
@@ -201,8 +199,7 @@ Kazitori = (function() {
 
   Kazitori.prototype.beforeFailedHandler = function() {};
 
-  /*isBeforeForce
-  */
+  /*isBeforeForce*/
 
 
   Kazitori.prototype.isBeforeForce = false;
@@ -263,16 +260,11 @@ Kazitori = (function() {
 
   function Kazitori(options) {
     this.observeURLHandler = __bind(this.observeURLHandler, this);
-
     this.beforeFailed = __bind(this.beforeFailed, this);
-
     this.executeHandlers = __bind(this.executeHandlers, this);
-
     this._executeBefores = __bind(this._executeBefores, this);
-
     this.beforeComplete = __bind(this.beforeComplete, this);
-
-    var docMode, win;
+    var docMode, e, win;
     this._processStep.status = 'constructor';
     this._processStep.args = [options];
     this.options = options || (options = {});
@@ -317,10 +309,10 @@ Kazitori = (function() {
           return this._params.queries;
         }
       });
-    } catch (e) {
-
+    } catch (_error) {
+      e = _error;
     }
-    if (!(this.options.isAutoStart != null) || this.options.isAutoStart !== false) {
+    if ((this.options.isAutoStart == null) || this.options.isAutoStart !== false) {
       this.start();
     }
     return;
@@ -599,7 +591,7 @@ Kazitori = (function() {
   };
 
   Kazitori.prototype.registerHandler = function(rule, name, isBefore, callback) {
-    var child, target;
+    var child, e, target;
     if (!callback) {
       if (isBefore) {
         callback = this._bindFunctions(name);
@@ -614,7 +606,8 @@ Kazitori = (function() {
             });
             this._bindChild(rule, child);
             return this;
-          } catch (e) {
+          } catch (_error) {
+            e = _error;
             callback = name;
           }
         } else {
@@ -668,7 +661,7 @@ Kazitori = (function() {
 
 
   Kazitori.prototype.appendRouter = function(child, childRoot) {
-    var rule, _instance;
+    var e, rule, _instance;
     if (!child instanceof Kazitori && typeof child !== "function") {
       throw new Error("引数の値が不正です。 引数として与えられるオブジェクトは Kazitori を継承している必要があります。");
       return;
@@ -686,7 +679,8 @@ Kazitori = (function() {
           rule = this._getChildRule(_instance, childRoot);
           this._bindChild(rule, _instance);
           return this;
-        } catch (e) {
+        } catch (_error) {
+          e = _error;
           throw new Error("引数の値が不正です。 引数として与えられるオブジェクトは Kazitori を継承している必要があります。");
         }
       }
@@ -724,7 +718,7 @@ Kazitori = (function() {
 
 
   Kazitori.prototype.removeRouter = function(child, childRoot) {
-    var _instance;
+    var e, _instance;
     if (!child instanceof Kazitori && typeof child !== "function") {
       throw new Error("引数の値が不正です。 引数として与えられるオブジェクトは Kazitori を継承している必要があります。");
       return;
@@ -739,7 +733,8 @@ Kazitori = (function() {
           });
           this._unbindChild(_instance, childRoot);
           return this;
-        } catch (e) {
+        } catch (_error) {
+          e = _error;
           throw new Error("引数の値が不正です。 引数として与えられるオブジェクトは Kazitori を継承している必要があります。");
         }
       }
@@ -930,7 +925,7 @@ Kazitori = (function() {
 
   Kazitori.prototype._bindRules = function() {
     var routes, rule, _i, _len;
-    if (!(this.routes != null)) {
+    if (this.routes == null) {
       return;
     }
     routes = this._keys(this.routes);
@@ -945,7 +940,7 @@ Kazitori = (function() {
     if (this.beforeAnytime) {
       this._bindBeforeAnytime(this.beforeAnytime);
     }
-    if (!(this.befores != null)) {
+    if (this.befores == null) {
       return;
     }
     befores = this._keys(this.befores);
@@ -969,7 +964,7 @@ Kazitori = (function() {
 
   Kazitori.prototype._bindNotFound = function() {
     var callback, notFoundFragment, notFoundFuncName, rule, _i, _len, _ref;
-    if (!(this.notFound != null)) {
+    if (this.notFound == null) {
       return;
     }
     if (typeof this.notFound === "string") {
@@ -1077,7 +1072,7 @@ Kazitori = (function() {
 
   Kazitori.prototype.getFragment = function(fragment) {
     var frag, index, matched, root, _i, _len, _ref;
-    if (!(fragment != null) || fragment === void 0) {
+    if ((fragment == null) || fragment === void 0) {
       if (this._hasPushState || !this._wantChangeHash) {
         fragment = this.location.pathname;
         matched = false;
@@ -1112,6 +1107,9 @@ Kazitori = (function() {
       if (fragment.indexOf(this.root) > -1 && fragment.indexOf(root) > -1) {
         fragment = fragment.substr(root.length);
       }
+    }
+    if (typeof fragment === "string") {
+      fragment = fragment.replace(trailingSlash, '');
     }
     return fragment;
   };
@@ -1298,7 +1296,7 @@ Kazitori = (function() {
 
   Kazitori.prototype._each = function(obj, iter, ctx) {
     var each, i, k, l;
-    if (!(obj != null)) {
+    if (obj == null) {
       return;
     }
     each = Array.prototype.forEach;
@@ -1333,7 +1331,7 @@ Kazitori = (function() {
     for (_i = 0, _len = funcs.length; _i < _len; _i++) {
       funcName = funcs[_i];
       func = this[funcName];
-      if (!(func != null)) {
+      if (func == null) {
         names = funcName.split('.');
         if (names.length > 1) {
           f = window[names[0]];
@@ -1498,7 +1496,6 @@ Rule = (function() {
 
 
 EventDispatcher = (function() {
-
   function EventDispatcher() {}
 
   EventDispatcher.prototype.listeners = {};
@@ -1570,7 +1567,6 @@ EventDispatcher = (function() {
 })();
 
 Deffered = (function(_super) {
-
   __extends(Deffered, _super);
 
   Deffered.prototype.queue = [];
@@ -1588,7 +1584,7 @@ Deffered = (function(_super) {
   };
 
   Deffered.prototype.execute = function() {
-    var task;
+    var error, task;
     if (this.isSuspend) {
       return;
     }
@@ -1601,7 +1597,8 @@ Deffered = (function(_super) {
         this.queue = [];
         return this.dispatchEvent(new KazitoriEvent(KazitoriEvent.TASK_QUEUE_COMPLETE));
       }
-    } catch (error) {
+    } catch (_error) {
+      error = _error;
       return this.reject(error);
     }
   };
@@ -1641,7 +1638,6 @@ Deffered = (function(_super) {
 
 
 KazitoriEvent = (function() {
-
   KazitoriEvent.prototype.next = null;
 
   KazitoriEvent.prototype.prev = null;

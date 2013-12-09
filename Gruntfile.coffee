@@ -1,5 +1,5 @@
 module.exports = (grunt) ->
-  
+
   "use strict"
 
   grunt.initConfig
@@ -74,15 +74,18 @@ module.exports = (grunt) ->
     watch:
       product:
         files: ["src/coffee/*.coffee"]
-        tasks: ["coffee:product", "uglify:product", "livereload", "test"]
+        tasks: ["coffee:product", "uglify:product", "test"]
+        # tasks: ["coffee:product", "uglify:product", "livereload", "test"]
 
       example:
         files: ["example/coffee/*.coffee"]
-        tasks: ["coffee:example", "livereload"]
+        tasks: ["coffee:example"]
+        # tasks: ["coffee:example", "livereload"]
 
       test:
         files: ["test/spec/*.coffee"]
-        tasks: ["coffee:test", "livereload", "test"]
+        tasks: ["coffee:test", "test"]
+        # tasks: ["coffee:test", "livereload", "test"]
 
     # docco:
     #   kazitori:
@@ -108,7 +111,7 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks "grunt-contrib-livereload"
   grunt.loadNpmTasks "grunt-contrib-connect"
   grunt.loadNpmTasks "grunt-notify"
-  
+
   grunt.registerTask "default", ["livereload-start", "coffee", "uglify", "test"]
   grunt.registerTask "test", ["connect:jasmine", "jasmine:product"]
   grunt.registerTask "ci", ["coffee", "test"]

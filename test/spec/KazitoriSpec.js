@@ -1,4 +1,4 @@
-var Child, ChildAppend, Router, childController, controller, originalLocation, view,
+var Child, ChildAppend, Router, childController, controller, originalLocation, view, _ref, _ref1, _ref2,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
@@ -25,11 +25,11 @@ childController = {
 };
 
 Child = (function(_super) {
-
   __extends(Child, _super);
 
   function Child() {
-    return Child.__super__.constructor.apply(this, arguments);
+    _ref = Child.__super__.constructor.apply(this, arguments);
+    return _ref;
   }
 
   Child.prototype.root = "/child";
@@ -67,11 +67,11 @@ Child = (function(_super) {
 })(Kazitori);
 
 ChildAppend = (function(_super) {
-
   __extends(ChildAppend, _super);
 
   function ChildAppend() {
-    return ChildAppend.__super__.constructor.apply(this, arguments);
+    _ref1 = ChildAppend.__super__.constructor.apply(this, arguments);
+    return _ref1;
   }
 
   ChildAppend.prototype.root = "/appender";
@@ -109,11 +109,11 @@ ChildAppend = (function(_super) {
 })(Kazitori);
 
 Router = (function(_super) {
-
   __extends(Router, _super);
 
   function Router() {
-    return Router.__super__.constructor.apply(this, arguments);
+    _ref2 = Router.__super__.constructor.apply(this, arguments);
+    return _ref2;
   }
 
   Router.prototype.beforeAnytime = ["beforeAny"];

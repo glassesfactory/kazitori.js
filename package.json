@@ -1,7 +1,7 @@
 {
   "name": "kazitori.js",
   "description": "pushState library.",
-  "version": "0.9.9",
+  "version": "0.9.10",
   "main": "src/js/kazitori.js",
   "homepage": "https://github.com/glassesfactory/kazitori.js",
   "author": {
@@ -29,7 +29,7 @@
     }
   ],
   "devDependencies": {
-    "grunt": "~0.4.0",
+    "grunt": "latest",
     "grunt-contrib-coffee": "latest",
     "grunt-contrib-uglify": "latest",
     "grunt-contrib-watch": "latest",

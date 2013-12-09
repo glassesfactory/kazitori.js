@@ -1,4 +1,4 @@
-var BarRouter, COOKIE_KEY, FooRouter, PASS, Router, USER, clickHandler, getCookie, isLoaded, nextHandler, prevHandler, setCookie, test2, test3,
+var BarRouter, COOKIE_KEY, FooRouter, PASS, Router, USER, clickHandler, getCookie, isLoaded, nextHandler, prevHandler, setCookie, test2, test3, _ref, _ref1, _ref2,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
@@ -9,11 +9,11 @@ test3 = function() {
 isLoaded = false;
 
 FooRouter = (function(_super) {
-
   __extends(FooRouter, _super);
 
   function FooRouter() {
-    return FooRouter.__super__.constructor.apply(this, arguments);
+    _ref = FooRouter.__super__.constructor.apply(this, arguments);
+    return _ref;
   }
 
   FooRouter.prototype.root = '/foo/';
@@ -57,11 +57,11 @@ FooRouter = (function(_super) {
 })(Kazitori);
 
 BarRouter = (function(_super) {
-
   __extends(BarRouter, _super);
 
   function BarRouter() {
-    return BarRouter.__super__.constructor.apply(this, arguments);
+    _ref1 = BarRouter.__super__.constructor.apply(this, arguments);
+    return _ref1;
   }
 
   BarRouter.prototype.routes = {
@@ -77,11 +77,11 @@ BarRouter = (function(_super) {
 })(FooRouter);
 
 Router = (function(_super) {
-
   __extends(Router, _super);
 
   function Router() {
-    return Router.__super__.constructor.apply(this, arguments);
+    _ref2 = Router.__super__.constructor.apply(this, arguments);
+    return _ref2;
   }
 
   Router.prototype.beforeAnytime = ['anytime'];
@@ -89,7 +89,7 @@ Router = (function(_super) {
   Router.prototype.routes = {
     '/': 'index',
     '/foo': FooRouter,
-    '/<string:id>': 'show'
+    '/<id>/': 'show'
   };
 
   Router.prototype.index = function() {
@@ -97,7 +97,7 @@ Router = (function(_super) {
   };
 
   Router.prototype.show = function(id) {
-    console.log("show");
+    console.log("show::", id);
     return $('.currentPage').empty().append("this page is test" + id);
   };
 
@@ -138,7 +138,7 @@ Router = (function(_super) {
   };
 
   /*
-      some before functions
+    some before functions
   */
 
 
@@ -189,7 +189,7 @@ $(document).ready(function() {
   });
   $('#dialog').hide();
   window.App = new Router({
-    'silent': true
+    'root': "/jp/"
   });
   console.log(window.App.handlers);
   Kai.init();
@@ -255,7 +255,7 @@ getCookie = function(key) {
 
 setCookie = function(key, value, opt) {
   var exipre, expire;
-  if (!(value != null)) {
+  if (value == null) {
     return;
   }
   expire = new Date();

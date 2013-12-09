@@ -86,7 +86,7 @@ VARIABLE_TYPES = [
 *  @constructor
 ###
 class Kazitori
-  VERSION: "0.9.9"
+  VERSION: "0.9.10"
   history: null
   location: null
 
@@ -969,6 +969,9 @@ class Kazitori
 
       if fragment.indexOf(@.root) > -1 and fragment.indexOf(root) > -1
         fragment = fragment.substr(root.length)
+    if typeof fragment is "string"
+      fragment = fragment.replace(trailingSlash, '')
+    # console.log "kazitori current fragment::", fragment.replace(trailingSlash, '')
     return fragment
 
 
