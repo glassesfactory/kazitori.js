@@ -1167,9 +1167,9 @@ class Kazitori
         bindedFuncs.push(func)
     if insert
       bindedFuncs = insert.concat bindedFuncs
-    callback =(args)->
+    callback =(args...)->
       for func in bindedFuncs
-        func.apply(@, [args])
+        func.apply(@, [args...])
       return
     return callback
 

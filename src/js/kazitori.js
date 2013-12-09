@@ -1,6 +1,7 @@
 var Deffered, EventDispatcher, Kazitori, KazitoriEvent, Rule, VARIABLE_TYPES, delegater, escapeRegExp, genericParam, namedParam, optionalParam, routeStripper, splatParam, trailingSlash,
   __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
+  __slice = [].slice,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
@@ -1361,11 +1362,12 @@ Kazitori = (function() {
     if (insert) {
       bindedFuncs = insert.concat(bindedFuncs);
     }
-    callback = function(args) {
-      var _j, _len1;
+    callback = function() {
+      var args, _j, _len1;
+      args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
       for (_j = 0, _len1 = bindedFuncs.length; _j < _len1; _j++) {
         func = bindedFuncs[_j];
-        func.apply(this, [args]);
+        func.apply(this, __slice.call(args));
       }
     };
     return callback;
