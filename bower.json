@@ -7,7 +7,7 @@
     "build",
     "docs",
     "example",
-    "node_modules"
+    "node_modules",
     "*.coffee",
     "*.md",
     "test"
