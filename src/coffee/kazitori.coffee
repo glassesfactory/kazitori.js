@@ -86,7 +86,7 @@ VARIABLE_TYPES = [
 *  @constructor
 ###
 class Kazitori
-  VERSION: "0.9.10"
+  VERSION: "0.9.12"
   history: null
   location: null
 
