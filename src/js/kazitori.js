@@ -288,7 +288,7 @@ Kazitori = (function() {
       this.location = win.location;
       this.history = win.history;
     }
-    docMode = document.docmentMode;
+    docMode = document.documentMode;
     this.isIE = win.navigator.userAgent.toLowerCase().indexOf('msie') !== -1;
     this.isOldIE = this.isIE && (!docMode || docMode < 7);
     this._dispatcher = new EventDispatcher();

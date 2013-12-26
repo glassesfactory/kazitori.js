@@ -277,7 +277,7 @@ class Kazitori
     if typeof win != 'undefined'
       @.location = win.location
       @.history = win.history
-    docMode = document.docmentMode
+    docMode = document.documentMode
     @isIE = win.navigator.userAgent.toLowerCase().indexOf('msie') != -1
     @isOldIE = @isIE and (!docMode||docMode < 7)
     @_dispatcher = new EventDispatcher()
