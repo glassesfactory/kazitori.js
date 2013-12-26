@@ -234,6 +234,9 @@ class Kazitori
 
   _isFirstRequest: true
 
+  #pushState が使えない IE で初回時にリダイレクトするかどうか
+  isInitReplace : true
+
 
 
   ###*
@@ -257,9 +260,10 @@ class Kazitori
     if options.routes
       @.routes = options.routes
 
-    @.root = if options.root then options.root else if @.root is null then '/' else @.root
-    @.isTemae = if options.isTemae then options.isTemae else false
-    @.silent = if options.silent then options.silent else false
+    @.root          = if options.root then options.root else if @.root is null then '/' else @.root
+    @.isTemae       = if options.isTemae then options.isTemae else false
+    @.silent        = if options.silent then options.silent else false
+    @.isInitReplace = if options.isInitReplace then options.isInitReplace else true
 
 
     @._params = {
@@ -328,7 +332,7 @@ class Kazitori
 
     atRoot = @.location.pathname.replace(/[^\/]$/, '$&/') is @.root
 
-    if @isIE and not atRoot
+    if @isIE and not atRoot and not @._hasPushState and @isInitReplace
       ieFrag = @.location.pathname.replace(@.root, '')
       @_updateHashIE(ieFrag)
 
@@ -352,7 +356,8 @@ class Kazitori
     override = @.root
     if !@.silent
       if not @._hasPushState and atRoot
-        override = @.root + @.fragment.replace(routeStripper, '')
+        # override = @.root + @.fragment.replace(routeStripper, '')
+        override = @.fragment
       else if not atRoot
         override = @.fragment
     return @loadURL(override)

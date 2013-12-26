@@ -243,6 +243,8 @@ Kazitori = (function() {
 
   Kazitori.prototype._isFirstRequest = true;
 
+  Kazitori.prototype.isInitReplace = true;
+
   /**
   * 一時停止しているかどうかを返します。
   *
@@ -275,6 +277,7 @@ Kazitori = (function() {
     this.root = options.root ? options.root : this.root === null ? '/' : this.root;
     this.isTemae = options.isTemae ? options.isTemae : false;
     this.silent = options.silent ? options.silent : false;
+    this.isInitReplace = options.isInitReplace ? options.isInitReplace : true;
     this._params = {
       params: [],
       queries: {},
@@ -343,7 +346,7 @@ Kazitori = (function() {
     this._wantChangeHash = this.options.hashChange !== false;
     fragment = this.fragment = this.getFragment();
     atRoot = this.location.pathname.replace(/[^\/]$/, '$&/') === this.root;
-    if (this.isIE && !atRoot) {
+    if (this.isIE && !atRoot && !this._hasPushState && this.isInitReplace) {
       ieFrag = this.location.pathname.replace(this.root, '');
       this._updateHashIE(ieFrag);
     }
@@ -365,7 +368,7 @@ Kazitori = (function() {
     override = this.root;
     if (!this.silent) {
       if (!this._hasPushState && atRoot) {
-        override = this.root + this.fragment.replace(routeStripper, '');
+        override = this.fragment;
       } else if (!atRoot) {
         override = this.fragment;
       }
