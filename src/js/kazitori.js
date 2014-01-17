@@ -1246,7 +1246,11 @@ Kazitori = (function() {
     if (this._hasPushState === true) {
       win.addEventListener('popstate', this.observeURLHandler);
     }
-    if (this._wantChangeHash === true && (__indexOf.call(win, 'onhashchange') >= 0) && !this.isOldIE) {
+    console.log(this._wantChangeHash);
+    console.log("onhashchange", (__indexOf.call(window, "onhashchange") >= 0));
+    console.log("hasOwnProperty", win.hasOwnProperty("onhashchange"));
+    if (this._wantChangeHash === true && !this.isOldIE) {
+      console.log("ひょいひょーい");
       return win.addEventListener('hashchange', this.observeURLHandler);
     }
   };

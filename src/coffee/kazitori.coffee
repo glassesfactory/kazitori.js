@@ -1080,7 +1080,13 @@ class Kazitori
     win = window
     if @._hasPushState is true
       win.addEventListener 'popstate', @observeURLHandler
-    if @._wantChangeHash is true and ('onhashchange' in win) and not @.isOldIE
+    #IE9 で addEventListener されていないのでは疑惑
+    console.log @._wantChangeHash
+    console.log "onhashchange", ("onhashchange" in window)
+    console.log "hasOwnProperty", win.hasOwnProperty("onhashchange")
+    # if @._wantChangeHash is true and 'onhashchange' in win and not @.isOldIE
+    if @._wantChangeHash is true and not @.isOldIE
+      console.log "ひょいひょーい"
       win.addEventListener 'hashchange', @observeURLHandler
 
   _removePopStateHandler:()->
