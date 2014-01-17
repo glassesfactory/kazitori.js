@@ -1,7 +1,7 @@
 {
   "name": "kazitori.js",
   "description": "pushState library.",
-  "version": "0.9.12",
+  "version": "1.0.0",
   "main": "src/js/kazitori.js",
   "homepage": "https://github.com/glassesfactory/kazitori.js",
   "author": {

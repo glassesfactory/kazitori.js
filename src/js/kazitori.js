@@ -76,7 +76,7 @@ VARIABLE_TYPES = [
 
 
 Kazitori = (function() {
-  Kazitori.prototype.VERSION = "0.9.12";
+  Kazitori.prototype.VERSION = "1.0.0";
 
   Kazitori.prototype.history = null;
 
@@ -1246,11 +1246,7 @@ Kazitori = (function() {
     if (this._hasPushState === true) {
       win.addEventListener('popstate', this.observeURLHandler);
     }
-    console.log(this._wantChangeHash);
-    console.log("onhashchange", (__indexOf.call(window, "onhashchange") >= 0));
-    console.log("hasOwnProperty", win.hasOwnProperty("onhashchange"));
     if (this._wantChangeHash === true && !this.isOldIE) {
-      console.log("ひょいひょーい");
       return win.addEventListener('hashchange', this.observeURLHandler);
     }
   };

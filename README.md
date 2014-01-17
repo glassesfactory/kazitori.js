@@ -4,7 +4,7 @@ kazitori.js
 [![Build Status](https://travis-ci.org/glassesfactory/kazitori.js.png?branch=master)](https://travis-ci.org/glassesfactory/kazitori.js)
 
 
-**Lastest version:** 0.9.12
+**Lastest version:** 1.0.0
 
 kazitori.js は pushState を良い感じにさばいてくれるライブラリです。  
 外部ライブラリへの依存は無いため、単体で使用することが出来ます。  
@@ -121,6 +121,14 @@ LICENSE
 
 Change Log
 --------------
+
+**2014 01 17 ver 1.0.0**
+
+* レガシー IE での bug fix などを経て十分にテストされたと判断したので 1.0 としてリリースしました。
+* 0.9.9 から対応した細かい bug fix は以下になります。
+* fragment が空文字列だった時 "/" として扱う
+* 引数が複数あった時、うまく展開されないことがあった問題を修正
+* レガシー IE での hashchange 周りの不具合を修正
 
 **2013 06 06 ver 0.9.9**
 
