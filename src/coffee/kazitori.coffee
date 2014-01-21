@@ -283,7 +283,7 @@ class Kazitori
       @.history = win.history
     docMode = document.documentMode
     @isIE = win.navigator.userAgent.toLowerCase().indexOf('msie') != -1
-    @isOldIE = @isIE and (!docMode||docMode < 7)
+    @isOldIE = @isIE and (!docMode||docMode < 9)
     @_dispatcher = new EventDispatcher()
     @.handlers = []
     @.beforeHandlers = []
@@ -1082,11 +1082,15 @@ class Kazitori
       win.addEventListener 'popstate', @observeURLHandler
     if @._wantChangeHash is true and not @.isOldIE
       win.addEventListener 'hashchange', @observeURLHandler
+    else if @._wantChangeHash is true
+      win.attachEvent 'onhashchange', @observeURLHandler
 
   _removePopStateHandler:()->
     win = window
     win.removeEventListener 'popstate', @observeURLHandler
     win.removeEventListener 'hashchange', @observeURLHandler
+    if @.isOldIE
+      win.detachEvent 'onhashchange', @observeURLHandler
 
 
   #==============================================

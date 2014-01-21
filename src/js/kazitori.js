@@ -293,7 +293,7 @@ Kazitori = (function() {
     }
     docMode = document.documentMode;
     this.isIE = win.navigator.userAgent.toLowerCase().indexOf('msie') !== -1;
-    this.isOldIE = this.isIE && (!docMode || docMode < 7);
+    this.isOldIE = this.isIE && (!docMode || docMode < 9);
     this._dispatcher = new EventDispatcher();
     this.handlers = [];
     this.beforeHandlers = [];
@@ -1248,6 +1248,8 @@ Kazitori = (function() {
     }
     if (this._wantChangeHash === true && !this.isOldIE) {
       return win.addEventListener('hashchange', this.observeURLHandler);
+    } else if (this._wantChangeHash === true) {
+      return win.attachEvent('onhashchange', this.observeURLHandler);
     }
   };
 
@@ -1255,7 +1257,10 @@ Kazitori = (function() {
     var win;
     win = window;
     win.removeEventListener('popstate', this.observeURLHandler);
-    return win.removeEventListener('hashchange', this.observeURLHandler);
+    win.removeEventListener('hashchange', this.observeURLHandler);
+    if (this.isOldIE) {
+      return win.detachEvent('onhashchange', this.observeURLHandler);
+    }
   };
 
   Kazitori.prototype._slice = Array.prototype.slice;
