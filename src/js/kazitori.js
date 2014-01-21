@@ -76,7 +76,7 @@ VARIABLE_TYPES = [
 
 
 Kazitori = (function() {
-  Kazitori.prototype.VERSION = "1.0.0";
+  Kazitori.prototype.VERSION = "1.0.1";
 
   Kazitori.prototype.history = null;
 
