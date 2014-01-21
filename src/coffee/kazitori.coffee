@@ -260,10 +260,11 @@ class Kazitori
     if options.routes
       @.routes = options.routes
 
-    @.root          = if options.root then options.root else if @.root is null then '/' else @.root
+    @.root          = if options.hasOwnProperty "root" then options.root else if @.root is null then '/' else @.root
+    console.log @.root
     @.isTemae       = if options.isTemae then options.isTemae else false
     @.silent        = if options.silent then options.silent else false
-    @.isInitReplace = if options.isInitReplace then options.isInitReplace else true
+    @.isInitReplace = if options.hasOwnProperty "isInitReplace" then options.isInitReplace else true
 
 
     @._params = {
@@ -878,9 +879,15 @@ class Kazitori
     return
 
   _updateHash:(location, fragment, replace)->
+    atRoot = @.location.pathname.replace(/[^\/]$/, '$&/') is @.root
+    console.log "あっとるーと?", atRoot
+    unless atRoot
+      location.replace @.root + '#' + fragment
+      return
     if replace
       href = location.href.replace /(javascript:|#).*$/, ''
       location.replace href + '#' + fragment
+      # location.replace @.root + '#' + fragment
     else
       location.hash = "#" + fragment
     return

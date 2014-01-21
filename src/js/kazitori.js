@@ -274,10 +274,11 @@ Kazitori = (function() {
     if (options.routes) {
       this.routes = options.routes;
     }
-    this.root = options.root ? options.root : this.root === null ? '/' : this.root;
+    this.root = options.hasOwnProperty("root") ? options.root : this.root === null ? '/' : this.root;
+    console.log(this.root);
     this.isTemae = options.isTemae ? options.isTemae : false;
     this.silent = options.silent ? options.silent : false;
-    this.isInitReplace = options.isInitReplace ? options.isInitReplace : true;
+    this.isInitReplace = options.hasOwnProperty("isInitReplace") ? options.isInitReplace : true;
     this._params = {
       params: [],
       queries: {},
@@ -997,7 +998,13 @@ Kazitori = (function() {
   };
 
   Kazitori.prototype._updateHash = function(location, fragment, replace) {
-    var href;
+    var atRoot, href;
+    atRoot = this.location.pathname.replace(/[^\/]$/, '$&/') === this.root;
+    console.log("あっとるーと?", atRoot);
+    if (!atRoot) {
+      location.replace(this.root + '#' + fragment);
+      return;
+    }
     if (replace) {
       href = location.href.replace(/(javascript:|#).*$/, '');
       location.replace(href + '#' + fragment);
