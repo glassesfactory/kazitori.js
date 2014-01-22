@@ -76,7 +76,7 @@ VARIABLE_TYPES = [
 
 
 Kazitori = (function() {
-  Kazitori.prototype.VERSION = "1.0.1";
+  Kazitori.prototype.VERSION = "1.0.2";
 
   Kazitori.prototype.history = null;
 
@@ -275,7 +275,6 @@ Kazitori = (function() {
       this.routes = options.routes;
     }
     this.root = options.hasOwnProperty("root") ? options.root : this.root === null ? '/' : this.root;
-    console.log(this.root);
     this.isTemae = options.isTemae ? options.isTemae : false;
     this.silent = options.silent ? options.silent : false;
     this.isInitReplace = options.hasOwnProperty("isInitReplace") ? options.isInitReplace : true;

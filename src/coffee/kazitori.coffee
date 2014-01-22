@@ -86,7 +86,7 @@ VARIABLE_TYPES = [
 *  @constructor
 ###
 class Kazitori
-  VERSION: "1.0.1"
+  VERSION: "1.0.2"
   history: null
   location: null
 
@@ -261,7 +261,6 @@ class Kazitori
       @.routes = options.routes
 
     @.root          = if options.hasOwnProperty "root" then options.root else if @.root is null then '/' else @.root
-    console.log @.root
     @.isTemae       = if options.isTemae then options.isTemae else false
     @.silent        = if options.silent then options.silent else false
     @.isInitReplace = if options.hasOwnProperty "isInitReplace" then options.isInitReplace else true
