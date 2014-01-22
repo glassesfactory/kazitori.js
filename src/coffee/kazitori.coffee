@@ -880,7 +880,6 @@ class Kazitori
 
   _updateHash:(location, fragment, replace)->
     atRoot = @.location.pathname.replace(/[^\/]$/, '$&/') is @.root
-    console.log "あっとるーと?", atRoot
     unless atRoot
       location.replace @.root + '#' + fragment
       return

@@ -1000,7 +1000,6 @@ Kazitori = (function() {
   Kazitori.prototype._updateHash = function(location, fragment, replace) {
     var atRoot, href;
     atRoot = this.location.pathname.replace(/[^\/]$/, '$&/') === this.root;
-    console.log("あっとるーと?", atRoot);
     if (!atRoot) {
       location.replace(this.root + '#' + fragment);
       return;
