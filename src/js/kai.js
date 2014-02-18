@@ -1,7 +1,7 @@
+
 /*
 Kazitori Path Helper
-*/
-
+ */
 (function(window) {
   var Kai, _GET_PATH;
   Kai = function() {
@@ -21,8 +21,8 @@ Kazitori Path Helper
   Kai.TABLET_DIR = 'tablet';
   Kai.ROOT = 'root';
   Kai.RELATIVE = 'relative';
-  /*Kai.init*/
 
+  /*Kai.init */
   Kai.init = function(options) {
     var loc, owner;
     if (!options) {
@@ -41,36 +41,36 @@ Kazitori Path Helper
     Kai.host = owner.call(options, 'host') ? options.host : loc.host;
     Kai.root = owner.call(options, 'root') ? options.root : '/';
   };
-  /*Kai.GET_CSS_PATH*/
 
+  /*Kai.GET_CSS_PATH */
   Kai.GET_CSS_PATH = function(rule, device) {
     var func;
     func = rule === Kai.RELATIVE ? Kai.GET_RELATIVE_PATH : Kai.GET_ROOT_PATH;
     return func.apply(Kai, [Kai.CSS_DIR, device]);
   };
-  /*Kai.GET_SCRIPT_PATH*/
 
+  /*Kai.GET_SCRIPT_PATH */
   Kai.GET_SCRIPT_PATH = function(rule, device) {
     var func;
     func = rule === Kai.RELATIVE ? Kai.GET_RELATIVE_PATH : Kai.GET_ROOT_PATH;
     return func.apply(Kai, [Kai.SCRIPT_DIR, device]);
   };
-  /*Kai.GET_IMAGE_PATH*/
 
+  /*Kai.GET_IMAGE_PATH */
   Kai.GET_IMAGE_PATH = function(rule, device) {
     var func;
     func = rule === Kai.RELATIVE ? Kai.GET_RELATIVE_PATH : Kai.GET_ROOT_PATH;
     return func.apply(Kai, [Kai.IMAGE_DIR, device]);
   };
-  /*Kai.GET_DATA_PATH*/
 
+  /*Kai.GET_DATA_PATH */
   Kai.GET_DATA_PATH = function(rule, device) {
     var func;
     func = rule === Kai.RELATIVE ? Kai.GET_RELATIVE_PATH : Kai.GET_ROOT_PATH;
     return func.apply(Kai, [Kai.DATA_DIR, device]);
   };
-  /*Kai.GET_RELATIVE_PATH*/
 
+  /*Kai.GET_RELATIVE_PATH */
   Kai.GET_RELATIVE_PATH = function(asset, device) {
     var fragment, i, level, result;
     fragment = window.location.pathname;
@@ -89,8 +89,8 @@ Kazitori Path Helper
     }
     return result;
   };
-  /*Kai.GET_ROOT_PATH*/
 
+  /*Kai.GET_ROOT_PATH */
   Kai.GET_ROOT_PATH = function(asset, device) {
     var result;
     result = '/' + _GET_PATH(asset, device);

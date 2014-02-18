@@ -152,7 +152,7 @@ $(document).ready ()->
   $('#dialog').hide()
   window.App = new Router
     'root' :  "/"
-    isLastSlash : true
+    isLastSlash : false
   console.log window.App.handlers
   # foo = new FooRouter({'isAutoStart':false})
   # window.App.appendRouter foo, '/foo/'

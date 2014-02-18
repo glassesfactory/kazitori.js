@@ -172,12 +172,13 @@ describe "Kazitori", ->
       expect(startHandler).toHaveBeenCalled()
 
     it "should dispatch start event once", ->
-      expect(startHandler.calls.length).toEqual(1)
+
+      expect(startHandler.calls.count()).toEqual(1)
 
     it "should not call handler when START event listener removed", ->
 
       router.removeEventListener KazitoriEvent.START, startHandler
-      startHandler.reset()
+      startHandler.calls.reset()
       router.stop()
       router.start()
       expect(startHandler).not.toHaveBeenCalled()
@@ -190,11 +191,11 @@ describe "Kazitori", ->
       expect(stopHandler).toHaveBeenCalled()
 
     it "should dispatch stop event once", ->
-      expect(stopHandler.calls.length).toEqual(1)
+      expect(stopHandler.calls.count()).toEqual(1)
 
     it "should not call handler when STOP event listener removed", ->
       router.removeEventListener KazitoriEvent.STOP, stopHandler
-      stopHandler.reset()
+      stopHandler.calls.reset()
       router.stop()
       expect(stopHandler).not.toHaveBeenCalled()
       router.start()
@@ -229,10 +230,10 @@ describe "Kazitori", ->
 
       router.change("#{_next}")
       expect(listener.onChange).toHaveBeenCalled()
-      expect(listener.onChange.calls.length).toEqual(1)
+      expect(listener.onChange.calls.count()).toEqual(1)
 
       expect(listener.onInternalChange).toHaveBeenCalled()
-      expect(listener.onInternalChange.calls.length).toEqual(1)
+      expect(listener.onInternalChange.calls.count()).toEqual(1)
 
       expect(listener.onUserChange).not.toHaveBeenCalled()
 
@@ -243,12 +244,12 @@ describe "Kazitori", ->
       location.replace("#{location.origin}#{_next}")
 
       expect(listener.onChange).toHaveBeenCalled()
-      expect(listener.onChange.calls.length).toEqual(1)
+      expect(listener.onChange.calls.count()).toEqual(1)
 
       expect(listener.onInternalChange).not.toHaveBeenCalled()
 
       expect(listener.onUserChange).toHaveBeenCalled()
-      expect(listener.onUserChange.calls.length).toEqual(1)
+      expect(listener.onUserChange.calls.count()).toEqual(1)
 
       router.removeEventListener KazitoriEvent.CHANGE, listener.onChange
       router.removeEventListener KazitoriEvent.INTERNAL_CHANGE, listener.onChange
@@ -285,7 +286,7 @@ describe "Kazitori", ->
       router.addEventListener KazitoriEvent.REJECT, rejectHandler
       router.reject()
       expect(rejectHandler).toHaveBeenCalled()
-      expect(rejectHandler.calls.length).toEqual(1)
+      expect(rejectHandler.calls.count()).toEqual(1)
 
     prevHandler = jasmine.createSpy('PREV Event')
 
@@ -293,11 +294,11 @@ describe "Kazitori", ->
       router.addEventListener KazitoriEvent.PREV, prevHandler
       router.omokazi()
       expect(prevHandler).toHaveBeenCalled()
-      expect(prevHandler.calls.length).toEqual(1)
+      expect(prevHandler.calls.count()).toEqual(1)
 
     it "should not call handler when PREV event listener removed", ->
       router.removeEventListener KazitoriEvent.PREV, prevHandler
-      prevHandler.reset()
+      prevHandler.calls.reset()
       router.omokazi()
       expect(prevHandler).not.toHaveBeenCalled()
 
@@ -310,12 +311,12 @@ describe "Kazitori", ->
       router.addEventListener KazitoriEvent.NEXT, nextHandler
       router.torikazi()
       expect(nextHandler).toHaveBeenCalled()
-      expect(nextHandler.calls.length).toEqual(1)
+      expect(nextHandler.calls.count()).toEqual(1)
 
     it "should not call handler when NEXT event listener removed", ->
       router.change('/posts/1')
       router.omokazi()
-      nextHandler.reset()
+      nextHandler.calls.reset()
 
       router.removeEventListener KazitoriEvent.NEXT, nextHandler
       router.torikazi()
@@ -327,11 +328,11 @@ describe "Kazitori", ->
       router.addEventListener KazitoriEvent.NOT_FOUND, notFoundHandler
       router.change("/hageeeeeee")
       expect(notFoundHandler).toHaveBeenCalled()
-      expect(notFoundHandler.calls.length).toEqual(1)
+      expect(notFoundHandler.calls.count()).toEqual(1)
 
     it "should not call handler when NEXT event listener removed", ->
       router.removeEventListener KazitoriEvent.NOT_FOUND, notFoundHandler
-      notFoundHandler.reset()
+      notFoundHandler.calls.reset()
       router.change("/hogeeeeeee")
       expect(notFoundHandler).not.toHaveBeenCalled()
 
@@ -503,7 +504,7 @@ describe "Kazitori", ->
       # router.change('/appender')
 
       # expect(notFoundHandler).toHaveBeenCalled()
-      # expect(notFoundHandler.calls.length).toEqual(1)
+      # expect(notFoundHandler.calls.count()).toEqual(1)
 
     it 'shuold remove router from instance', ->
       spyOn(childController, 'index')
@@ -518,7 +519,7 @@ describe "Kazitori", ->
       router.change('/appender')
 
       # expect(notFoundHandler).toHaveBeenCalled()
-      # expect(notFoundHandler.calls.length).toEqual(1)
+      # expect(notFoundHandler.calls.count()).toEqual(1)
 
   describe "silent", ->
     it 'shuold call show and not change location', ->
@@ -552,11 +553,11 @@ describe "Deffered", ->
   d.addEventListener KazitoriEvent.TASK_QUEUE_FAILED, taskQueueFailedHandler
 
   beforeEach ->
-    defferedSpy.reset()
-    chaninedDefferedSpy.reset()
-    defferedSpy2.reset()
-    taskQueueFailedHandler.reset()
-    taskQueueCompleteHandler.reset()
+    defferedSpy.calls.reset()
+    chaninedDefferedSpy.calls.reset()
+    defferedSpy2.calls.reset()
+    taskQueueFailedHandler.calls.reset()
+    taskQueueCompleteHandler.calls.reset()
 
   afterEach ->
 
@@ -582,21 +583,27 @@ describe "Deffered", ->
     d.deffered defferedSpy2
     d.execute(d)
 
+    return
+
 
   # it 'should dispatch TASK_QUEUE_FAILD envet when defferd completed', ->
   it 'should dispatch TASK_QUEUE_COMPLETE envet when defferd completed', ->
     complete = false
+    # console.log runs
+    # runs ->
+    #   d.deffered (d)->
+    #     complete = true
+    #     return
+    #   return
 
-    runs ->
-      d.deffered (d)->
-        complete = true
+    # waitsFor ->
+    #   d.execute(d)
+    #   return complete
 
-    waitsFor ->
-      d.execute(d)
-      complete
-
-    runs ->
-      expect(taskQueueCompleteHandler).toHaveBeenCalled()
+    # runs ->
+    #   expect(taskQueueCompleteHandler).toHaveBeenCalled()
+    #   return
+    return
 
   it 'should dispatch TASK_QUEUE_FAILED envet when defferd.reject called', ->
     d.deffered (d)->
@@ -604,3 +611,5 @@ describe "Deffered", ->
 
     d.execute(d)
     expect(taskQueueFailedHandler).toHaveBeenCalled()
+    return
+  return

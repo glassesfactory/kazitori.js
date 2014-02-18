@@ -1,4 +1,4 @@
-var BarRouter, COOKIE_KEY, FooRouter, PASS, Router, USER, clickHandler, getCookie, isLoaded, nextHandler, prevHandler, setCookie, test2, test3, _ref, _ref1, _ref2,
+var BarRouter, COOKIE_KEY, FooRouter, PASS, Router, USER, clickHandler, getCookie, isLoaded, nextHandler, prevHandler, setCookie, test2, test3,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
@@ -12,8 +12,7 @@ FooRouter = (function(_super) {
   __extends(FooRouter, _super);
 
   function FooRouter() {
-    _ref = FooRouter.__super__.constructor.apply(this, arguments);
-    return _ref;
+    return FooRouter.__super__.constructor.apply(this, arguments);
   }
 
   FooRouter.prototype.root = '/foo/';
@@ -60,8 +59,7 @@ BarRouter = (function(_super) {
   __extends(BarRouter, _super);
 
   function BarRouter() {
-    _ref1 = BarRouter.__super__.constructor.apply(this, arguments);
-    return _ref1;
+    return BarRouter.__super__.constructor.apply(this, arguments);
   }
 
   BarRouter.prototype.routes = {
@@ -80,8 +78,7 @@ Router = (function(_super) {
   __extends(Router, _super);
 
   function Router() {
-    _ref2 = Router.__super__.constructor.apply(this, arguments);
-    return _ref2;
+    return Router.__super__.constructor.apply(this, arguments);
   }
 
   Router.prototype.beforeAnytime = ['anytime'];
@@ -137,10 +134,10 @@ Router = (function(_super) {
     return console.log("nullpo");
   };
 
+
   /*
     some before functions
-  */
-
+   */
 
   Router.prototype.anytime = function() {
     return console.log("any!?");
@@ -190,7 +187,7 @@ $(document).ready(function() {
   $('#dialog').hide();
   window.App = new Router({
     'root': "/",
-    isLastSlash: true
+    isLastSlash: false
   });
   console.log(window.App.handlers);
   Kai.init();
