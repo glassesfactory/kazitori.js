@@ -26,7 +26,7 @@ FooRouter = (function(_super) {
 
   FooRouter.prototype.routes = {
     '/': 'index',
-    '/<int:id>': 'show'
+    '/<int:id>/': 'show'
   };
 
   FooRouter.prototype.index = function() {
@@ -189,7 +189,8 @@ $(document).ready(function() {
   });
   $('#dialog').hide();
   window.App = new Router({
-    'root': "/"
+    'root': "/",
+    isLastSlash: true
   });
   console.log(window.App.handlers);
   Kai.init();

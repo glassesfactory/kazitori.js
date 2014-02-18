@@ -1,6 +1,7 @@
 var Deffered, EventDispatcher, Kazitori, KazitoriEvent, Rule, VARIABLE_TYPES, delegater, escapeRegExp, genericParam, namedParam, optionalParam, routeStripper, splatParam, trailingSlash,
   __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
+  __slice = [].slice,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
@@ -75,7 +76,7 @@ VARIABLE_TYPES = [
 
 
 Kazitori = (function() {
-  Kazitori.prototype.VERSION = "0.9.10";
+  Kazitori.prototype.VERSION = "1.0.2";
 
   Kazitori.prototype.history = null;
 
@@ -242,6 +243,10 @@ Kazitori = (function() {
 
   Kazitori.prototype._isFirstRequest = true;
 
+  Kazitori.prototype.isInitReplace = true;
+
+  Kazitori.prototype.isLastSlash = false;
+
   /**
   * 一時停止しているかどうかを返します。
   *
@@ -271,9 +276,11 @@ Kazitori = (function() {
     if (options.routes) {
       this.routes = options.routes;
     }
-    this.root = options.root ? options.root : this.root === null ? '/' : this.root;
+    this.root = options.hasOwnProperty("root") ? options.root : this.root === null ? '/' : this.root;
     this.isTemae = options.isTemae ? options.isTemae : false;
     this.silent = options.silent ? options.silent : false;
+    this.isInitReplace = options.hasOwnProperty("isInitReplace") ? options.isInitReplace : true;
+    this.isLastSlash = options.hasOwnProperty("isLastSlash") ? options.isLastSlash : false;
     this._params = {
       params: [],
       queries: {},
@@ -287,9 +294,9 @@ Kazitori = (function() {
       this.location = win.location;
       this.history = win.history;
     }
-    docMode = document.docmentMode;
+    docMode = document.documentMode;
     this.isIE = win.navigator.userAgent.toLowerCase().indexOf('msie') !== -1;
-    this.isOldIE = this.isIE && (!docMode || docMode < 7);
+    this.isOldIE = this.isIE && (!docMode || docMode < 9);
     this._dispatcher = new EventDispatcher();
     this.handlers = [];
     this.beforeHandlers = [];
@@ -311,6 +318,10 @@ Kazitori = (function() {
       });
     } catch (_error) {
       e = _error;
+      if (this.isOldIE) {
+        this.params = this._params.params;
+        this.queries = this._params.queries;
+      }
     }
     if ((this.options.isAutoStart == null) || this.options.isAutoStart !== false) {
       this.start();
@@ -342,7 +353,7 @@ Kazitori = (function() {
     this._wantChangeHash = this.options.hashChange !== false;
     fragment = this.fragment = this.getFragment();
     atRoot = this.location.pathname.replace(/[^\/]$/, '$&/') === this.root;
-    if (this.isIE && !atRoot) {
+    if (this.isIE && !atRoot && !this._hasPushState && this.isInitReplace) {
       ieFrag = this.location.pathname.replace(this.root, '');
       this._updateHashIE(ieFrag);
     }
@@ -364,7 +375,7 @@ Kazitori = (function() {
     override = this.root;
     if (!this.silent) {
       if (!this._hasPushState && atRoot) {
-        override = this.root + this.fragment.replace(routeStripper, '');
+        override = this.fragment;
       } else if (!atRoot) {
         override = this.fragment;
       }
@@ -520,6 +531,9 @@ Kazitori = (function() {
       options = this._changeOptions;
     }
     url = this.root + this.fragment.replace(routeStripper, '');
+    if (this.isLastSlash) {
+      url += "/";
+    }
     if (!this.silent) {
       if (this._hasPushState) {
         this.history[options.replace ? 'replaceState' : 'pushState']({}, document.title, url);
@@ -993,7 +1007,12 @@ Kazitori = (function() {
   };
 
   Kazitori.prototype._updateHash = function(location, fragment, replace) {
-    var href;
+    var atRoot, href;
+    atRoot = this.location.pathname.replace(/[^\/]$/, '$&/') === this.root;
+    if (!atRoot) {
+      location.replace(this.root + '#' + fragment);
+      return;
+    }
     if (replace) {
       href = location.href.replace(/(javascript:|#).*$/, '');
       location.replace(href + '#' + fragment);
@@ -1110,6 +1129,9 @@ Kazitori = (function() {
     }
     if (typeof fragment === "string") {
       fragment = fragment.replace(trailingSlash, '');
+      if (fragment === "") {
+        fragment = "/";
+      }
     }
     return fragment;
   };
@@ -1179,15 +1201,25 @@ Kazitori = (function() {
         if (!test) {
           this._params.params = this._getCastedParams(rule, newParam.slice(0));
           this._params.queries = newQueries;
+          if (this.isOldIE) {
+            this.params = this._params.params;
+            this.queries = this._params.queries;
+          }
         }
       } else {
         if (!test) {
           this._params.params = this._getCastedParams(rule, newParam);
+          if (this.isOldIE) {
+            this.params = this._params.params;
+          }
         }
       }
       return newParam;
     } else {
       this._params.params = [];
+      if (this.isOldIE) {
+        this.param = [];
+      }
       return null;
     }
   };
@@ -1239,8 +1271,10 @@ Kazitori = (function() {
     if (this._hasPushState === true) {
       win.addEventListener('popstate', this.observeURLHandler);
     }
-    if (this._wantChangeHash === true && (__indexOf.call(win, 'onhashchange') >= 0) && !this.isOldIE) {
+    if (this._wantChangeHash === true && !this.isOldIE) {
       return win.addEventListener('hashchange', this.observeURLHandler);
+    } else if (this._wantChangeHash === true) {
+      return win.attachEvent('onhashchange', this.observeURLHandler);
     }
   };
 
@@ -1248,7 +1282,10 @@ Kazitori = (function() {
     var win;
     win = window;
     win.removeEventListener('popstate', this.observeURLHandler);
-    return win.removeEventListener('hashchange', this.observeURLHandler);
+    win.removeEventListener('hashchange', this.observeURLHandler);
+    if (this.isOldIE) {
+      return win.detachEvent('onhashchange', this.observeURLHandler);
+    }
   };
 
   Kazitori.prototype._slice = Array.prototype.slice;
@@ -1358,11 +1395,12 @@ Kazitori = (function() {
     if (insert) {
       bindedFuncs = insert.concat(bindedFuncs);
     }
-    callback = function(args) {
-      var _j, _len1;
+    callback = function() {
+      var args, _j, _len1;
+      args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
       for (_j = 0, _len1 = bindedFuncs.length; _j < _len1; _j++) {
         func = bindedFuncs[_j];
-        func.apply(this, [args]);
+        func.apply(this, __slice.call(args));
       }
     };
     return callback;

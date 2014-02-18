@@ -237,6 +237,9 @@ class Kazitori
   #pushState が使えない IE で初回時にリダイレクトするかどうか
   isInitReplace : true
 
+  #末尾のスラッシュ
+  isLastSlash : false
+
 
 
   ###*
@@ -264,7 +267,7 @@ class Kazitori
     @.isTemae       = if options.isTemae then options.isTemae else false
     @.silent        = if options.silent then options.silent else false
     @.isInitReplace = if options.hasOwnProperty "isInitReplace" then options.isInitReplace else true
-
+    @.isLastSlash   = if options.hasOwnProperty "isLastSlash" then options.isLastSlash else false
 
     @._params = {
       params:[]
@@ -303,6 +306,9 @@ class Kazitori
           return @._params.queries
         })
     catch e
+      if @isOldIE
+        @.params = @._params.params
+        @.queries = @._params.queries
       #throw new Error(e)
       #IEだと defineProperty がアレらしいので
       #@.__defineGetter__ したほうがいいかなー
@@ -489,6 +495,8 @@ class Kazitori
     if not options
       options = @._changeOptions
     url = @.root + @.fragment.replace(routeStripper, '')
+    if @.isLastSlash
+      url += "/"
     if not @.silent
       if @._hasPushState
         @.history[ if options.replace then 'replaceState' else 'pushState' ]({}, document.title, url)
@@ -904,7 +912,6 @@ class Kazitori
     matched = []
     tmpFrag = fragment
     if tmpFrag isnt undefined and tmpFrag isnt 'undefined'
-
       hasQuery = @_match.apply(tmpFrag, [/(\?[\w\d=|]+)/g])
     if hasQuery
       fragment = fragment.split('?')[0]
@@ -1035,12 +1042,19 @@ class Kazitori
         if not test
           @._params.params = @_getCastedParams(rule, newParam.slice(0))
           @._params.queries = newQueries
+          if @isOldIE
+            @.params  = @._params.params
+            @.queries = @._params.queries
       else
         if not test
           @._params.params = @_getCastedParams(rule, newParam)
+          if @isOldIE
+            @.params  = @._params.params
       return newParam
     else
       @._params.params = []
+      if @isOldIE
+        @.param = []
       return null
 
   #パラメーターを指定された型でキャスト

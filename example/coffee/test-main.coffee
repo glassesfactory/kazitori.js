@@ -10,7 +10,7 @@ class FooRouter extends Kazitori
     '/': ['beforeFooMinchi']
   routes:
     '/': 'index'
-    '/<int:id>': 'show'
+    '/<int:id>/': 'show'
 
   index:()->
     console.log 'Foo!'
@@ -150,7 +150,9 @@ $(document).ready ()->
     left : window.innerWidth / 2 - 150
   })
   $('#dialog').hide()
-  window.App = new Router({'root': "/"})
+  window.App = new Router
+    'root' :  "/"
+    isLastSlash : true
   console.log window.App.handlers
   # foo = new FooRouter({'isAutoStart':false})
   # window.App.appendRouter foo, '/foo/'

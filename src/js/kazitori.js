@@ -245,6 +245,8 @@ Kazitori = (function() {
 
   Kazitori.prototype.isInitReplace = true;
 
+  Kazitori.prototype.isLastSlash = false;
+
   /**
   * 一時停止しているかどうかを返します。
   *
@@ -278,6 +280,7 @@ Kazitori = (function() {
     this.isTemae = options.isTemae ? options.isTemae : false;
     this.silent = options.silent ? options.silent : false;
     this.isInitReplace = options.hasOwnProperty("isInitReplace") ? options.isInitReplace : true;
+    this.isLastSlash = options.hasOwnProperty("isLastSlash") ? options.isLastSlash : false;
     this._params = {
       params: [],
       queries: {},
@@ -315,6 +318,10 @@ Kazitori = (function() {
       });
     } catch (_error) {
       e = _error;
+      if (this.isOldIE) {
+        this.params = this._params.params;
+        this.queries = this._params.queries;
+      }
     }
     if ((this.options.isAutoStart == null) || this.options.isAutoStart !== false) {
       this.start();
@@ -524,6 +531,9 @@ Kazitori = (function() {
       options = this._changeOptions;
     }
     url = this.root + this.fragment.replace(routeStripper, '');
+    if (this.isLastSlash) {
+      url += "/";
+    }
     if (!this.silent) {
       if (this._hasPushState) {
         this.history[options.replace ? 'replaceState' : 'pushState']({}, document.title, url);
@@ -1191,15 +1201,25 @@ Kazitori = (function() {
         if (!test) {
           this._params.params = this._getCastedParams(rule, newParam.slice(0));
           this._params.queries = newQueries;
+          if (this.isOldIE) {
+            this.params = this._params.params;
+            this.queries = this._params.queries;
+          }
         }
       } else {
         if (!test) {
           this._params.params = this._getCastedParams(rule, newParam);
+          if (this.isOldIE) {
+            this.params = this._params.params;
+          }
         }
       }
       return newParam;
     } else {
       this._params.params = [];
+      if (this.isOldIE) {
+        this.param = [];
+      }
       return null;
     }
   };
