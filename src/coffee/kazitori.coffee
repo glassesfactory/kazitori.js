@@ -23,6 +23,7 @@ routeStripper = /^[#\/]|\s+$/g
 escapeRegExp = /[\-{}\[\]+?.,\\\^$|#\s]/g
 namedParam = /<(\w+|[A-Za-z_-]+:\w+)>/g
 genericParam = /([A-Za-z_-]+):(\w+)/
+filePattern  = /\w+\.[a-zA-Z0-9]{3,64}/
 
 optionalParam = /\((.*?)\)/g
 splatParam = /\*\w+/g
@@ -315,7 +316,7 @@ class Kazitori
 
     if not @.options.isAutoStart? or @.options.isAutoStart != false
       @start()
-    return
+
 
 
   ###*
@@ -381,6 +382,8 @@ class Kazitori
     @.started = false
     #ストップイベントをディスパッチ
     @._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.STOP, @.fragment))
+    return
+
 
   ###*
   * ブラウザのヒストリー機能を利用して「進む」を実行します。<br>
@@ -486,6 +489,7 @@ class Kazitori
     @change(fragment, options)
     return
 
+
   _urlChange:(fragment, options)->
     @._processStep.status = '_urlChange'
     @._processStep.args = [fragment, options]
@@ -495,8 +499,12 @@ class Kazitori
     if not options
       options = @._changeOptions
     url = @.root + @.fragment.replace(routeStripper, '')
-    if @.isLastSlash
+    #末尾に slash を付ける必要がある場合つける
+    isFile = url.match(filePattern)
+    isLastSlash = url.match(trailingSlash)
+    if @.isLastSlash and not isFile and not isLastSlash
       url += "/"
+
     if not @.silent
       if @._hasPushState
         @.history[ if options.replace then 'replaceState' else 'pushState' ]({}, document.title, url)
@@ -514,6 +522,7 @@ class Kazitori
     if options.internal and options.internal is true
       @._dispatcher.dispatchEvent( new KazitoriEvent(KazitoriEvent.INTERNAL_CHANGE, @.fragment, @.lastFragment))
     @loadURL(@.fragment, options)
+    return
 
 
   ###*
@@ -601,6 +610,7 @@ class Kazitori
     if child.beforeAnytimeHandler
       @.lastAnytime = @.beforeAnytime.concat()
       @_bindBeforeAnytime(@.beforeAnytime, [child.beforeAnytimeHandler.callback])
+    return
 
 
   ###*
@@ -693,7 +703,7 @@ class Kazitori
         newBefores.unshift(beforeRule)
       i++
     @.beforeHandlers = newBefores
-
+    return
 
   ###*
   * ブラウザから現在の URL を読み込みます。
@@ -763,6 +773,7 @@ class Kazitori
     @._beforeDeffer.addEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, @beforeComplete)
     @._beforeDeffer.addEventListener(KazitoriEvent.TASK_QUEUE_FAILED, @beforeFailed)
     @._beforeDeffer.execute(@._beforeDeffer)
+    return
 
   #routes で登録されたメソッドを実行
   executeHandlers:()=>
@@ -860,6 +871,7 @@ class Kazitori
         callback && callback.apply(@, args)
       ,@
     }
+    return
 
   # notFound で指定されたメソッドをバインド
   _bindNotFound:()->
@@ -901,7 +913,7 @@ class Kazitori
   #zantei
   _updateHashIE:(fragment, replace)->
     location.replace @.root + '#/' + fragment
-
+    return
 
   #マッチする URL があるかどうか
   # memo : 20130130
@@ -1004,6 +1016,7 @@ class Kazitori
       return match[1]
     else
       return ''
+    return
 
 
   ###*
@@ -1056,6 +1069,7 @@ class Kazitori
       if @isOldIE
         @.param = []
       return null
+    return
 
   #パラメーターを指定された型でキャスト
   _getCastedParams:(rule, params)->
@@ -1087,12 +1101,15 @@ class Kazitori
 
   addEventListener:(type, listener)->
     @_dispatcher.addEventListener(type, listener)
+    return
 
   removeEventListener:(type, listener)->
     @_dispatcher.removeEventListener(type, listener)
+    return
 
   dispatchEvent:(event)->
     @_dispatcher.dispatchEvent(event)
+    return
 
 
   _addPopStateHandler:()->
@@ -1103,6 +1120,7 @@ class Kazitori
       win.addEventListener 'hashchange', @observeURLHandler
     else if @._wantChangeHash is true
       win.attachEvent 'onhashchange', @observeURLHandler
+    return
 
   _removePopStateHandler:()->
     win = window
@@ -1110,6 +1128,7 @@ class Kazitori
     win.removeEventListener 'hashchange', @observeURLHandler
     if @.isOldIE
       win.detachEvent 'onhashchange', @observeURLHandler
+    return
 
 
   #==============================================
@@ -1167,6 +1186,7 @@ class Kazitori
         if k in obj
           if iter.call(ctx, obj[k], k, obj) is @breaker
             return
+    return
 
   _bindFunctions:(funcs, insert)->
     if typeof funcs is 'string'
@@ -1290,7 +1310,7 @@ class Rule
       for m in matched
         t = m.match(genericParam)||null
         @types.push if t isnt null then t[1] else null
-
+    return
 
 ###*
 * イベントディスパッチャ
@@ -1379,6 +1399,7 @@ class Deffered extends EventDispatcher
     message = if not error then "user reject" else error
     @dispatchEvent({type:KazitoriEvent.TASK_QUEUE_FAILED, index:@index, message:message })
     @isSuspend = false
+    return
 
   #deffered を一時停止する
   suspend:()->

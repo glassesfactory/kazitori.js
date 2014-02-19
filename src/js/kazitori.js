@@ -1,4 +1,4 @@
-var Deffered, EventDispatcher, Kazitori, KazitoriEvent, Rule, VARIABLE_TYPES, delegater, escapeRegExp, genericParam, namedParam, optionalParam, routeStripper, splatParam, trailingSlash,
+var Deffered, EventDispatcher, Kazitori, KazitoriEvent, Rule, VARIABLE_TYPES, delegater, escapeRegExp, filePattern, genericParam, namedParam, optionalParam, routeStripper, splatParam, trailingSlash,
   __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
   __slice = [].slice,
@@ -20,6 +20,8 @@ escapeRegExp = /[\-{}\[\]+?.,\\\^$|#\s]/g;
 namedParam = /<(\w+|[A-Za-z_-]+:\w+)>/g;
 
 genericParam = /([A-Za-z_-]+):(\w+)/;
+
+filePattern = /\w+\.[a-zA-Z0-9]{3,64}/;
 
 optionalParam = /\((.*?)\)/g;
 
@@ -326,7 +328,6 @@ Kazitori = (function() {
     if ((this.options.isAutoStart == null) || this.options.isAutoStart !== false) {
       this.start();
     }
-    return;
   }
 
 
@@ -396,7 +397,7 @@ Kazitori = (function() {
     win.removeEventListener('popstate', this.observeURLHandler);
     win.removeEventListener('hashchange', this.observeURLHandler);
     this.started = false;
-    return this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.STOP, this.fragment));
+    this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.STOP, this.fragment));
   };
 
 
@@ -521,7 +522,7 @@ Kazitori = (function() {
   };
 
   Kazitori.prototype._urlChange = function(fragment, options) {
-    var url;
+    var isFile, isLastSlash, url;
     this._processStep.status = '_urlChange';
     this._processStep.args = [fragment, options];
     if (this.isSuspend) {
@@ -531,7 +532,9 @@ Kazitori = (function() {
       options = this._changeOptions;
     }
     url = this.root + this.fragment.replace(routeStripper, '');
-    if (this.isLastSlash) {
+    isFile = url.match(filePattern);
+    isLastSlash = url.match(trailingSlash);
+    if (this.isLastSlash && !isFile && !isLastSlash) {
       url += "/";
     }
     if (!this.silent) {
@@ -553,7 +556,7 @@ Kazitori = (function() {
     if (options.internal && options.internal === true) {
       this._dispatcher.dispatchEvent(new KazitoriEvent(KazitoriEvent.INTERNAL_CHANGE, this.fragment, this.lastFragment));
     }
-    return this.loadURL(this.fragment, options);
+    this.loadURL(this.fragment, options);
   };
 
 
@@ -658,7 +661,7 @@ Kazitori = (function() {
     this.beforeHandlers = childBefores.concat(this.beforeHandlers);
     if (child.beforeAnytimeHandler) {
       this.lastAnytime = this.beforeAnytime.concat();
-      return this._bindBeforeAnytime(this.beforeAnytime, [child.beforeAnytimeHandler.callback]);
+      this._bindBeforeAnytime(this.beforeAnytime, [child.beforeAnytimeHandler.callback]);
     }
   };
 
@@ -781,7 +784,7 @@ Kazitori = (function() {
       }
       i++;
     }
-    return this.beforeHandlers = newBefores;
+    this.beforeHandlers = newBefores;
   };
 
 
@@ -858,7 +861,7 @@ Kazitori = (function() {
     }
     this._beforeDeffer.addEventListener(KazitoriEvent.TASK_QUEUE_COMPLETE, this.beforeComplete);
     this._beforeDeffer.addEventListener(KazitoriEvent.TASK_QUEUE_FAILED, this.beforeFailed);
-    return this._beforeDeffer.execute(this._beforeDeffer);
+    this._beforeDeffer.execute(this._beforeDeffer);
   };
 
   Kazitori.prototype.executeHandlers = function() {
@@ -969,7 +972,7 @@ Kazitori = (function() {
   Kazitori.prototype._bindBeforeAnytime = function(funcs, bindedFuncs) {
     var callback;
     callback = this._bindFunctions(funcs, bindedFuncs);
-    return this.beforeAnytimeHandler = {
+    this.beforeAnytimeHandler = {
       callback: this._binder(function(fragment) {
         var args;
         args = [fragment];
@@ -1024,7 +1027,7 @@ Kazitori = (function() {
   };
 
   Kazitori.prototype._updateHashIE = function(fragment, replace) {
-    return location.replace(this.root + '#/' + fragment);
+    location.replace(this.root + '#/' + fragment);
   };
 
   Kazitori.prototype._matchCheck = function(fragment, handlers, test) {
@@ -1256,15 +1259,15 @@ Kazitori = (function() {
   };
 
   Kazitori.prototype.addEventListener = function(type, listener) {
-    return this._dispatcher.addEventListener(type, listener);
+    this._dispatcher.addEventListener(type, listener);
   };
 
   Kazitori.prototype.removeEventListener = function(type, listener) {
-    return this._dispatcher.removeEventListener(type, listener);
+    this._dispatcher.removeEventListener(type, listener);
   };
 
   Kazitori.prototype.dispatchEvent = function(event) {
-    return this._dispatcher.dispatchEvent(event);
+    this._dispatcher.dispatchEvent(event);
   };
 
   Kazitori.prototype._addPopStateHandler = function() {
@@ -1274,9 +1277,9 @@ Kazitori = (function() {
       win.addEventListener('popstate', this.observeURLHandler);
     }
     if (this._wantChangeHash === true && !this.isOldIE) {
-      return win.addEventListener('hashchange', this.observeURLHandler);
+      win.addEventListener('hashchange', this.observeURLHandler);
     } else if (this._wantChangeHash === true) {
-      return win.attachEvent('onhashchange', this.observeURLHandler);
+      win.attachEvent('onhashchange', this.observeURLHandler);
     }
   };
 
@@ -1286,7 +1289,7 @@ Kazitori = (function() {
     win.removeEventListener('popstate', this.observeURLHandler);
     win.removeEventListener('hashchange', this.observeURLHandler);
     if (this.isOldIE) {
-      return win.detachEvent('onhashchange', this.observeURLHandler);
+      win.detachEvent('onhashchange', this.observeURLHandler);
     }
   };
 
@@ -1340,7 +1343,7 @@ Kazitori = (function() {
     }
     each = Array.prototype.forEach;
     if (each && obj.forEach === each) {
-      return obj.forEach(iter, ctx);
+      obj.forEach(iter, ctx);
     } else if (obj.length === +obj.length) {
       i = 0;
       l = obj.length;
@@ -1504,7 +1507,7 @@ Rule = (function() {
    */
 
   Rule.prototype.update = function(path) {
-    var m, matched, re, t, _i, _len, _results;
+    var m, matched, re, t, _i, _len;
     this.rule = path + this.rule;
     if (this.rule !== '/') {
       this.rule = this.rule.replace(trailingSlash, '');
@@ -1514,13 +1517,11 @@ Rule = (function() {
     matched = path.match(re);
     if (matched !== null) {
       this.isVariable = true;
-      _results = [];
       for (_i = 0, _len = matched.length; _i < _len; _i++) {
         m = matched[_i];
         t = m.match(genericParam) || null;
-        _results.push(this.types.push(t !== null ? t[1] : null));
+        this.types.push(t !== null ? t[1] : null);
       }
-      return _results;
     }
   };
 
@@ -1651,7 +1652,7 @@ Deffered = (function(_super) {
       index: this.index,
       message: message
     });
-    return this.isSuspend = false;
+    this.isSuspend = false;
   };
 
   Deffered.prototype.suspend = function() {
